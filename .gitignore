@@ -1,0 +1,6 @@
+# Artefato de build (o site é gerado a cada execução do Actions)
+site/
+
+# Python
+__pycache__/
+*.pyc
