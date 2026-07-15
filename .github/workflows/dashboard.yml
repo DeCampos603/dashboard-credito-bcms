@@ -43,6 +43,7 @@ jobs:
         run: python gerar_dashboard.py
 
       - name: Salvar histórico (commit se mudou)
+        continue-on-error: true   # se faltar permissão de escrita, não derruba a publicação
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

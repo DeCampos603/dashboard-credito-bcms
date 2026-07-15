@@ -233,7 +233,7 @@ def svg_waterfall(recebido, empenhado, disponivel, mini=False):
     we = plot - (xd - xL)
     parts.append(_r(xd, y2, we, rh, "warning", 'rx="3"'))
     parts.append(f'<text x="{xL-8}" y="{y2+rh/2+4:.0f}" text-anchor="end" class="s-cat">(−) Empenhado</text>')
-    parts.append(f'<text x="{xd+8:.1f}" y="{y2+rh/2+4:.0f}" class="s-val s-warn">−{esc(brl(empenhado).replace("R$ ","R$ "))}</text>')
+    parts.append(f'<text x="{xd+8:.1f}" y="{y2+rh/2+4:.0f}" class="s-val s-on">−{esc(brl(empenhado).replace("R$ ","R$ "))}</text>')
     # linha 3 — Disponível
     parts.append(_r(xL, y3, xd - xL, rh, "success", 'rx="3"'))
     parts.append(f'<text x="{xL-8}" y="{y3+rh/2+4:.0f}" text-anchor="end" class="s-cat s-cat-ok">(=) Crédito Disponível</text>')
@@ -361,12 +361,15 @@ def tabela_html(tid, celulas, com_fonte, ativo):
     for c in celulas:
         fonte = f'<td><span class="pill-fonte">{esc(FONTE_CURTA.get(c.get("uasg",""),""))}</span></td>' if com_fonte else ''
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
+        cid = esc(c.get("cid", ""))
         body.append(
-            f'<tr>{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
+            f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Ver as notas de crédito desta célula (descrição completa)" '
+            f'onclick="bcmsCel(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsCel(this)}}">'
+            f'{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
             f'<td class="obj" title="{esc(aplic)}">{esc(aplic[:60])}</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
-            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}</td></tr>')
+            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
     ncols = len(cols)
     tfoot = (f'<tfoot><tr><td colspan="{ncols-1}">TOTAL · {len(celulas)} célula(s) com crédito em tela</td>'
              f'<td class="num anchor">{esc(brl(tot))}</td></tr></tfoot>')
@@ -424,14 +427,38 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
     trend = svg_tendencia(hist)
 
     # tabelas — crédito EM TELA por célula (saldo líquido positivo)
+    # + dados de drill-down: as NCs (com descrição completa) que compõem cada célula
+    lin_idx = {}
+    for cod, _ in ALVOS:
+        for L in res[cod]["linhas"]:
+            lin_idx.setdefault((cod, L["acao"], L["pi"], L["nd"]), []).append(L)
+    celdata = {}
+    cid_map = {}
+    cid_seq = [0]
+    def cid_for(uasg, c):
+        key = (uasg, c["acao"], c["pi"], c["nd"])
+        cid = cid_map.get(key)
+        if cid is None:
+            cid_seq[0] += 1
+            cid = "c%d" % cid_seq[0]
+            cid_map[key] = cid
+            ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"]] for L in lin_idx.get(key, [])),
+                        key=lambda x: -x[2])
+            celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
+                            "u": FONTE_CURTA.get(uasg, ""), "r": round(c["aloc"], 2),
+                            "e": round(c["emp"], 2), "d": round(c["cred"], 2), "ncs": ncs}
+        c["cid"] = cid
+        return cid
     def celulas_pos(cod):
         cl = [c for c in res[cod]["celulas"].values() if c["cred"] > 0.005]
         cl.sort(key=lambda x: x["cred"], reverse=True)
+        for c in cl:
+            cid_for(cod, c)
         return cl
     cons_cel = []
     for cod, _ in ALVOS:
         for c in celulas_pos(cod):
-            cons_cel.append({**c, "uasg": cod})
+            cons_cel.append({**c, "uasg": cod, "cid": cid_for(cod, c)})
     cons_cel.sort(key=lambda x: x["cred"], reverse=True)
     abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons\')" onkeydown="bcmsTabKey(event,this)">Consolidado</button>'
             f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-160329\')" onkeydown="bcmsTabKey(event,this)">160329 · OGU</button>'
@@ -442,6 +469,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
 
     css = CSS
     js = JS
+    celdata_json = json.dumps(celdata, ensure_ascii=False).replace("</", "<\\/")
     hero_eq = (f'<span class="eq-t eq-prov">{esc(brl(tot["prov"]))}</span>'
                f'<i class="eq-op">−</i>'
                f'<span class="eq-t eq-emp">{esc(brl(tot["emp"]))}</span>'
@@ -512,16 +540,24 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
 
   <section class="sec">
     <div class="eyebrow">Crédito Disponível em tela — por célula orçamentária</div>
-    <p class="sec-nota">Saldo <b>líquido</b> por célula (Ação · PI · ND): <b>Recebido (líq) − Empenhado = Crédito Disponível</b> em cada linha. "Recebido (líq)" já compensa alterações de ND, detalhamentos e anulações (a alteração <b>não é somada</b> com a NC original). Só aparecem células com saldo &gt; 0; a soma fecha com o total consolidado.</p>
+    <p class="sec-nota">Saldo <b>líquido</b> por célula (Ação · PI · ND): <b>Recebido (líq) − Empenhado = Crédito Disponível</b> em cada linha. "Recebido (líq)" já compensa alterações de ND, detalhamentos e anulações (a alteração <b>não é somada</b> com a NC original). Só aparecem células com saldo &gt; 0; a soma fecha com o total consolidado. <b>Clique em uma linha</b> para ver as notas de crédito da célula com a descrição completa.</p>
     <div class="tabs" role="tablist" aria-label="Crédito em tela por UASG">{abas}</div>
     {tabs}
   </section>
 </main>
 
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true" onclick="if(event.target===this)bcmsCelClose()">
+  <div class="modal-panel">
+    <button class="modal-x" aria-label="Fechar" onclick="bcmsCelClose()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
 <footer class="rodape">
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo não empenhado "em tela" do Tesouro Gerencial). O detalhe é o <b>saldo líquido por célula orçamentária</b> (Ação · PI · ND): descentralizações, alterações de ND, detalhamentos, anulações e empenho são compensados dentro de cada célula, de modo que a alteração de ND <b>não é somada</b> à NC original. A soma das células reconcilia com o total consolidado.</p>
   <p>Fonte: CRÉDITO DISP.xlsx (Google Drive, atualizado diariamente) · Atualizado em {esc(ger)}</p>
 </footer>
+<script>var CELDATA={celdata_json};</script>
 <script>{js}</script>
 </body></html>"""
 
@@ -660,6 +696,28 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 .cell-neg{color:var(--danger);box-shadow:inset 3px 0 0 var(--danger);background:color-mix(in srgb,var(--danger) 6%,transparent)}
 .pill-fonte{font-size:10.5px;font-weight:700;color:var(--primary);border:1px solid var(--border-strong);border-radius:5px;padding:1px 6px}
 .det tfoot td{padding:10px 12px;font-weight:700;background:var(--surface-2);border-top:1px solid var(--border-strong)}
+.cel-row{cursor:pointer}.cel-row .chev{float:right;margin-left:8px;color:var(--ink-muted);font-weight:400;transition:transform .12s,color .12s}
+.cel-row:hover .chev{color:var(--success-strong);transform:translateX(2px)}
+/* modal drill-down */
+.modal{position:fixed;inset:0;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;background:rgba(8,14,24,.55);overflow-y:auto}
+.modal.open{display:flex}
+.modal-panel{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-width:760px;width:100%;padding:22px 24px}
+.modal-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:1px solid var(--border);background:var(--surface-2);border-radius:8px;color:var(--ink-muted);cursor:pointer;font-size:14px;line-height:1}
+.modal-x:hover{color:var(--ink);border-color:var(--border-strong)}
+#modal-body h3{font-size:18px;font-weight:650;margin-bottom:2px;padding-right:36px}
+.m-sub{font-size:13px;color:var(--ink-muted);margin-bottom:14px}
+.m-kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.m-kpis span{flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
+.m-kpis b{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.m-kpis .ok b{color:var(--success-strong)}.m-kpis .ok{border-left:3px solid var(--success)}
+.m-ncs{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto}
+.m-nc{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)}
+.m-nc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.m-nc-num{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px}
+.m-nc-val{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--success-strong);white-space:nowrap}
+.m-nc-val.neg{color:var(--danger)}
+.m-nc-op{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-muted);margin-top:3px}
+.m-nc-desc{font-size:12.5px;color:var(--ink);margin-top:5px;line-height:1.5;white-space:pre-wrap}
 /* footer */
 .rodape{max-width:1200px;margin:40px auto 0;padding:20px 24px;border-top:1px solid var(--border);color:var(--ink-muted);font-size:12px;line-height:1.7}
 .rodape b{color:var(--ink)}
@@ -694,7 +752,7 @@ function bcmsTabKey(e,btn){var t=Array.prototype.slice.call(btn.parentNode.query
 function bcmsSearch(inp,tid){var q=inp.value.toLowerCase();var tb=document.getElementById(tid).querySelector('tbody');
  var rows=tb.querySelectorAll('tr');var n=0;
  rows.forEach(function(r){var ok=r.textContent.toLowerCase().indexOf(q)>-1;r.style.display=ok?'':'none';if(ok)n++;});
- document.getElementById('cnt-'+tid).textContent=n+' linha(s)';}
+ document.getElementById('cnt-'+tid).textContent=n+' célula(s)';}
 function bcmsSort(th){var table=th.closest('table');var idx=Array.prototype.indexOf.call(th.parentNode.children,th);
  var dir=th.getAttribute('aria-sort')==='ascending'?'descending':'ascending';
  th.parentNode.querySelectorAll('th').forEach(function(h){h.setAttribute('aria-sort','none');h.querySelector('.sort').textContent='';});
@@ -705,6 +763,25 @@ function bcmsSort(th){var table=th.closest('table');var idx=Array.prototype.inde
   var va,vb;if(da!==null&&db!==null){va=parseFloat(da);vb=parseFloat(db);}else{va=ca.textContent.trim().toLowerCase();vb=cb.textContent.trim().toLowerCase();}
   if(va<vb)return dir==='ascending'?-1:1;if(va>vb)return dir==='ascending'?1:-1;return 0;});
  rows.forEach(function(r){tb.appendChild(r);});}
+function bcmsEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−R$ ':'R$ ')+i+','+s[1];}
+function bcmsCel(row){var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
+ var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
+ var sub=(d.u?d.u+' · ':'')+(d.nome||'');
+ if(sub.replace(/\s/g,''))h+='<p class="m-sub">'+bcmsEsc(sub)+'</p>';
+ h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
+ var itens='';
+ d.ncs.forEach(function(n){if(!n[0])return; var neg=n[2]<0;
+  itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
+  if(n[1])itens+='<div class="m-nc-op">'+bcmsEsc(n[1])+'</div>';
+  if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
+  itens+='</div>';});
+ h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
+ document.getElementById('modal-body').innerHTML=h;
+ var m=document.getElementById('modal');m.classList.add('open');m.setAttribute('aria-hidden','false');
+ var x=document.querySelector('.modal-x');if(x)x.focus();}
+function bcmsCelClose(){var m=document.getElementById('modal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');}}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')bcmsCelClose();});
 """
 
 # ---------------- main ----------------
