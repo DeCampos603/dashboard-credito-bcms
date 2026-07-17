@@ -110,9 +110,12 @@ def etl(path):
         ck = (acao, pic, ndc)
         cl = d["celulas"].get(ck)
         if cl is None:
-            cl = dict(acao=acao, pi=pic, pi_nome=pin, nd=ndc, nd_nome=ndn, aloc=0.0, emp=0.0, cred=0.0)
+            cl = dict(acao=acao, pi=pic, pi_nome=pin, nd=ndc, nd_nome=ndn,
+                      aloc=0.0, emp=0.0, liq=0.0, pag=0.0, cred=0.0)
             d["celulas"][ck] = cl
         cl["cred"] += vals["cred"]
+        cl["liq"] += vals["liq"]                  # liquidado da célula (estágio da despesa)
+        cl["pag"] += vals["pag"]                  # pago da célula
         if ncv == "":
             cl["emp"] += -vals["cred"]           # empenho (col.17 negativo → empenho positivo)
         else:
@@ -124,6 +127,7 @@ def etl(path):
                 emit=disp(ws.cell(r, 2).value), nc=ncv, acao=acao,
                 pi=pic, nd=ndc, nd_desc=ndn,
                 obj=disp(ws.cell(r, 11).value), op=disp(ws.cell(r, 12).value),
+                dia=disp(ws.cell(r, 13).value),
                 cred=vals["cred"], emp=vals["emp"], liq=vals["liq"], pag=vals["pag"]))
     for cod in res:
         res[cod]["linhas"].sort(key=lambda x: x["cred"], reverse=True)
@@ -213,9 +217,11 @@ def svg_waterfall(recebido, empenhado, disponivel, mini=False):
     if recebido <= 0:
         return '<p class="vazio">sem dados</p>'
     if mini:
-        W, H, xL, rh, gap, fs = 340, 118, 96, 26, 10, 10
+        W, H, xL, rh, gap, fs = 360, 118, 112, 26, 10, 10
+        L1, L2, L3 = "Recebido", "(−) Empenhado", "(=) Disponível"
     else:
         W, H, xL, rh, gap, fs = 720, 196, 190, 42, 16, 13
+        L1, L2, L3 = "Provisão Recebida", "(−) Empenhado", "(=) Crédito Disponível"
     xR = W - 24
     plot = xR - xL
     R = recebido
@@ -227,16 +233,16 @@ def svg_waterfall(recebido, empenhado, disponivel, mini=False):
              f'<desc>{esc(brl(recebido))} − {esc(brl(empenhado))} = {esc(brl(disponivel))}</desc>']
     # linha 1 — Recebida
     parts.append(_r(xL, y1, plot, rh, "primary", 'rx="3"'))
-    parts.append(f'<text x="{xL-8}" y="{y1+rh/2+4:.0f}" text-anchor="end" class="s-cat">Provisão Recebida</text>')
+    parts.append(f'<text x="{xL-8}" y="{y1+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(L1)}</text>')
     parts.append(f'<text x="{xR-6}" y="{y1+rh/2+4:.0f}" text-anchor="end" class="s-val s-on">{esc(brl(recebido))}</text>')
     # linha 2 — Empenhado (flutuante, à direita, de X(D) a X(R))
     we = plot - (xd - xL)
     parts.append(_r(xd, y2, we, rh, "warning", 'rx="3"'))
-    parts.append(f'<text x="{xL-8}" y="{y2+rh/2+4:.0f}" text-anchor="end" class="s-cat">(−) Empenhado</text>')
+    parts.append(f'<text x="{xL-8}" y="{y2+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(L2)}</text>')
     parts.append(f'<text x="{xd+8:.1f}" y="{y2+rh/2+4:.0f}" class="s-val s-on">−{esc(brl(empenhado).replace("R$ ","R$ "))}</text>')
     # linha 3 — Disponível
     parts.append(_r(xL, y3, xd - xL, rh, "success", 'rx="3"'))
-    parts.append(f'<text x="{xL-8}" y="{y3+rh/2+4:.0f}" text-anchor="end" class="s-cat s-cat-ok">(=) Crédito Disponível</text>')
+    parts.append(f'<text x="{xL-8}" y="{y3+rh/2+4:.0f}" text-anchor="end" class="s-cat s-cat-ok">{esc(L3)}</text>')
     parts.append(f'<text x="{xd+8:.1f}" y="{y3+rh/2+4:.0f}" class="s-val s-ok">{esc(brl(disponivel))}</text>')
     # conectores tracejados
     parts.append(f'<line x1="{xR:.1f}" y1="{y1+rh}" x2="{xR:.1f}" y2="{y2}" class="s-conn"/>')
@@ -295,7 +301,19 @@ def svg_funil(cod, d):
     return f'<div class="card chart"><div class="eyebrow">Estágios · {esc(cod)} {esc(FONTE_CURTA[cod])}</div>{svg}</div>'
 
 def svg_tendencia(hist):
-    pts = [(h["data"], h["total"]["cred"]) for h in hist]
+    # agrega por SEMANA ISO — mantém o último snapshot de cada semana
+    wk, order = {}, []
+    for h in hist:
+        try:
+            y, m, dd = (int(x) for x in h["data"].split("-"))
+            key = datetime.date(y, m, dd).isocalendar()[:2]
+        except Exception:
+            key = h.get("data")
+        if key not in wk:
+            order.append(key)
+        wk[key] = h
+    semanas = [wk[k] for k in order]
+    pts = [(h["data"], h["total"]["cred"]) for h in semanas]
     W, H, pl, pb, pt, pr = 720, 210, 66, 34, 16, 74
     pw, ph = W - pl - pr, H - pb - pt
     vals = [v for _, v in pts]
@@ -324,9 +342,54 @@ def svg_tendencia(hist):
     if n >= 1:
         dt, v = pts[-1]
         el.append(f'<text x="{X(n-1):.1f}" y="{Y(v)-10:.1f}" text-anchor="end" class="s-num s-ok">{esc(brl(v))}</text>')
-    nota = "" if n > 1 else '<p class="vazio">o histórico começa hoje — a curva aparece a partir do 2º dia.</p>'
-    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Tendência do Crédito Disponível">{"".join(el)}</svg>'
-    return f'<div class="card chart wide"><div class="eyebrow">Tendência · Crédito Disponível consolidado</div>{svg}{nota}</div>'
+    nota = "" if n > 1 else '<p class="vazio">a curva semanal aparece a partir da 2ª semana de histórico.</p>'
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Tendência semanal do Crédito Disponível">{"".join(el)}</svg>'
+    return f'<div class="card chart wide"><div class="eyebrow">Tendência semanal · Crédito Disponível consolidado</div>{svg}{nota}</div>'
+
+# ---------------- brasão BCMS ----------------
+def _cog(cx, cy, ro, ri, teeth):
+    pts = []
+    for i in range(teeth * 2):
+        ang = math.pi * i / teeth - math.pi / 2
+        r = ro if i % 2 == 0 else ri
+        pts.append(f"{cx + r*math.cos(ang):.1f},{cy + r*math.sin(ang):.1f}")
+    return "M" + " L".join(pts) + " Z"
+
+def brasao_svg():
+    GOLD, RED, BLUE, CREAM, GRAY = "#C8901E", "#CE2B2B", "#1E6FD0", "#FBF3DA", "#CBD0D6"
+    g1, g2 = _cog(46, 62, 13, 9.5, 10), _cog(72, 62, 13, 9.5, 10)
+    star = _cog(60, 120, 13, 5.5, 9)
+    return (f'<svg class="brasao" viewBox="0 0 120 152" role="img" aria-label="Brasão do BCMS">'
+            f'<path d="M12,20 L108,20 L108,86 C108,118 86,136 60,148 C34,136 12,118 12,86 Z" fill="#fff" stroke="{GOLD}" stroke-width="3"/>'
+            f'<path d="M27,58 L93,58 L104,88 L82,124 L60,136 L38,124 L16,88 Z" fill="{GRAY}" opacity="0.5"/>'
+            f'<g stroke="{GOLD}" stroke-width="1.5" stroke-linecap="round">'
+            f'<rect x="30" y="88" width="60" height="8" rx="4" fill="{CREAM}" transform="rotate(-32 60 92)"/>'
+            f'<rect x="30" y="88" width="60" height="8" rx="4" fill="{CREAM}" transform="rotate(32 60 92)"/></g>'
+            f'<path d="{g1}" fill="{CREAM}" stroke="{GOLD}" stroke-width="1.6"/><circle cx="46" cy="62" r="4" fill="none" stroke="{GOLD}" stroke-width="1.3"/>'
+            f'<path d="{g2}" fill="{CREAM}" stroke="{GOLD}" stroke-width="1.6"/><circle cx="72" cy="62" r="4" fill="none" stroke="{GOLD}" stroke-width="1.3"/>'
+            f'<path d="{star}" fill="{CREAM}" stroke="{GOLD}" stroke-width="1.5"/>'
+            f'<rect x="3" y="2" width="114" height="34" rx="3" fill="{GOLD}"/>'
+            f'<rect x="6" y="5" width="108" height="14" fill="{RED}"/><rect x="6" y="19" width="108" height="14" fill="{BLUE}"/>'
+            f'<text x="60" y="26" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="19" fill="#fff">BCMS</text>'
+            f'</svg>')
+
+def brasao_html():
+    import base64, glob
+    mimes = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml"}
+    adir = os.path.join(HERE, "assets")
+    # 1) nomes preferenciais; 2) qualquer imagem na pasta assets/
+    candidatos = [os.path.join(adir, "brasao" + e) for e in mimes]
+    if os.path.isdir(adir):
+        for f in sorted(glob.glob(os.path.join(adir, "*"))):
+            if os.path.splitext(f)[1].lower() in mimes and f not in candidatos:
+                candidatos.append(f)
+    for p in candidatos:
+        ext = os.path.splitext(p)[1].lower()
+        if ext in mimes and os.path.exists(p):
+            with open(p, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            return f'<img class="brasao" src="data:{mimes[ext]};base64,{b64}" alt="Brasão do BCMS — Batalhão Central de Manutenção e Suprimento">'
+    return brasao_svg()
 
 # ---------------- componentes HTML ----------------
 def kpi_tile(label, valor, chip, cls):
@@ -377,7 +440,7 @@ def tabela_html(tid, celulas, com_fonte, ativo):
     return (f'<div class="tabpanel" id="{tid}" role="tabpanel"{disp_style}>'
             f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
             f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND ou aplicação…" oninput="bcmsSearch(this,\'{tid}\')">'
-            f'<span class="tbl-count" id="cnt-{tid}" aria-live="polite">{len(celulas)} células</span></div>'
+            f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células</span></div>'
             f'<div class="tbl-scroll"><table class="det"><thead><tr>{"".join(ths)}</tr></thead>'
             f'<tbody>{"".join(body)}</tbody>{tfoot}</table></div></div>')
 
@@ -446,7 +509,8 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
                         key=lambda x: -x[2])
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "r": round(c["aloc"], 2),
-                            "e": round(c["emp"], 2), "d": round(c["cred"], 2), "ncs": ncs}
+                            "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
+                            "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2), "ncs": ncs}
         c["cid"] = cid
         return cid
     def celulas_pos(cod):
@@ -467,9 +531,110 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
             tabela_html("tab-160329", celulas_pos("160329"), False, False) +
             tabela_html("tab-167329", celulas_pos("167329"), False, False))
 
+    # ===== ABA RESUMO: movimentação de NC do dia + resumo semanal =====
+    movs = []
+    for cod, _ in ALVOS:
+        for L in res[cod]["linhas"]:
+            if not L["nc"]:
+                continue  # só NC real (exclui linhas de empenho)
+            try:
+                dd, mm, yy = L.get("dia", "").split("/")
+                dt = datetime.date(int(yy), int(mm), int(dd))
+            except Exception:
+                dt = None
+            movs.append({**L, "uasg": cod, "dt": dt})
+    ncdata = {}
+    for i, m in enumerate(movs, 1):
+        nid = "n%d" % i
+        m["nid"] = nid
+        ncdata[nid] = {"nc": m["nc"], "u": FONTE_CURTA.get(m["uasg"], ""), "acao": m["acao"],
+                       "pi": m["pi"], "nd": m["nd"], "ndn": m.get("nd_desc", ""), "op": m["op"],
+                       "dia": m.get("dia", ""), "val": round(m["cred"], 2), "obj": m["obj"]}
+    datas = sorted({m["dt"] for m in movs if m["dt"]}, reverse=True)
+    max_date = datas[0] if datas else None
+    fmt_d = lambda d: d.strftime("%d/%m/%Y") if d else "—"
+    daily = sorted([m for m in movs if m["dt"] == max_date] if max_date else [], key=lambda x: x["cred"], reverse=True)
+    rec_d = sum(m["cred"] for m in daily if m["cred"] > 0)
+    red_d = sum(m["cred"] for m in daily if m["cred"] < 0)
+
+    def _th(h, numc, sortable=True):
+        cls = ' class="num"' if numc else ''
+        if not sortable:
+            return f'<th{cls}>{esc(h)}</th>'
+        return (f'<th{cls} tabindex="0" role="button" aria-sort="none" onclick="bcmsSort(this)" '
+                f'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsSort(this)}}">{esc(h)}<span class="sort"></span></th>')
+
+    def mov_row(m):
+        neg = ' cell-neg' if m["cred"] < 0 else ''
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-nc="{esc(m["nid"])}" title="Detalhar a NC" '
+                f'onclick="bcmsNC(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsNC(this)}}">'
+                f'<td class="mono2">{esc(m["nc"])}</td><td><span class="pill-fonte">{esc(FONTE_CURTA[m["uasg"]])}</span></td>'
+                f'<td>{esc(m["acao"])}</td><td class="mono2">{esc(m["nd"])}</td>'
+                f'<td class="obj" title="{esc(m["op"])}">{esc(m["op"][:28])}</td>'
+                f'<td class="num anchor{neg}" data-sort="{m["cred"]:.2f}">{esc(brl(m["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
+
+    def mov_tabela(tid, lst):
+        if not lst:
+            return '<p class="vazio">Sem movimentação de NC neste período.</p>'
+        ths = _th("NC", False) + _th("Fonte", False) + _th("Ação", False) + _th("ND", False) + _th("Operação", False) + _th("Valor", True)
+        body = "".join(mov_row(m) for m in lst)
+        return (f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
+                f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, ação, ND ou operação…" oninput="bcmsSearch(this,\'{tid}\')">'
+                f'<span class="tbl-count" id="cnt-{tid}" data-unit="NC(s)" aria-live="polite">{len(lst)} NC(s)</span></div>'
+                f'<div class="tbl-scroll" id="{tid}"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{body}</tbody></table></div>')
+
+    # resumo semanal — últimos 7 dias com movimentação
+    week_days = datas[:7]
+    week_rows, tot_rec, tot_red, n_week = [], 0.0, 0.0, 0
+    daydata = {}
+    for idx, d in enumerate(week_days):
+        dm = [m for m in movs if m["dt"] == d]
+        rec = sum(m["cred"] for m in dm if m["cred"] > 0)
+        red = sum(m["cred"] for m in dm if m["cred"] < 0)
+        tot_rec += rec; tot_red += red; n_week += len(dm)
+        dk = "d%d" % idx
+        daydata[dk] = {"d": fmt_d(d), "n": len(dm), "rec": round(rec, 2), "red": round(red, 2), "liq": round(rec + red, 2),
+                       "ncs": sorted([[m["nc"], FONTE_CURTA[m["uasg"]], m["op"], round(m["cred"], 2), m["obj"]] for m in dm],
+                                     key=lambda x: -x[3])}
+        week_rows.append((d, len(dm), rec, red, rec + red, dk))
+
+    def semana_tabela(rows):
+        if not rows:
+            return '<p class="vazio">Sem movimentação na última semana.</p>'
+        heads = _th("Dia", False, False) + _th("Nº NC", True, False) + _th("Recebido (+)", True, False) + _th("Reduções (−)", True, False) + _th("Líquido", True, False)
+        body = ""
+        for d, n, rec, red, liq, dk in rows:
+            body += (f'<tr class="cel-row" tabindex="0" role="button" data-day="{dk}" title="Ver as NCs deste dia" '
+                     f'onclick="bcmsDay(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDay(this)}}">'
+                     f'<td class="mono2">{fmt_d(d)}</td><td class="num">{n}</td>'
+                     f'<td class="num col-pos">{esc(brl(rec))}</td><td class="num col-neg">{esc(brl(red))}</td>'
+                     f'<td class="num anchor">{esc(brl(liq))}<i class="chev" aria-hidden="true">›</i></td></tr>')
+        foot = (f'<tfoot><tr><td>TOTAL</td><td class="num">{n_week}</td>'
+                f'<td class="num">{esc(brl(tot_rec))}</td><td class="num">{esc(brl(tot_red))}</td>'
+                f'<td class="num anchor">{esc(brl(tot_rec + tot_red))}</td></tr></tfoot>')
+        return f'<div class="tbl-scroll"><table class="det"><thead><tr>{heads}</tr></thead><tbody>{body}</tbody>{foot}</table></div>'
+
+    resumo_html = (
+        '<div class="resumo-hero">'
+        f'<div class="rh-main"><span class="rh-l">Crédito Disponível consolidado · BCMS</span>'
+        f'<span class="rh-v num">{esc(brl(tot["cred"]))}</span></div>'
+        f'<div class="rh-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
+        f'<section class="sec"><div class="eyebrow">Movimentação de NC — {fmt_d(max_date)} (dia anterior)</div>'
+        f'<p class="sec-nota">Notas de crédito com lançamento em <b>{fmt_d(max_date)}</b> (último dia com movimento — dados com ~24h de defasagem): '
+        f'<b>{len(daily)}</b> NC(s) · Recebido <b>{esc(brl(rec_d))}</b> · Reduções <b>{esc(brl(red_d))}</b> · Líquido <b>{esc(brl(rec_d + red_d))}</b>. '
+        'Clique em uma NC para detalhá-la.</p>'
+        + mov_tabela("mov-dia", daily) + '</section>'
+        '<section class="sec"><div class="eyebrow">Resumo semanal — últimos 7 dias com movimentação</div>'
+        '<p class="sec-nota">Movimentação de NC por dia: recebimentos (+), reduções/anulações (−) e líquido. <b>Clique em um dia</b> para ver as NCs daquele dia (e clique numa NC para a descrição completa).</p>'
+        + semana_tabela(week_rows) + '</section>'
+    )
+
     css = CSS
     js = JS
     celdata_json = json.dumps(celdata, ensure_ascii=False).replace("</", "<\\/")
+    ncdata_json = json.dumps(ncdata, ensure_ascii=False).replace("</", "<\\/")
+    daydata_json = json.dumps(daydata, ensure_ascii=False).replace("</", "<\\/")
+    brasao = brasao_html()
     hero_eq = (f'<span class="eq-t eq-prov">{esc(brl(tot["prov"]))}</span>'
                f'<i class="eq-op">−</i>'
                f'<span class="eq-t eq-emp">{esc(brl(tot["emp"]))}</span>'
@@ -480,14 +645,15 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
 <meta name="color-scheme" content="light dark">
 <title>Crédito Disponível — BCMS</title><style>{css}</style></head>
 <body>
+<div class="bcms-bar" aria-hidden="true"></div>
 <header class="topbar">
   <div class="brand">
-    <svg class="brasao" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" style="fill:none;stroke:var(--primary);stroke-width:1.6"/><path d="M12 7v7M8.5 10.5h7" style="stroke:var(--primary);stroke-width:1.6"/></svg>
+    {brasao}
     <div><h1>Crédito Disponível — BCMS</h1>
-    <p class="subtitle">Fonte: Tesouro Gerencial / SIAFI · UASGs 160329 (OGU) e 167329 (Fundo do Exército)</p></div>
+    <p class="subtitle">Batalhão Central de Manutenção e Suprimento · Tesouro Gerencial / SIAFI · UASGs 160329 (OGU) e 167329 (Fundo do Exército)</p></div>
   </div>
   <div class="topbar-r">
-    <span class="selo">Posição {esc(posicao)}</span>
+    <div class="selo-wrap"><span class="selo">Posição {esc(posicao)}</span><span class="selo-delay">⏱ dados com ~24h de defasagem</span></div>
     <button class="theme" id="themeBtn" aria-pressed="false" aria-label="Alternar tema claro/escuro" onclick="bcmsTheme()">
       <svg viewBox="0 0 24 24" class="ic-sun" aria-hidden="true"><circle cx="12" cy="12" r="4.5" style="fill:currentColor"/><g style="stroke:currentColor;stroke-width:1.6"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/></g></svg>
       <svg viewBox="0 0 24 24" class="ic-moon" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z" style="fill:currentColor"/></svg>
@@ -498,6 +664,16 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
 <main class="wrap">
   {banner}
 
+  <div class="toptabs" role="tablist" aria-label="Visões do painel">
+    <button class="toptab on" role="tab" aria-selected="true" onclick="bcmsView(this,'resumo')">Resumo</button>
+    <button class="toptab" role="tab" aria-selected="false" onclick="bcmsView(this,'completo')">Detalhamento completo</button>
+  </div>
+
+  <div id="view-resumo">
+  {resumo_html}
+  </div>
+
+  <div id="view-completo" style="display:none">
   <section class="hero">
     <div class="hero-l">
       <div class="eyebrow">Crédito Disponível · Consolidado BCMS</div>
@@ -544,6 +720,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
     <div class="tabs" role="tablist" aria-label="Crédito em tela por UASG">{abas}</div>
     {tabs}
   </section>
+  </div>
 </main>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true" onclick="if(event.target===this)bcmsCelClose()">
@@ -554,10 +731,11 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
 </div>
 
 <footer class="rodape">
+  <p class="rodape-brand">⚙ BCMS · Batalhão Central de Manutenção e Suprimento — Exército Brasileiro</p>
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo não empenhado "em tela" do Tesouro Gerencial). O detalhe é o <b>saldo líquido por célula orçamentária</b> (Ação · PI · ND): descentralizações, alterações de ND, detalhamentos, anulações e empenho são compensados dentro de cada célula, de modo que a alteração de ND <b>não é somada</b> à NC original. A soma das células reconcilia com o total consolidado.</p>
-  <p>Fonte: CRÉDITO DISP.xlsx (Google Drive, atualizado diariamente) · Atualizado em {esc(ger)}</p>
+  <p>Fonte: CRÉDITO DISP.xlsx (Google Drive) · <b>⏱ Os dados do Tesouro Gerencial têm defasagem de aproximadamente 24 horas.</b> · Painel gerado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};</script>
+<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};</script>
 <script>{js}</script>
 </body></html>"""
 
@@ -568,7 +746,7 @@ CSS = r"""
 --bg:#EEF1F6;--surface:#FFFFFF;--surface-2:#E9EDF3;--ink:#0F1B2A;--ink-muted:#566374;
 --border:#D8DEE7;--border-strong:#C2CBD6;--primary:#1C4A73;--primary-strong:#143A5C;
 --success:#0F7A5A;--success-strong:#0B5E45;--warning:#B5822B;--warning-ink:#8A631C;
---danger:#B23A2E;--focus:#0B5E45;--hero-soft:#E7F1EC;--track:#E4E8EF;
+--danger:#B23A2E;--focus:#0B5E45;--hero-soft:#E7F1EC;--track:#E4E8EF;--gold:#C8901E;
 --stg1:#1C4A73;--stg2:#3E6E9B;--stg3:#6D9AC0;
 --shadow:0 1px 2px rgba(15,27,42,.06);--shadow-h:0 3px 10px rgba(15,27,42,.10);
 --serif:Georgia,"Times New Roman","Nimbus Roman",serif;
@@ -589,7 +767,7 @@ CSS = r"""
 --bg:#EEF1F6;--surface:#FFFFFF;--surface-2:#E9EDF3;--ink:#0F1B2A;--ink-muted:#566374;
 --border:#D8DEE7;--border-strong:#C2CBD6;--primary:#1C4A73;--primary-strong:#143A5C;
 --success:#0F7A5A;--success-strong:#0B5E45;--warning:#B5822B;--warning-ink:#8A631C;
---danger:#B23A2E;--focus:#0B5E45;--hero-soft:#E7F1EC;--track:#E4E8EF;
+--danger:#B23A2E;--focus:#0B5E45;--hero-soft:#E7F1EC;--track:#E4E8EF;--gold:#C8901E;
 --stg1:#1C4A73;--stg2:#3E6E9B;--stg3:#6D9AC0;--shadow:0 1px 2px rgba(15,27,42,.06);--shadow-h:0 3px 10px rgba(15,27,42,.10);}
 html{transition:background-color .15s,color .15s}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
@@ -600,15 +778,31 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .sec-nota{font-size:12.5px;color:var(--ink-muted);margin:-4px 0 12px;max-width:900px;line-height:1.55}
 .sec-nota b{color:var(--ink)}
 .sec{margin-top:30px}
+/* abas de topo */
+.toptabs{display:flex;gap:6px;margin:20px 0 6px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:5px}
+.toptab{flex:1;background:none;border:none;color:var(--ink-muted);font:650 14px var(--sans);padding:10px 14px;border-radius:8px;cursor:pointer}
+.toptab.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.toptab:hover:not(.on){color:var(--ink)}
+/* resumo hero */
+.resumo-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--hero-soft);border:1px solid var(--border);border-left:4px solid var(--success);border-radius:12px;padding:16px 22px;margin-top:18px}
+.rh-l{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted)}
+.rh-v{display:block;font-size:30px;font-weight:700;color:var(--success-strong);line-height:1.1;margin-top:3px}
+.rh-meta{font-size:12.5px;color:var(--ink-muted);text-align:right}
+.rh-delay{color:var(--warning-ink);font-weight:600}
+.col-pos{color:var(--success-strong)}.col-neg{color:var(--danger)}
+.m-kpis b.neg{color:var(--danger)}.m-kpis b.op{font-size:12px;font-weight:600;line-height:1.3}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px}
 /* topbar */
 .topbar{max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:12px}
-.brasao{width:38px;height:38px;flex:none}
+.brasao{width:44px;height:auto;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
+.bcms-bar{height:5px;background:linear-gradient(to bottom,#CE2B2B 50%,#1E6FD0 50%)}
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
 .subtitle{font-size:12.5px;color:var(--ink-muted);margin-top:2px}
 .topbar-r{display:flex;align-items:center;gap:10px}
+.selo-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .selo{background:var(--surface-2);color:var(--ink-muted);border:1px solid var(--border);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.selo-delay{font-size:10.5px;color:var(--warning-ink);font-weight:600;white-space:nowrap}
 .theme{width:36px;height:36px;border:1px solid var(--border);background:var(--surface);border-radius:8px;color:var(--ink-muted);cursor:pointer;display:grid;place-items:center}
 .theme:hover{border-color:var(--border-strong);color:var(--ink)}
 .theme svg{width:18px;height:18px}
@@ -710,7 +904,9 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 .m-kpis span{flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
 .m-kpis b{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
 .m-kpis .ok b{color:var(--success-strong)}.m-kpis .ok{border-left:3px solid var(--success)}
-.m-ncs{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto}
+.m-formula{font-size:11.5px;color:var(--ink-muted);margin:-8px 0 14px;font-style:italic}
+.m-ncs-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin-bottom:8px}
+.m-ncs{display:flex;flex-direction:column;gap:8px;max-height:48vh;overflow-y:auto}
 .m-nc{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)}
 .m-nc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .m-nc-num{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px}
@@ -721,6 +917,7 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 /* footer */
 .rodape{max-width:1200px;margin:40px auto 0;padding:20px 24px;border-top:1px solid var(--border);color:var(--ink-muted);font-size:12px;line-height:1.7}
 .rodape b{color:var(--ink)}
+.rodape-brand{color:var(--warning-ink);font-weight:700;font-size:13px;letter-spacing:.02em;margin-bottom:8px}
 /* focus + motion */
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -749,10 +946,25 @@ function bcmsTab(btn,id){
 function bcmsTabKey(e,btn){var t=Array.prototype.slice.call(btn.parentNode.querySelectorAll('.tab'));
  var i=t.indexOf(btn);if(e.key==='ArrowRight'){e.preventDefault();t[(i+1)%t.length].focus();t[(i+1)%t.length].click();}
  else if(e.key==='ArrowLeft'){e.preventDefault();t[(i-1+t.length)%t.length].focus();t[(i-1+t.length)%t.length].click();}}
+function bcmsView(btn,which){
+ btn.parentNode.querySelectorAll('.toptab').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-selected','false');});
+ btn.classList.add('on');btn.setAttribute('aria-selected','true');
+ document.getElementById('view-resumo').style.display=which==='resumo'?'':'none';
+ document.getElementById('view-completo').style.display=which==='completo'?'':'none';
+ window.scrollTo(0,0);}
 function bcmsSearch(inp,tid){var q=inp.value.toLowerCase();var tb=document.getElementById(tid).querySelector('tbody');
  var rows=tb.querySelectorAll('tr');var n=0;
  rows.forEach(function(r){var ok=r.textContent.toLowerCase().indexOf(q)>-1;r.style.display=ok?'':'none';if(ok)n++;});
- document.getElementById('cnt-'+tid).textContent=n+' célula(s)';}
+ var cnt=document.getElementById('cnt-'+tid);var u=cnt.getAttribute('data-unit')||'linha(s)';cnt.textContent=n+' '+u;}
+function bcmsNC(row){var d=NCDATA[row.getAttribute('data-nc')];if(!d)return;var neg=d.val<0;
+ var h='<h3 id="modal-title">NC '+bcmsEsc(d.nc)+'</h3>';
+ h+='<p class="m-sub">'+bcmsEsc((d.u?d.u+' · ':'')+'Ação '+d.acao+' · PI '+d.pi+' · ND '+d.nd+(d.ndn?' — '+d.ndn:''))+'</p>';
+ h+='<div class="m-kpis"><span>Data<b>'+bcmsEsc(d.dia||'—')+'</b></span><span>Operação<b class="op">'+bcmsEsc(d.op||'—')+'</b></span><span class="'+(neg?'':'ok')+'">Valor<b class="'+(neg?'neg':'')+'">'+bcmsBRL(d.val)+'</b></span></div>';
+ h+='<div class="m-ncs-h">Descrição completa</div>';
+ h+='<div class="m-nc"><div class="m-nc-desc">'+bcmsEsc(d.obj||'(sem descrição)')+'</div></div>';
+ document.getElementById('modal-body').innerHTML=h;
+ var m=document.getElementById('modal');m.classList.add('open');m.setAttribute('aria-hidden','false');
+ var x=document.querySelector('.modal-x');if(x)x.focus();}
 function bcmsSort(th){var table=th.closest('table');var idx=Array.prototype.indexOf.call(th.parentNode.children,th);
  var dir=th.getAttribute('aria-sort')==='ascending'?'descending':'ascending';
  th.parentNode.querySelectorAll('th').forEach(function(h){h.setAttribute('aria-sort','none');h.querySelector('.sort').textContent='';});
@@ -769,14 +981,31 @@ function bcmsCel(row){var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
  var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
  var sub=(d.u?d.u+' · ':'')+(d.nome||'');
  if(sub.replace(/\s/g,''))h+='<p class="m-sub">'+bcmsEsc(sub)+'</p>';
- h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
+ h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span>Liquidado<b>'+bcmsBRL(d.l||0)+'</b></span><span>Pago<b>'+bcmsBRL(d.p||0)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
+ h+='<p class="m-formula">Recebido (líq) − Empenhado = Crédito Disponível · Empenhado ≥ Liquidado ≥ Pago</p>';
  var itens='';
  d.ncs.forEach(function(n){if(!n[0])return; var neg=n[2]<0;
   itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
   if(n[1])itens+='<div class="m-nc-op">'+bcmsEsc(n[1])+'</div>';
   if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
   itens+='</div>';});
+ var nq=d.ncs.filter(function(n){return n[0];}).length;
+ h+='<div class="m-ncs-h">Notas de crédito da célula ('+nq+')</div>';
  h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
+ document.getElementById('modal-body').innerHTML=h;
+ var m=document.getElementById('modal');m.classList.add('open');m.setAttribute('aria-hidden','false');
+ var x=document.querySelector('.modal-x');if(x)x.focus();}
+function bcmsDay(row){var d=DAYDATA[row.getAttribute('data-day')];if(!d)return;
+ var h='<h3 id="modal-title">Movimentação de '+bcmsEsc(d.d)+'</h3>';
+ h+='<div class="m-kpis"><span>Nº de NC<b>'+d.n+'</b></span><span>Recebido<b class="col-pos">'+bcmsBRL(d.rec)+'</b></span><span>Reduções<b class="col-neg">'+bcmsBRL(d.red)+'</b></span><span class="ok">Líquido<b>'+bcmsBRL(d.liq)+'</b></span></div>';
+ h+='<div class="m-ncs-h">Notas de crédito do dia ('+d.ncs.length+')</div>';
+ var itens='';
+ d.ncs.forEach(function(n){var neg=n[3]<0;
+  itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+' <span class="pill-fonte">'+bcmsEsc(n[1])+'</span></span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[3])+'</span></div>';
+  if(n[2])itens+='<div class="m-nc-op">'+bcmsEsc(n[2])+'</div>';
+  if(n[4])itens+='<div class="m-nc-desc">'+bcmsEsc(n[4])+'</div>';
+  itens+='</div>';});
+ h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem NC neste dia.</p>')+'</div>';
  document.getElementById('modal-body').innerHTML=h;
  var m=document.getElementById('modal');m.classList.add('open');m.setAttribute('aria-hidden','false');
  var x=document.querySelector('.modal-x');if(x)x.focus();}
