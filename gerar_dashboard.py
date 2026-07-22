@@ -61,36 +61,58 @@ def baixar(file_id):
 # ---------------- ETL ----------------
 def etl(path):
     wb = openpyxl.load_workbook(path, data_only=True)
-    ws = wb["CRÉDITO DISP"] if "CRÉDITO DISP" in wb.sheetnames else wb.active
+    ws = None
+    for nm in wb.sheetnames:
+        if norm(nm).startswith("CREDITO DISP") or "CRÉDITO DISP" in nm:
+            ws = wb[nm]; break
+    if ws is None:
+        ws = wb.active
+    # LINHA do cabeçalho de métricas detectada dinamicamente (o export do TG varia entre linha 7 e 8)
+    hdr_row = None
+    for r in range(1, 16):
+        rowvals = {norm(ws.cell(r, c).value) for c in range(1, ws.max_column + 1)}
+        if "CREDITO DISPONIVEL" in rowvals or "PROVISAO RECEBIDA" in rowvals:
+            hdr_row = r; break
+    if not hdr_row:
+        raise SystemExit("Não encontrei o cabeçalho (PROVISAO RECEBIDA / CREDITO DISPONIVEL) — "
+                         "a fonte no Drive pode ter mudado de formato/relatório.")
     hdr = {}
     for c in range(1, ws.max_column + 1):
-        n = norm(ws.cell(HDR_ROW, c).value)
+        n = norm(ws.cell(hdr_row, c).value)
         if n and n not in hdr: hdr[n] = c
-    def col(name):
+    def col(name, req=True):
         c = hdr.get(name)
-        if not c: raise SystemExit(f"Layout mudou: coluna '{name}' não encontrada.")
+        if not c and req:
+            raise SystemExit(f"Coluna '{name}' não encontrada (aba '{ws.title}') — a fonte mudou de layout.")
         return c
-    C = dict(prov=col("PROVISAO RECEBIDA"), conc=col("PROVISAO CONCEDIDA"), cred=col("CREDITO DISPONIVEL"),
-             emp=col("DESPESAS EMPENHADAS"), liq=col("DESPESAS LIQUIDADAS"), pag=col("DESPESAS PAGAS"))
-    # período real do relatório (ex.: "JUL/2026") — vem da linha de cabeçalho, não da data de hoje
+    C = dict(prov=col("PROVISAO RECEBIDA"), cred=col("CREDITO DISPONIVEL"),
+             emp=col("DESPESAS EMPENHADAS"), liq=col("DESPESAS LIQUIDADAS"), pag=col("DESPESAS PAGAS"),
+             conc=col("PROVISAO CONCEDIDA", req=False))  # ausente em alguns relatórios (CRO usa DESTAQUE)
+    # primeira linha de dados: 1ª após o cabeçalho cujo col 3 (UG Executora) é um código numérico
+    data_row = None
+    for r in range(hdr_row + 1, min(hdr_row + 8, ws.max_row + 1)):
+        if norm(ws.cell(r, 3).value).replace("'", "").isdigit():
+            data_row = r; break
+    if not data_row:
+        data_row = hdr_row + 1
+    # período real do relatório (ex.: "JUL/2026")
     periodo = None
-    for r in (6, 5, 7):
+    for r in range(max(1, hdr_row - 2), hdr_row + 3):
         for c in range(1, ws.max_column + 1):
             v = str(ws.cell(r, c).value or "").strip().upper()
             if re.match(r"^[A-Z]{3}/\d{4}$", v):
-                periodo = v
-                break
+                periodo = v; break
         if periodo:
             break
     res = {}
     for cod, nome in ALVOS:
         res[cod] = dict(nome=nome, prov=0.0, conc=0.0, cred=0.0, emp=0.0, liq=0.0, pag=0.0,
                         n=0, por_acao={}, por_nd={}, nd_nome={}, linhas=[], celulas={})
-    for r in range(DATA_ROW, ws.max_row + 1):
+    for r in range(data_row, ws.max_row + 1):
         cod = norm(ws.cell(r, 3).value)
         if cod not in res: continue
         d = res[cod]
-        vals = {k: to_num(ws.cell(r, C[k]).value) for k in C}
+        vals = {k: (to_num(ws.cell(r, C[k]).value) if C[k] else 0.0) for k in C}
         for k in C: d[k] += vals[k]
         d["n"] += 1
         ncv = disp(ws.cell(r, 5).value)          # "" quando NC = não se aplica (linha de empenho)
@@ -131,6 +153,16 @@ def etl(path):
                 cred=vals["cred"], emp=vals["emp"], liq=vals["liq"], pag=vals["pag"]))
     for cod in res:
         res[cod]["linhas"].sort(key=lambda x: x["cred"], reverse=True)
+
+    # GUARD: se NENHUMA UASG do BCMS aparece, a fonte no Drive trocou de relatório.
+    # Falha claro (o site publicado anterior permanece no ar; nada de painel vazio/errado).
+    if sum(res[c]["n"] for c, _ in ALVOS) == 0:
+        ugs = sorted({norm(ws.cell(r, 3).value) for r in range(data_row, ws.max_row + 1)
+                      if norm(ws.cell(r, 3).value).replace("'", "").isdigit()})
+        raise SystemExit(
+            f"Nenhuma linha das UASGs {'/'.join(c for c, _ in ALVOS)} (BCMS) na aba '{ws.title}'. "
+            f"UGs presentes: {', '.join(ugs) or '(nenhuma)'}. A fonte no Drive parece ter mudado de "
+            f"relatório — aponte o link correto do 'CRÉDITO DISP' do BCMS (UASG 160329/167329).")
 
     # VALIDAÇÃO ANTI-FALHA: o Crédito Disponível do TG tem de fechar com
     # Provisão Recebida − Provisão Concedida − Empenhado (identidade contábil do SIAFI).
@@ -614,12 +646,77 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
                 f'<td class="num anchor">{esc(brl(tot_rec + tot_red))}</td></tr></tfoot>')
         return f'<div class="tbl-scroll"><table class="det"><thead><tr>{heads}</tr></thead><tbody>{body}</tbody>{foot}</table></div>'
 
+    # MÓDULO "Créditos em tela — resumo": o que são, valores e há quantos dias estão em tela (envelhecimento)
+    asof = max_date or datetime.date.today()
+    rec_por_cel = {}
+    for cod, _ in ALVOS:
+        for L in res[cod]["linhas"]:
+            if L["cred"] > 0 and L.get("dia"):
+                try:
+                    dd, mm, yy = L["dia"].split("/"); dt = datetime.date(int(yy), int(mm), int(dd))
+                except Exception:
+                    dt = None
+                if dt:
+                    rec_por_cel.setdefault((cod, L["acao"], L["pi"], L["nd"]), []).append((dt, L["cred"]))
+    def idade_celula(cod, c):
+        recs = sorted(rec_por_cel.get((cod, c["acao"], c["pi"], c["nd"]), []), reverse=True)
+        if not recs:
+            return None, None
+        acc, ref = 0.0, recs[0][0]
+        for dt, v in recs:
+            acc += v; ref = dt
+            if acc >= c["cred"] - 0.005:
+                break
+        return (asof - ref).days, ref
+    emtela = []
+    for cod, _ in ALVOS:
+        for c in celulas_pos(cod):
+            dias, ref = idade_celula(cod, c)
+            emtela.append({**c, "uasg": cod, "dias": dias, "ref": ref})
+    emtela.sort(key=lambda x: x["cred"], reverse=True)
+    tot_emtela = sum(c["cred"] for c in emtela)
+    idades = [c["dias"] for c in emtela if c["dias"] is not None]
+    idade_media = round(sum(idades) / len(idades)) if idades else 0
+    idade_max = max(idades) if idades else 0
+
+    def et_row(c):
+        aplic = c.get("nd_nome") or c.get("pi_nome") or ""
+        oque = f'{c["acao"]} · ND {c["nd"]}' + (f' — {aplic}' if aplic else '')
+        dias = c["dias"]
+        if dias is None:
+            dcls, dtxt, dsort = "", "—", -1
+        else:
+            dcls = "col-neg" if dias > 60 else ("col-warn" if dias > 30 else "")
+            dtxt = f'{dias} dia' + ('s' if dias != 1 else '')
+            dsort = dias
+        refd = c["ref"].strftime("%d/%m/%Y") if c["ref"] else "—"
+        cid = esc(c.get("cid", ""))
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Detalhar a célula" '
+                f'onclick="bcmsCel(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsCel(this)}}">'
+                f'<td><span class="pill-fonte">{esc(FONTE_CURTA[c["uasg"]])}</span></td>'
+                f'<td class="obj" title="{esc(oque)}">{esc(oque[:64])}</td>'
+                f'<td class="mono2">{esc(refd)}</td>'
+                f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}</td>'
+                f'<td class="num {dcls}" data-sort="{dsort}">{dtxt}<i class="chev" aria-hidden="true">›</i></td></tr>')
+    et_ths = _th("Fonte", False) + _th("O que é (Ação · ND)", False) + _th("Recebido em", False) + _th("Crédito Disponível", True) + _th("Dias em tela", True)
+    emtela_html = (
+        '<section class="sec"><div class="eyebrow">Créditos em tela — resumo</div>'
+        '<div class="et-head">'
+        f'<div class="et-kpi et-hero"><span>Crédito Disponível em tela</span><b class="num">{esc(brl(tot_emtela))}</b></div>'
+        f'<div class="et-kpi"><span>Células</span><b>{len(emtela)}</b></div>'
+        f'<div class="et-kpi"><span>Idade média</span><b>{idade_media} dias</b></div>'
+        f'<div class="et-kpi"><span>Mais antigo</span><b>{idade_max} dias</b></div>'
+        f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
+        '<p class="sec-nota">O que está disponível para empenhar, por célula (Ação · PI · ND): o que é, o valor e '
+        '<b>há quantos dias está em tela</b> (desde o recebimento que compõe o saldo). '
+        '<b>Clique numa linha</b> para detalhar. Cor dos dias: verde ≤30 · âmbar 31–60 · vermelho &gt;60.</p>'
+        f'<div class="tbl-scroll"><table class="det"><thead><tr>{et_ths}</tr></thead>'
+        f'<tbody>{"".join(et_row(c) for c in emtela)}</tbody></table></div></section>'
+    )
+
     resumo_html = (
-        '<div class="resumo-hero">'
-        f'<div class="rh-main"><span class="rh-l">Crédito Disponível consolidado · BCMS</span>'
-        f'<span class="rh-v num">{esc(brl(tot["cred"]))}</span></div>'
-        f'<div class="rh-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
-        f'<section class="sec"><div class="eyebrow">Movimentação de NC — {fmt_d(max_date)} (dia anterior)</div>'
+        emtela_html
+        + f'<section class="sec"><div class="eyebrow">Movimentação de NC — {fmt_d(max_date)} (dia anterior)</div>'
         f'<p class="sec-nota">Notas de crédito com lançamento em <b>{fmt_d(max_date)}</b> (último dia com movimento — dados com ~24h de defasagem): '
         f'<b>{len(daily)}</b> NC(s) · Recebido <b>{esc(brl(rec_d))}</b> · Reduções <b>{esc(brl(red_d))}</b> · Líquido <b>{esc(brl(rec_d + red_d))}</b>. '
         'Clique em uma NC para detalhá-la.</p>'
@@ -789,7 +886,15 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .rh-v{display:block;font-size:30px;font-weight:700;color:var(--success-strong);line-height:1.1;margin-top:3px}
 .rh-meta{font-size:12.5px;color:var(--ink-muted);text-align:right}
 .rh-delay{color:var(--warning-ink);font-weight:600}
-.col-pos{color:var(--success-strong)}.col-neg{color:var(--danger)}
+.col-pos{color:var(--success-strong)}.col-neg{color:var(--danger)}.col-warn{color:var(--warning-ink)}
+/* módulo créditos em tela */
+.et-head{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;margin-bottom:12px}
+.et-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 16px;display:flex;flex-direction:column;gap:2px;min-width:130px;box-shadow:var(--shadow)}
+.et-kpi span{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted)}
+.et-kpi b{font-size:19px;font-weight:700}
+.et-hero{background:var(--hero-soft);border-left:4px solid var(--success)}
+.et-hero b{font-size:24px;color:var(--success-strong)}
+.et-meta{margin-left:auto;align-self:center;font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.5}
 .m-kpis b.neg{color:var(--danger)}.m-kpis b.op{font-size:12px;font-weight:600;line-height:1.3}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px}
 /* topbar */
