@@ -1,6 +1,9 @@
 # Artefato de build (o site é gerado a cada execução do Actions)
 site/
 
+# Saídas geradas (planilhas .xlsx dos relatórios)
+relatorios/
+
 # Python
 __pycache__/
 *.pyc

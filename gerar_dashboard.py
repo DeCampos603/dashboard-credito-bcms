@@ -537,11 +537,13 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
             cid_seq[0] += 1
             cid = "c%d" % cid_seq[0]
             cid_map[key] = cid
-            ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"]] for L in lin_idx.get(key, [])),
-                        key=lambda x: -x[2])
+            ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
+                          for L in lin_idx.get(key, [])), key=lambda x: -x[2])
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
-                            "u": FONTE_CURTA.get(uasg, ""), "r": round(c["aloc"], 2),
-                            "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
+                            "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
+                            "acao": c["acao"], "pi": c["pi"], "pinome": c.get("pi_nome", ""),
+                            "nd": c["nd"], "ndnome": c.get("nd_nome", ""),
+                            "r": round(c["aloc"], 2), "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
                             "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2), "ncs": ncs}
         c["cid"] = cid
         return cid
@@ -1005,6 +1007,10 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 .modal-x:hover{color:var(--ink);border-color:var(--border-strong)}
 #modal-body h3{font-size:18px;font-weight:650;margin-bottom:2px;padding-right:36px}
 .m-sub{font-size:13px;color:var(--ink-muted);margin-bottom:14px}
+.m-ficha{display:flex;flex-wrap:wrap;gap:9px 18px;margin:2px 0 14px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px}
+.m-ficha span{display:flex;flex-direction:column;gap:1px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);min-width:110px}
+.m-ficha span.wide{flex-basis:100%}
+.m-ficha b{font-size:13px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0}
 .m-kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .m-kpis span{flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
 .m-kpis b{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -1084,14 +1090,21 @@ function bcmsEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){re
 function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−R$ ':'R$ ')+i+','+s[1];}
 function bcmsCel(row){var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
  var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
- var sub=(d.u?d.u+' · ':'')+(d.nome||'');
- if(sub.replace(/\s/g,''))h+='<p class="m-sub">'+bcmsEsc(sub)+'</p>';
+ var fonte=d.u==='OGU'?'OGU (Orçamento Geral da União)':(d.u==='FEx'?'FEx (Fundo do Exército)':(d.u||'—'));
+ h+='<div class="m-ficha">'
+   +'<span>UASG (Executora)<b>'+bcmsEsc(d.uasg||'—')+'</b></span>'
+   +'<span>Fonte<b>'+bcmsEsc(fonte)+'</b></span>'
+   +'<span>Ação Governo<b>'+bcmsEsc(d.acao||'—')+'</b></span>'
+   +'<span class="wide">PI (Plano Interno)<b>'+bcmsEsc(d.pi||'—')+(d.pinome?' — '+bcmsEsc(d.pinome):'')+'</b></span>'
+   +'<span class="wide">ND (Natureza de Despesa)<b>'+bcmsEsc(d.nd||'—')+(d.ndnome?' — '+bcmsEsc(d.ndnome):'')+'</b></span>'
+   +'</div>';
  h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span>Liquidado<b>'+bcmsBRL(d.l||0)+'</b></span><span>Pago<b>'+bcmsBRL(d.p||0)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
  h+='<p class="m-formula">Recebido (líq) − Empenhado = Crédito Disponível · Empenhado ≥ Liquidado ≥ Pago</p>';
  var itens='';
  d.ncs.forEach(function(n){if(!n[0])return; var neg=n[2]<0;
+  var meta=[]; if(n[4])meta.push('Emitente '+bcmsEsc(n[4])); if(n[1])meta.push(bcmsEsc(n[1])); if(n[5])meta.push('em '+bcmsEsc(n[5]));
   itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
-  if(n[1])itens+='<div class="m-nc-op">'+bcmsEsc(n[1])+'</div>';
+  if(meta.length)itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
   if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
   itens+='</div>';});
  var nq=d.ncs.filter(function(n){return n[0];}).length;
