@@ -19,12 +19,26 @@ Uso:
     python gerar_dashboard.py --local X.xlsx  # usa arquivo local (teste)
     python gerar_dashboard.py --date 2026-07-14  # força a data do snapshot (default: hoje)
 """
-import os, sys, json, argparse, datetime, urllib.request, tempfile, html, math, re
+import os, sys, json, argparse, datetime, urllib.request, tempfile, html, math, re, shutil
 import openpyxl
 
 HDR_ROW, DATA_ROW = 8, 9
-ALVOS = [("160329", "BCMS · OGU"), ("167329", "BCMS · Fundo do Exército")]
-FONTE_CURTA = {"160329": "OGU", "167329": "FEx"}
+# Manifesto das OMDS da Ba Ap Log — cada OM = par OGU (16xxxx) + FEx (167xxx).
+UNIDADES = [
+    {"sigla": "BCMS",      "nome": "Batalhão Central de Manutenção e Suprimento", "ogu": "160329", "fex": "167329", "logo": "BCMS.png",    "accent": "#DB2819", "key": "BCMS"},
+    {"sigla": "Ba Ap Log", "nome": "Base de Apoio Logístico do Exército",          "ogu": "160238", "fex": "167238", "logo": "BAAPLOG.png", "accent": "#D83030", "key": "BAAPLOG"},
+    {"sigla": "D C Mun",   "nome": "Depósito Central de Munição",                  "ogu": "160246", "fex": "167246", "logo": "DCMUN.png",   "accent": "#047CC0", "key": "DCMUN"},
+    {"sigla": "BMSA",      "nome": "BMSA",                                         "ogu": "160304", "fex": "167304", "logo": "BMSA.png",    "accent": "#DB2819", "key": "BMSA"},
+    {"sigla": "1º D Sup",  "nome": "1º Depósito de Suprimento",                    "ogu": "160307", "fex": "167307", "logo": "1DSUP.png",   "accent": "#DE2B30", "key": "DSUP1"},
+    {"sigla": "ECT",       "nome": "ECT",                                          "ogu": "160321", "fex": "167321", "logo": "Ect.png",     "accent": "#B33338", "key": "ECT"},
+]
+def _par(u):  # par de UASGs (OGU, FEx) de uma unidade, no formato (cod, label)
+    return [(u["ogu"], f'{u["sigla"]} · OGU'), (u["fex"], f'{u["sigla"]} · FEx')]
+# ALVOS = todas as 12 UASGs (a ETL processa tudo de uma vez)
+ALVOS = [p for u in UNIDADES for p in _par(u)]
+FONTE_CURTA = {}
+for _u in UNIDADES:
+    FONTE_CURTA[_u["ogu"]] = "OGU"; FONTE_CURTA[_u["fex"]] = "FEx"
 DEFAULT_FILE_ID = "1Jv546wpWQSFAlep3oLRAg29hVy86iJxJ"
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(HERE, "site")
@@ -477,7 +491,8 @@ def tabela_html(tid, celulas, com_fonte, ativo):
             f'<tbody>{"".join(body)}</tbody>{tfoot}</table></div></div>')
 
 # ---------------- página ----------------
-def gerar_html(res, hist, data_str, periodo=None, alertas=None):
+def conteudo_unidade(res, hist, data_str, periodo, u):
+    ALVOS = _par(u); sfx = u["key"]          # sombreia o global → tudo abaixo opera só nesta OM
     tot = {k: sum(res[c][k] for c, _ in ALVOS) for k in ("prov", "conc", "cred", "emp", "liq", "pag", "n")}
     ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
     posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
@@ -495,11 +510,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
     else:
         delta_html = '<div class="delta flat">1º dia de histórico</div>'
 
-    # alerta banner
-    banner = ""
-    if alertas:
-        itens = "".join(f"<li>{esc(a)}</li>" for a in alertas)
-        banner = f'<div class="banner" role="alert"><b>⚠ Verificação:</b><ul>{itens}</ul></div>'
+    banner = ""  # alertas tratados no shell (montar_pagina)
 
     # KPIs secundários
     kpis = (kpi_tile("Provisão Recebida", brl(tot["prov"]), "", "prov") +
@@ -535,7 +546,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
         cid = cid_map.get(key)
         if cid is None:
             cid_seq[0] += 1
-            cid = "c%d" % cid_seq[0]
+            cid = "%s_c%d" % (sfx, cid_seq[0])
             cid_map[key] = cid
             ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
                           for L in lin_idx.get(key, [])), key=lambda x: -x[2])
@@ -558,12 +569,13 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
         for c in celulas_pos(cod):
             cons_cel.append({**c, "uasg": cod, "cid": cid_for(cod, c)})
     cons_cel.sort(key=lambda x: x["cred"], reverse=True)
-    abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons\')" onkeydown="bcmsTabKey(event,this)">Consolidado</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-160329\')" onkeydown="bcmsTabKey(event,this)">160329 · OGU</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-167329\')" onkeydown="bcmsTabKey(event,this)">167329 · FEx</button>')
-    tabs = (tabela_html("tab-cons", cons_cel, True, True) +
-            tabela_html("tab-160329", celulas_pos("160329"), False, False) +
-            tabela_html("tab-167329", celulas_pos("167329"), False, False))
+    ogu_c, fex_c = ALVOS[0][0], ALVOS[1][0]
+    abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons-{sfx}\')" onkeydown="bcmsTabKey(event,this)">Consolidado</button>'
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{ogu_c}\')" onkeydown="bcmsTabKey(event,this)">{ogu_c} · OGU</button>'
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{fex_c}\')" onkeydown="bcmsTabKey(event,this)">{fex_c} · FEx</button>')
+    tabs = (tabela_html(f"tab-cons-{sfx}", cons_cel, True, True) +
+            tabela_html(f"tab-{ogu_c}", celulas_pos(ogu_c), False, False) +
+            tabela_html(f"tab-{fex_c}", celulas_pos(fex_c), False, False))
 
     # ===== ABA RESUMO: movimentação de NC do dia + resumo semanal =====
     movs = []
@@ -579,7 +591,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
             movs.append({**L, "uasg": cod, "dt": dt})
     ncdata = {}
     for i, m in enumerate(movs, 1):
-        nid = "n%d" % i
+        nid = "%s_n%d" % (sfx, i)
         m["nid"] = nid
         ncdata[nid] = {"nc": m["nc"], "u": FONTE_CURTA.get(m["uasg"], ""), "acao": m["acao"],
                        "pi": m["pi"], "nd": m["nd"], "ndn": m.get("nd_desc", ""), "op": m["op"],
@@ -626,7 +638,7 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
         rec = sum(m["cred"] for m in dm if m["cred"] > 0)
         red = sum(m["cred"] for m in dm if m["cred"] < 0)
         tot_rec += rec; tot_red += red; n_week += len(dm)
-        dk = "d%d" % idx
+        dk = "%s_d%d" % (sfx, idx)
         daydata[dk] = {"d": fmt_d(d), "n": len(dm), "rec": round(rec, 2), "red": round(red, 2), "liq": round(rec + red, 2),
                        "ncs": sorted([[m["nc"], FONTE_CURTA[m["uasg"]], m["op"], round(m["cred"], 2), m["obj"]] for m in dm],
                                      key=lambda x: -x[3])}
@@ -722,60 +734,30 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
         f'<p class="sec-nota">Notas de crédito com lançamento em <b>{fmt_d(max_date)}</b> (último dia com movimento — dados com ~24h de defasagem): '
         f'<b>{len(daily)}</b> NC(s) · Recebido <b>{esc(brl(rec_d))}</b> · Reduções <b>{esc(brl(red_d))}</b> · Líquido <b>{esc(brl(rec_d + red_d))}</b>. '
         'Clique em uma NC para detalhá-la.</p>'
-        + mov_tabela("mov-dia", daily) + '</section>'
+        + mov_tabela(f"mov-dia-{sfx}", daily) + '</section>'
         '<section class="sec"><div class="eyebrow">Resumo semanal — últimos 7 dias com movimentação</div>'
         '<p class="sec-nota">Movimentação de NC por dia: recebimentos (+), reduções/anulações (−) e líquido. <b>Clique em um dia</b> para ver as NCs daquele dia (e clique numa NC para a descrição completa).</p>'
         + semana_tabela(week_rows) + '</section>'
     )
 
-    css = CSS
-    js = JS
-    celdata_json = json.dumps(celdata, ensure_ascii=False).replace("</", "<\\/")
-    ncdata_json = json.dumps(ncdata, ensure_ascii=False).replace("</", "<\\/")
-    daydata_json = json.dumps(daydata, ensure_ascii=False).replace("</", "<\\/")
-    brasao = brasao_html()
     hero_eq = (f'<span class="eq-t eq-prov">{esc(brl(tot["prov"]))}</span>'
                f'<i class="eq-op">−</i>'
                f'<span class="eq-t eq-emp">{esc(brl(tot["emp"]))}</span>'
                f'<i class="eq-op">=</i>'
                f'<span class="eq-t eq-disp">{esc(brl(tot["cred"]))}</span>')
-    return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<title>Crédito Disponível — BCMS</title><style>{css}</style></head>
-<body>
-<div class="bcms-bar" aria-hidden="true"></div>
-<header class="topbar">
-  <div class="brand">
-    {brasao}
-    <div><h1>Crédito Disponível — BCMS</h1>
-    <p class="subtitle">Batalhão Central de Manutenção e Suprimento · Tesouro Gerencial / SIAFI · UASGs 160329 (OGU) e 167329 (Fundo do Exército)</p></div>
-  </div>
-  <div class="topbar-r">
-    <div class="selo-wrap"><span class="selo">Posição {esc(posicao)}</span><span class="selo-delay">⏱ dados com ~24h de defasagem</span></div>
-    <button class="theme" id="themeBtn" aria-pressed="false" aria-label="Alternar tema claro/escuro" onclick="bcmsTheme()">
-      <svg viewBox="0 0 24 24" class="ic-sun" aria-hidden="true"><circle cx="12" cy="12" r="4.5" style="fill:currentColor"/><g style="stroke:currentColor;stroke-width:1.6"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/></g></svg>
-      <svg viewBox="0 0 24 24" class="ic-moon" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z" style="fill:currentColor"/></svg>
-    </button>
-  </div>
-</header>
-
-<main class="wrap">
-  {banner}
-
+    disp = "" if (u is UNIDADES[0]) else ' style="display:none"'
+    frag = f"""<section class="unidade" data-key="{sfx}" data-sigla="{esc(u['sigla'])}"{disp}>
   <div class="toptabs" role="tablist" aria-label="Visões do painel">
     <button class="toptab on" role="tab" aria-selected="true" onclick="bcmsView(this,'resumo')">Resumo</button>
     <button class="toptab" role="tab" aria-selected="false" onclick="bcmsView(this,'completo')">Detalhamento completo</button>
   </div>
-
-  <div id="view-resumo">
+  <div class="view-resumo">
   {resumo_html}
   </div>
-
-  <div id="view-completo" style="display:none">
+  <div class="view-completo" style="display:none">
   <section class="hero">
     <div class="hero-l">
-      <div class="eyebrow">Crédito Disponível · Consolidado BCMS</div>
+      <div class="eyebrow">Crédito Disponível · Consolidado {esc(u['sigla'])}</div>
       <div class="hero-num num">{esc(brl(tot["cred"]))}</div>
       <div class="hero-eq">{hero_eq}</div>
       <div class="hero-eq-lbl"><span>Provisão Recebida</span><span>Empenhado</span><span>Disponível</span></div>
@@ -820,22 +802,76 @@ def gerar_html(res, hist, data_str, periodo=None, alertas=None):
     {tabs}
   </section>
   </div>
-</main>
+</section>"""
+    return frag, celdata, ncdata, daydata
 
+
+# ---------------- shell da página (multi-OMDS) ----------------
+def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
+    frags, CEL, NCD, DAY = [], {}, {}, {}
+    for u in UNIDADES:
+        hist_u = [{"data": h.get("data"),
+                   "total": {"cred": round(h.get(u["ogu"], {}).get("cred", 0.0)
+                                           + h.get(u["fex"], {}).get("cred", 0.0), 2)}}
+                  for h in hist]
+        frag, cel, ncd, day = conteudo_unidade(res, hist_u, data_str, periodo, u)
+        frags.append(frag); CEL.update(cel); NCD.update(ncd); DAY.update(day)
+    banner = ""
+    if alertas:
+        itens = "".join(f"<li>{esc(a)}</li>" for a in alertas)
+        banner = f'<div class="banner" role="alert"><b>⚠ Verificação:</b><ul>{itens}</ul></div>'
+    omds = "".join(
+        f'<button class="omds{" on" if i == 0 else ""}" data-key="{u["key"]}" aria-current="{"true" if i == 0 else "false"}" '
+        f'title="{esc(u["nome"])}" onclick="trocaOMDS(this)">'
+        f'<img src="assets/logos/{u["logo"]}" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        f'<span>{esc(u["sigla"])}</span></button>'
+        for i, u in enumerate(UNIDADES))
+    ujs = json.dumps({u["key"]: {"sigla": u["sigla"], "nome": u["nome"], "ogu": u["ogu"], "fex": u["fex"],
+                                 "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
+    u0 = UNIDADES[0]
+    posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
+    ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
+    celdata_json = json.dumps(CEL, ensure_ascii=False).replace("</", "<\\/")
+    ncdata_json = json.dumps(NCD, ensure_ascii=False).replace("</", "<\\/")
+    daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
+    return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Crédito Disponível — OMDS Ba Ap Log Ex</title><style>{CSS}</style></head>
+<body>
+<div class="bcms-bar" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="brand">
+    <img class="brasao" id="emblema" src="assets/logos/{u0['logo']}" alt="Brasão {esc(u0['sigla'])}">
+    <div><h1 id="uTitulo">Crédito Disponível — {esc(u0['sigla'])}</h1>
+    <p class="subtitle"><span id="uNome">{esc(u0['nome'])}</span> · Tesouro Gerencial / SIAFI · <span id="uUasg">UASGs {u0['ogu']} (OGU) e {u0['fex']} (FEx)</span></p></div>
+  </div>
+  <div class="topbar-r">
+    <div class="selo-wrap"><span class="selo">Posição {esc(posicao)}</span><span class="selo-delay">⏱ dados com ~24h de defasagem</span></div>
+    <button class="theme" id="themeBtn" aria-pressed="false" aria-label="Alternar tema claro/escuro" onclick="bcmsTheme()">
+      <svg viewBox="0 0 24 24" class="ic-sun" aria-hidden="true"><circle cx="12" cy="12" r="4.5" style="fill:currentColor"/><g style="stroke:currentColor;stroke-width:1.6"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/></g></svg>
+      <svg viewBox="0 0 24 24" class="ic-moon" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z" style="fill:currentColor"/></svg>
+    </button>
+  </div>
+</header>
+<nav class="omds-nav" aria-label="Trocar de organização militar"><div class="omds-nav-in">{omds}</div></nav>
+<main class="wrap">
+  {banner}
+  {"".join(frags)}
+</main>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true" onclick="if(event.target===this)bcmsCelClose()">
   <div class="modal-panel">
     <button class="modal-x" aria-label="Fechar" onclick="bcmsCelClose()">✕</button>
     <div id="modal-body"></div>
   </div>
 </div>
-
 <footer class="rodape">
-  <p class="rodape-brand">⚙ BCMS · Batalhão Central de Manutenção e Suprimento — Exército Brasileiro</p>
-  <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo não empenhado "em tela" do Tesouro Gerencial). O detalhe é o <b>saldo líquido por célula orçamentária</b> (Ação · PI · ND): descentralizações, alterações de ND, detalhamentos, anulações e empenho são compensados dentro de cada célula, de modo que a alteração de ND <b>não é somada</b> à NC original. A soma das células reconcilia com o total consolidado.</p>
+  <p class="rodape-brand">⚙ Comando Ba Ap Log Ex · OMDS — Exército Brasileiro</p>
+  <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo não empenhado "em tela" do Tesouro Gerencial). O detalhe é o <b>saldo líquido por célula orçamentária</b> (Ação · PI · ND). A soma das células reconcilia com o total consolidado de cada OM.</p>
   <p>Fonte: CRÉDITO DISP.xlsx (Google Drive) · <b>⏱ Os dados do Tesouro Gerencial têm defasagem de aproximadamente 24 horas.</b> · Painel gerado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};</script>
-<script>{js}</script>
+<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var UNIDADES={ujs};</script>
+<script>{JS}</script>
 </body></html>"""
 
 # ============ CSS / JS (constantes) ============
@@ -902,8 +938,17 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 /* topbar */
 .topbar{max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:12px}
-.brasao{width:44px;height:auto;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
-.bcms-bar{height:5px;background:linear-gradient(to bottom,#CE2B2B 50%,#1E6FD0 50%)}
+.brasao{width:46px;height:46px;object-fit:contain;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
+.bcms-bar{height:5px;background:linear-gradient(to bottom,var(--accent,#CE2B2B) 50%,#1E6FD0 50%)}
+/* barra OMDS (troca de organização) */
+.omds-nav{border-bottom:1px solid var(--border);background:var(--surface)}
+.omds-nav-in{max-width:1200px;margin:0 auto;padding:9px 24px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.omds{flex:none;display:flex;align-items:center;gap:8px;padding:6px 13px 6px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);color:var(--ink-muted);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
+.omds img{width:24px;height:24px;object-fit:contain;flex:none}
+.omds:hover{border-color:var(--border-strong);color:var(--ink)}
+.omds:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.omds.on{color:#fff;background:var(--accent,#CE2B2B);border-color:var(--accent,#CE2B2B);box-shadow:var(--shadow)}
+.omds.on img{filter:drop-shadow(0 0 1px rgba(255,255,255,.6))}
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
 .subtitle{font-size:12.5px;color:var(--ink-muted);margin-top:2px}
 .topbar-r{display:flex;align-items:center;gap:10px}
@@ -1052,17 +1097,32 @@ function bcmsTab(btn,id){
  var list=btn.parentNode.querySelectorAll('.tab');
  list.forEach(function(b){b.classList.remove('on');b.setAttribute('aria-selected','false');b.tabIndex=-1;});
  btn.classList.add('on');btn.setAttribute('aria-selected','true');btn.tabIndex=0;
- document.querySelectorAll('.tabpanel').forEach(function(p){p.style.display='none';});
+ (btn.closest('.unidade')||document).querySelectorAll('.tabpanel').forEach(function(p){p.style.display='none';});
  document.getElementById(id).style.display='block';}
 function bcmsTabKey(e,btn){var t=Array.prototype.slice.call(btn.parentNode.querySelectorAll('.tab'));
  var i=t.indexOf(btn);if(e.key==='ArrowRight'){e.preventDefault();t[(i+1)%t.length].focus();t[(i+1)%t.length].click();}
  else if(e.key==='ArrowLeft'){e.preventDefault();t[(i-1+t.length)%t.length].focus();t[(i-1+t.length)%t.length].click();}}
 function bcmsView(btn,which){
+ var m=btn.closest('.unidade')||document;
  btn.parentNode.querySelectorAll('.toptab').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-selected','false');});
  btn.classList.add('on');btn.setAttribute('aria-selected','true');
- document.getElementById('view-resumo').style.display=which==='resumo'?'':'none';
- document.getElementById('view-completo').style.display=which==='completo'?'':'none';
+ var vr=m.querySelector('.view-resumo');if(vr)vr.style.display=which==='resumo'?'':'none';
+ var vc=m.querySelector('.view-completo');if(vc)vc.style.display=which==='completo'?'':'none';
  window.scrollTo(0,0);}
+function trocaOMDS(btn){
+ var key=btn.getAttribute('data-key');var u=UNIDADES[key];if(!u)return;
+ document.querySelectorAll('.omds-nav .omds').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-current','false');});
+ btn.classList.add('on');btn.setAttribute('aria-current','true');
+ document.querySelectorAll('.unidade').forEach(function(s){s.style.display=(s.getAttribute('data-key')===key)?'':'none';});
+ document.documentElement.style.setProperty('--accent',u.accent);
+ var em=document.getElementById('emblema');if(em){em.src='assets/logos/'+u.logo;em.alt='Brasão '+u.sigla;}
+ var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — '+u.sigla;
+ var n=document.getElementById('uNome');if(n)n.textContent=u.nome;
+ var uu=document.getElementById('uUasg');if(uu)uu.textContent='UASGs '+u.ogu+' (OGU) e '+u.fex+' (FEx)';
+ try{document.title='Crédito Disponível — '+u.sigla;}catch(e){}
+ try{localStorage.setItem('bcms-omds',key);}catch(e){}
+ window.scrollTo(0,0);}
+(function(){try{var k=localStorage.getItem('bcms-omds');if(k){var b=document.querySelector('.omds-nav .omds[data-key="'+k+'"]');if(b&&!b.classList.contains('on'))b.click();}}catch(e){}})();
 function bcmsSearch(inp,tid){var q=inp.value.toLowerCase();var tb=document.getElementById(tid).querySelector('tbody');
  var rows=tb.querySelectorAll('tr');var n=0;
  rows.forEach(function(r){var ok=r.textContent.toLowerCase().indexOf(q)>-1;r.style.display=ok?'':'none';if(ok)n++;});
@@ -1146,10 +1206,21 @@ def main():
     for a in alertas:
         print("[ALERTA]", a)
     hist = atualizar_historico(res, data_str)
-    html_out = gerar_html(res, hist, data_str, periodo, alertas)
+    html_out = montar_pagina(res, hist, data_str, periodo, alertas)
 
     os.makedirs(SITE, exist_ok=True)
     os.makedirs(os.path.join(SITE, "data"), exist_ok=True)
+    # copia os brasões das OMDS para dentro do site (referenciados por assets/logos/*.png)
+    src_logos = os.path.join(HERE, "assets", "logos")
+    dst_logos = os.path.join(SITE, "assets", "logos")
+    os.makedirs(dst_logos, exist_ok=True)
+    if os.path.isdir(src_logos):
+        for fn in os.listdir(src_logos):
+            if fn.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".svg")):
+                try:
+                    shutil.copyfile(os.path.join(src_logos, fn), os.path.join(dst_logos, fn))
+                except Exception as e:
+                    print("[AVISO] não copiei", fn, ":", e)
     with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as f:
         f.write(html_out)
     with open(os.path.join(SITE, "data", "history.json"), "w", encoding="utf-8") as f:

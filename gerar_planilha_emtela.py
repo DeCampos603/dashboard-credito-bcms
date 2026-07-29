@@ -14,15 +14,48 @@ Uso:
     py -3 gerar_planilha_emtela.py                 # baixa do Drive
     py -3 gerar_planilha_emtela.py --local X.xlsx  # arquivo local
 """
-import os, argparse, datetime
+import os, argparse, datetime, json, re
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
-from gerar_dashboard import etl, baixar, ALVOS, FONTE_CURTA, DEFAULT_FILE_ID, brl
+from gerar_dashboard import etl, baixar, UNIDADES, _par, FONTE_CURTA, DEFAULT_FILE_ID, brl
+
+# Esta planilha é específica do BCMS (UASG 160329 e 167329), conforme especificado.
+# (No dashboard, ALVOS cobre as 6 OMDS; aqui restringimos ao BCMS.)
+ALVOS = _par(UNIDADES[0])
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUTDIR = os.path.join(HERE, "relatorios")
 OUT = os.path.join(OUTDIR, "CREDITOS_EM_TELA_BCMS.xlsx")
+RESUMOS_PATH = os.path.join(HERE, "data", "resumos_nc.json")
+
+# Cache de resumos (finalidade + prazo) por número de NC — mantido à parte; NCs novas são reportadas.
+try:
+    with open(RESUMOS_PATH, encoding="utf-8") as _f:
+        RESUMOS = json.load(_f)
+except Exception:
+    RESUMOS = {}
+
+def extrai_prazo(obj):
+    """Fallback p/ NCs sem resumo: tenta extrair o prazo de empenho do texto."""
+    o = (obj or "").upper()
+    if re.search(r"IMEDIAT|EMPH?\s*IMTO|EMP\s*IMTO", o):
+        return "Imediato"
+    m = re.search(r"(?:EMPENH\w*|EMPH?)\s*AT[EÉ]\s*:?\s*(\d{1,2}\s*[/ ]?\s*[A-Z]{3,4}\s*[/ ]?\s*\d{2,4}|\d{1,2}/\d{1,2}/\d{2,4})", o)
+    if m:
+        return re.sub(r"\s+", "", m.group(1))
+    m = re.search(r"PRAZO\s*(?:PARA|DE)?\s*EMP\w*\s*:?\s*(\d+\s*DIAS[^.\-]*)", o)
+    if m:
+        return m.group(1).strip().title()
+    return "—"
+
+def resumir(nc, obj):
+    r = RESUMOS.get(nc)
+    if r:
+        return r.get("finalidade", ""), r.get("prazo", "—")
+    fin = (obj or "").strip()
+    fin = (fin[:70] + "…") if len(fin) > 72 else fin
+    return "(resumir) " + fin, extrai_prazo(obj)
 
 def parse_dia(s):
     try:
@@ -53,14 +86,16 @@ def build_rows(res, asof):
                 val = min(L["cred"], restante)
                 restante -= val
                 dt = parse_dia(L["dia"])
+                fin, prz = resumir(L["nc"], L["obj"])
                 rows.append(dict(uasg=cod, uasg_lbl=uasg_lbl, pi_ext=pi_ext, acao=cl["acao"], pi=cl["pi"],
                                  nd=cl["nd"], nd_nome=cl.get("nd_nome", ""), nc=L["nc"], obj=L["obj"],
-                                 op=L["op"], data=L["dia"], dt=dt,
+                                 op=L["op"], data=L["dia"], dt=dt, finalidade=fin, prazo=prz,
                                  dias=((asof - dt).days if dt else None), valor=val))
             if restante > 0.005:  # saldo sem NC datada — não perder o valor
                 rows.append(dict(uasg=cod, uasg_lbl=uasg_lbl, pi_ext=pi_ext, acao=cl["acao"], pi=cl["pi"],
                                  nd=cl["nd"], nd_nome=cl.get("nd_nome", ""), nc="(sem NC datada)",
-                                 obj="(saldo sem NC datada)", op="", data="", dt=None, dias=None, valor=restante))
+                                 obj="(saldo sem NC datada)", op="", data="", dt=None,
+                                 finalidade="(saldo sem NC datada)", prazo="—", dias=None, valor=restante))
     rows.sort(key=lambda r: (r["dias"] if r["dias"] is not None else -1), reverse=True)
     return rows
 
@@ -87,9 +122,10 @@ AMB = Font(name="Calibri", size=10, bold=True, color="BF8F00")
 VER = Font(name="Calibri", size=10, color="375623")
 
 COLS = [("UASG", "uasg_lbl", 15, al_c),
-        ("PI (por extenso)", "pi_ext", 34, al_w),
-        ("Descrição da NC", "obj", 74, al_w),
-        ("Valor (R$)", "valor", 17, al_r),
+        ("PI (por extenso)", "pi_ext", 30, al_w),
+        ("Finalidade", "finalidade", 54, al_w),
+        ("Prazo p/ empenhar", "prazo", 16, al_c),
+        ("Valor (R$)", "valor", 15, al_r),
         ("Dias em tela", "dias", 12, al_c)]
 
 def gerar(res, periodo, rows):
@@ -167,6 +203,12 @@ def main():
     todas = [d for d in todas if d]
     asof = max(todas) if todas else datetime.date.today()
     rows = build_rows(res, asof)
+    faltando = sorted({r["nc"] for r in rows if r["nc"] and not str(r["nc"]).startswith("(") and r["nc"] not in RESUMOS})
+    if faltando:
+        print(f"[RESUMO] {len(faltando)} NC(s) SEM resumo no cache (finalidade provisória — resumir e adicionar em data/resumos_nc.json):")
+        for nc in faltando:
+            obj = next((L["obj"] for cod, _ in ALVOS for L in res[cod]["linhas"] if L["nc"] == nc), "")
+            print(f"   - {nc}: {obj[:110]}")
     total, media, antigo = gerar(res, periodo, rows)
     print(f"OK -> {OUT}")
     print(f"{len(rows)} NCs | Total em tela {brl(total)} | idade média {media}d | mais antigo {antigo}d | asof {asof}")
