@@ -662,7 +662,8 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 f'<td class="num anchor">{esc(brl(tot_rec + tot_red))}</td></tr></tfoot>')
         return f'<div class="tbl-scroll"><table class="det"><thead><tr>{heads}</tr></thead><tbody>{body}</tbody>{foot}</table></div>'
 
-    # MÓDULO "Créditos em tela — resumo": o que são, valores e há quantos dias estão em tela (envelhecimento)
+    # MÓDULO "Créditos em tela — por Nota de Crédito (NC)":
+    # Cada linha representa uma Nota de Crédito real que compõe o saldo disponível (atribuição LIFO por célula).
     asof = max_date or datetime.date.today()
     rec_por_cel = {}
     for cod, _ in ALVOS:
@@ -673,31 +674,68 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 except Exception:
                     dt = None
                 if dt:
-                    rec_por_cel.setdefault((cod, L["acao"], L["pi"], L["nd"]), []).append((dt, L["cred"]))
-    def idade_celula(cod, c):
-        recs = sorted(rec_por_cel.get((cod, c["acao"], c["pi"], c["nd"]), []), reverse=True)
-        if not recs:
-            return None, None
-        acc, ref = 0.0, recs[0][0]
-        for dt, v in recs:
-            acc += v; ref = dt
-            if acc >= c["cred"] - 0.005:
-                break
-        return (asof - ref).days, ref
-    emtela = []
+                    rec_por_cel.setdefault((cod, L["acao"], L["pi"], L["nd"]), []).append({**L, "dt": dt})
+
+    emtela_ncs = []
     for cod, _ in ALVOS:
-        for c in celulas_pos(cod):
-            dias, ref = idade_celula(cod, c)
-            emtela.append({**c, "uasg": cod, "dias": dias, "ref": ref})
-    emtela.sort(key=lambda x: x["cred"], reverse=True)
-    tot_emtela = sum(c["cred"] for c in emtela)
-    idades = [c["dias"] for c in emtela if c["dias"] is not None]
+        for cl in celulas_pos(cod):
+            recs = sorted(rec_por_cel.get((cod, cl["acao"], cl["pi"], cl["nd"]), []),
+                          key=lambda L: L["dt"], reverse=True)
+            restante = cl["cred"]
+            for L in recs:
+                if restante <= 0.005:
+                    break
+                val_nc = min(L["cred"], restante)
+                restante -= val_nc
+                dt = L["dt"]
+                dias = (asof - dt).days if dt else None
+                emtela_ncs.append({
+                    "uasg": cod,
+                    "fonte": FONTE_CURTA.get(cod, ""),
+                    "nc": L.get("nc") or "(sem número)",
+                    "acao": cl["acao"],
+                    "pi": cl["pi"],
+                    "pi_nome": cl.get("pi_nome", ""),
+                    "nd": cl["nd"],
+                    "nd_nome": cl.get("nd_nome", ""),
+                    "obj": L.get("obj", "") or "(sem descrição)",
+                    "op": L.get("op", ""),
+                    "emit": L.get("emit", ""),
+                    "dia": L.get("dia", ""),
+                    "dt": dt,
+                    "dias": dias,
+                    "cred": val_nc,
+                    "cid": cl.get("cid", "")
+                })
+            if restante > 0.005:
+                emtela_ncs.append({
+                    "uasg": cod,
+                    "fonte": FONTE_CURTA.get(cod, ""),
+                    "nc": "(Saldo em tela)",
+                    "acao": cl["acao"],
+                    "pi": cl["pi"],
+                    "pi_nome": cl.get("pi_nome", ""),
+                    "nd": cl["nd"],
+                    "nd_nome": cl.get("nd_nome", ""),
+                    "obj": f"Saldo remanescente em tela da célula {cl['acao']} · PI {cl['pi']} · ND {cl['nd']}",
+                    "op": "SALDO REMANESCENTE",
+                    "emit": "",
+                    "dia": "",
+                    "dt": None,
+                    "dias": None,
+                    "cred": restante,
+                    "cid": cl.get("cid", "")
+                })
+
+    emtela_ncs.sort(key=lambda x: (x["dias"] if x["dias"] is not None else -1, x["cred"]), reverse=True)
+    tot_emtela = sum(c["cred"] for c in emtela_ncs)
+    idades = [c["dias"] for c in emtela_ncs if c["dias"] is not None]
     idade_media = round(sum(idades) / len(idades)) if idades else 0
     idade_max = max(idades) if idades else 0
 
     def et_row(c):
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
-        oque = f'{c["acao"]} · ND {c["nd"]}' + (f' — {aplic}' if aplic else '')
+        acao_nd = f'{c["acao"]} · {c["nd"]}'
         dias = c["dias"]
         if dias is None:
             dcls, dtxt, dsort = "", "—", -1
@@ -705,30 +743,49 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
             dcls = "col-neg" if dias > 60 else ("col-warn" if dias > 30 else "")
             dtxt = f'{dias} dia' + ('s' if dias != 1 else '')
             dsort = dias
-        refd = c["ref"].strftime("%d/%m/%Y") if c["ref"] else "—"
+        refd = c["dt"].strftime("%d/%m/%Y") if c["dt"] else "—"
         cid = esc(c.get("cid", ""))
-        return (f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Detalhar a célula" '
+        desc_completa = esc(c.get("obj", ""))
+        desc_resumo = desc_completa[:75] + ("…" if len(desc_completa) > 75 else "")
+        nc_lbl = esc(c["nc"])
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Clique para detalhar a célula / notas de crédito" '
                 f'onclick="bcmsCel(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsCel(this)}}">'
-                f'<td><span class="pill-fonte">{esc(FONTE_CURTA[c["uasg"]])}</span></td>'
-                f'<td class="obj" title="{esc(oque)}">{esc(oque[:64])}</td>'
+                f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
+                f'<td class="mono2" style="font-weight:700">{nc_lbl}</td>'
+                f'<td class="mono2">{esc(acao_nd)}</td>'
+                f'<td class="obj" title="{desc_completa}" data-full-desc="{desc_completa}">{desc_resumo}</td>'
                 f'<td class="mono2">{esc(refd)}</td>'
                 f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}</td>'
                 f'<td class="num {dcls}" data-sort="{dsort}">{dtxt}<i class="chev" aria-hidden="true">›</i></td></tr>')
-    et_ths = _th("Fonte", False) + _th("O que é (Ação · ND)", False) + _th("Recebido em", False) + _th("Crédito Disponível", True) + _th("Dias em tela", True)
+
+    et_ths = (
+        _th("Fonte", False) +
+        _th("Nota de Crédito (NC)", False) +
+        _th("Ação · ND", False) +
+        _th("Descrição Completa da NC", False) +
+        _th("Recebido em", False) +
+        _th("Crédito em Tela", True) +
+        _th("Dias em Tela", True)
+    )
+
     emtela_html = (
-        '<section class="sec"><div class="eyebrow">Créditos em tela — resumo</div>'
+        '<section class="sec"><div class="eyebrow">Créditos em tela — por Nota de Crédito (NC)</div>'
         '<div class="et-head">'
         f'<div class="et-kpi et-hero"><span>Crédito Disponível em tela</span><b class="num">{esc(brl(tot_emtela))}</b></div>'
-        f'<div class="et-kpi"><span>Células</span><b>{len(emtela)}</b></div>'
+        f'<div class="et-kpi"><span>Notas de Crédito</span><b>{len(emtela_ncs)}</b></div>'
         f'<div class="et-kpi"><span>Idade média</span><b>{idade_media} dias</b></div>'
         f'<div class="et-kpi"><span>Mais antigo</span><b>{idade_max} dias</b></div>'
-        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_{sfx}\')" title="Baixar relação de créditos em tela em planilha formatada para Excel"><span class="btn-excel-ic">📥</span> Baixar em Excel</button></div>'
+        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📥</span> Baixar Relatório NC em Excel</button></div>'
         f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
-        '<p class="sec-nota">O que está disponível para empenhar, por célula (Ação · PI · ND): o que é, o valor e '
-        '<b>há quantos dias está em tela</b> (desde o recebimento que compõe o saldo). '
-        '<b>Clique numa linha</b> para detalhar. Cor dos dias: verde ≤30 · âmbar 31–60 · vermelho &gt;60.</p>'
+        '<p class="sec-nota">Relação dos <b>créditos disponíveis por Nota de Crédito (NC)</b> com descrição completa do objeto e <b>dias em tela</b> (desde o lançamento da NC). '
+        '<b>Clique em uma linha</b> para abrir a ficha completa. Cor dos dias: verde ≤30 · âmbar 31–60 · vermelho &gt;60.</p>'
+        f'<div class="tbl-tools"><label class="visually-hidden" for="q-tab-emtela-{sfx}">Buscar</label>'
+        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="bcmsSearch(this,\'tab-emtela-{sfx}\')">'
+        f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
+        f'<span class="tbl-count" id="cnt-tab-emtela-{sfx}" data-unit="NC(s) em tela" aria-live="polite">{len(emtela_ncs)} NC(s) em tela</span></div>'
         f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det"><thead><tr>{et_ths}</tr></thead>'
-        f'<tbody>{"".join(et_row(c) for c in emtela)}</tbody></table></div></section>'
+        f'<tbody>{"".join(et_row(c) for c in emtela_ncs)}</tbody>'
+        f'<tfoot><tr><td colspan="5">TOTAL · {len(emtela_ncs)} Nota(s) de Crédito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>—</td></tr></tfoot></table></div></section>'
     )
 
     resumo_html = (
@@ -1506,17 +1563,42 @@ function bcmsToast(msg){
 function bcmsExportTable(btn,tid,filename){
  var container=document.getElementById(tid);if(!container)return;
  var table=container.tagName==='TABLE'?container:container.querySelector('table');if(!table)return;
- filename=(filename||'exportacao_credito')+'_'+(new Date().toISOString().slice(0,10));
- var ths=table.querySelectorAll('thead th');var headers=[];
- ths.forEach(function(th){var txt=th.textContent.replace('▲','').replace('▼','').trim();if(txt&&txt!=='Ação'&&txt!=='AÇÃO')headers.push(txt);});
+ filename=(filename||'creditos_em_tela')+'_'+(new Date().toISOString().slice(0,10));
+ var ths=table.querySelectorAll('thead th');var headers=[];var colTypes=[];
+ ths.forEach(function(th){
+  var txt=th.textContent.replace('▲','').replace('▼','').trim();
+  if(txt&&txt!=='Ação'&&txt!=='AÇÃO'){
+   headers.push(txt);
+   var u=txt.toUpperCase();
+   if(u.indexOf('DIA')>-1||u.indexOf('CÉLULA')>-1||u.indexOf('CELULA')>-1||u.indexOf('Nº')>-1||u.indexOf('POS')>-1){colTypes.push('Integer');}
+   else if(u.indexOf('%')>-1||u.indexOf('TAXA')>-1){colTypes.push('Percent');}
+   else if(u.indexOf('R$')>-1||u.indexOf('RECEBIDO')>-1||u.indexOf('EMPENHADO')>-1||u.indexOf('DISP')>-1||u.indexOf('VALOR')>-1||u.indexOf('LIQUIDADO')>-1||u.indexOf('PAGO')>-1||u.indexOf('LÍQUIDO')>-1||u.indexOf('SALDO')>-1||u.indexOf('REDUÇ')>-1||u.indexOf('CRÉDITO')>-1||u.indexOf('CREDITO')>-1){colTypes.push('Currency');}
+   else{colTypes.push('String');}
+  }
+ });
  var trs=table.querySelectorAll('tbody tr');var rows=[];
  trs.forEach(function(tr){if(tr.style.display==='none')return;
   var cells=tr.querySelectorAll('td');var rowData=[];
   cells.forEach(function(td,idx){if(idx>=headers.length)return;
-   var sortVal=td.getAttribute('data-sort');var txt=td.textContent.replace('›','').trim();
-   if(sortVal!==null&&!isNaN(parseFloat(sortVal))){rowData.push({v:parseFloat(sortVal),t:'Number'});}
-   else{rowData.push({v:txt,t:'String'});}});
-  if(rowData.length)rows.push(rowData);});
+   var sortVal=td.getAttribute('data-sort');var exp=colTypes[idx]||'String';
+   var fullText=td.getAttribute('data-full-desc')||td.getAttribute('title')||td.textContent.replace('›','').trim();
+   if(!td.getAttribute('data-full-desc')&&!td.getAttribute('title')){fullText=td.textContent.replace('›','').trim();}
+   if(exp==='Integer'){
+    var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseInt(sortVal,10):parseInt(fullText.replace(/\D/g,''),10);
+    if(isNaN(numVal)||numVal<0){rowData.push({v:fullText||'—',t:'String',s:'Default'});}
+    else{rowData.push({v:numVal,t:'Number',s:'Integer'});}
+   } else if(exp==='Currency'){
+    var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseFloat(sortVal):parseFloat(fullText.replace(/[^\d,-]/g,'').replace(',','.'));
+    rowData.push({v:isNaN(numVal)?0.0:numVal,t:'Number',s:'Currency'});
+   } else if(exp==='Percent'){
+    var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseFloat(sortVal):parseFloat(fullText.replace(/[^\d,-]/g,'').replace(',','.'));
+    rowData.push({v:isNaN(numVal)?0.0:numVal/100.0,t:'Number',s:'Percent'});
+   } else {
+    rowData.push({v:fullText,t:'String',s:'Default'});
+   }
+  });
+  if(rowData.length)rows.push(rowData);
+ });
  var xml='<?xml version="1.0" encoding="UTF-8"?>\n'+
   '<?mso-application progid="Excel.Sheet"?>\n'+
   '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n'+
@@ -1527,22 +1609,30 @@ function bcmsExportTable(btn,tid,filename){
   ' <Style ss:ID="Default" ss:Name="Normal"><Font ss:FontName="Calibri" ss:Size="11" ss:Color="#000000"/><Alignment ss:Vertical="Center"/></Style>\n'+
   ' <Style ss:ID="Header"><Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C4A73" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n'+
   ' <Style ss:ID="Title"><Font ss:FontName="Calibri" ss:Size="14" ss:Bold="1" ss:Color="#1C4A73"/><Alignment ss:Vertical="Center"/></Style>\n'+
-  ' <Style ss:ID="Currency"><NumberFormat ss:Format="&quot;R$&quot; #,##0.00"/></Style>\n'+
-  ' <Style ss:ID="Percent"><NumberFormat ss:Format="0.0%"/></Style>\n'+
+  ' <Style ss:ID="Currency"><NumberFormat ss:Format="&quot;R$&quot; #,##0.00"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'+
+  ' <Style ss:ID="Integer"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n'+
+  ' <Style ss:ID="Percent"><NumberFormat ss:Format="0.0%"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'+
   ' <Style ss:ID="Bold"><Font ss:FontName="Calibri" ss:Bold="1"/></Style>\n'+
   '</Styles>\n'+
-  '<Worksheet ss:Name="Crédito Disponível">\n'+
+  '<Worksheet ss:Name="Créditos em Tela">\n'+
   '<Table ss:DefaultRowHeight="20">\n';
- headers.forEach(function(){xml+=' <Column ss:AutoFitWidth="1" ss:Width="120"/>\n';});
- xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — RELATÓRIO DE CRÉDITO DISPONÍVEL</Data></Cell></Row>\n';
- xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+'</Data></Cell></Row>\n';
+ headers.forEach(function(h){
+  var u=h.toUpperCase();var w=120;
+  if(u.indexOf('DESCRIÇÃO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('APLICAÇÃO')>-1){w=380;}
+  else if(u.indexOf('ORGANIZAÇÃO')>-1||u.indexOf('NOME')>-1){w=220;}
+  else if(u.indexOf('NC')>-1||u.indexOf('NOTA')>-1){w=140;}
+  else if(u.indexOf('DIA')>-1){w=100;}
+  xml+=' <Column ss:AutoFitWidth="1" ss:Width="'+w+'"/>\n';
+ });
+ xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — RELATÓRIO DE CRÉDITOS DISPONÍVEIS</Data></Cell></Row>\n';
+ xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+' · Detalhamento por Nota de Crédito (NC)</Data></Cell></Row>\n';
  xml+=' <Row ss:Height="10"/>\n';
  xml+=' <Row ss:Height="24">\n';
  headers.forEach(function(h){xml+='  <Cell ss:StyleID="Header"><Data ss:Type="String">'+bcmsEscXml(h)+'</Data></Cell>\n';});
  xml+=' </Row>\n';
  rows.forEach(function(r){xml+=' <Row ss:Height="20">\n';
   r.forEach(function(c){
-   if(c.t==='Number'){xml+='  <Cell ss:StyleID="Currency"><Data ss:Type="Number">'+c.v+'</Data></Cell>\n';}
+   if(c.t==='Number'){xml+='  <Cell ss:StyleID="'+(c.s||'Currency')+'"><Data ss:Type="Number">'+c.v+'</Data></Cell>\n';}
    else{xml+='  <Cell><Data ss:Type="String">'+bcmsEscXml(c.v)+'</Data></Cell>\n';}});
   xml+=' </Row>\n';});
  xml+='</Table></Worksheet></Workbook>';
