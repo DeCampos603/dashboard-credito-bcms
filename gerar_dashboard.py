@@ -38,7 +38,7 @@ def _par(u):  # par de UASGs (OGU, FEx) de uma unidade, no formato (cod, label)
 ALVOS = [p for u in UNIDADES for p in _par(u)]
 FONTE_CURTA = {}
 for _u in UNIDADES:
-    FONTE_CURTA[_u["ogu"]] = "OGU"; FONTE_CURTA[_u["fex"]] = "FEx"
+    FONTE_CURTA[_u["ogu"]] = "160"; FONTE_CURTA[_u["fex"]] = "167"
 DEFAULT_FILE_ID = "1Jv546wpWQSFAlep3oLRAg29hVy86iJxJ"
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(HERE, "site")
@@ -1570,10 +1570,34 @@ function bcmsExportTable(btn,tid,filename){
   if(txt&&txt!=='Ação'&&txt!=='AÇÃO'){
    headers.push(txt);
    var u=txt.toUpperCase();
-   if(u.indexOf('DIA')>-1||u.indexOf('CÉLULA')>-1||u.indexOf('CELULA')>-1||u.indexOf('Nº')>-1||u.indexOf('POS')>-1){colTypes.push('Integer');}
-   else if(u.indexOf('%')>-1||u.indexOf('TAXA')>-1){colTypes.push('Percent');}
-   else if(u.indexOf('R$')>-1||u.indexOf('RECEBIDO')>-1||u.indexOf('EMPENHADO')>-1||u.indexOf('DISP')>-1||u.indexOf('VALOR')>-1||u.indexOf('LIQUIDADO')>-1||u.indexOf('PAGO')>-1||u.indexOf('LÍQUIDO')>-1||u.indexOf('SALDO')>-1||u.indexOf('REDUÇ')>-1||u.indexOf('CRÉDITO')>-1||u.indexOf('CREDITO')>-1){colTypes.push('Currency');}
-   else{colTypes.push('String');}
+   // 1. Textos / Códigos / Datas / Identificadores (SEMPRE String)
+   if(u.indexOf('NOTA')>-1||u.indexOf('NC')>-1||u.indexOf('FONTE')>-1||u.indexOf('UASG')>-1||
+      u.indexOf('RECEBIDO EM')>-1||u.indexOf('DATA')>-1||u.indexOf('EMISSÃO')>-1||u.indexOf('EMISSAO')>-1||
+      u.indexOf('DESCRIÇÃO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('AÇÃO')>-1||
+      u.indexOf('ACAO')>-1||u.indexOf('ND')>-1||u.indexOf('PI')>-1||u.indexOf('OPERAÇÃO')>-1||
+      u.indexOf('OPERACAO')>-1||u.indexOf('EMITENTE')>-1||u.indexOf('ORGANIZAÇÃO')>-1||u.indexOf('OMDS')>-1||
+      u.indexOf('DIA ANTERIOR')>-1){
+    colTypes.push('String');
+   }
+   // 2. Inteiros (Dias em tela, células, contadores, posições)
+   else if(u.indexOf('DIA')>-1||u.indexOf('CÉLULA')>-1||u.indexOf('CELULA')>-1||u.indexOf('Nº')>-1||u.indexOf('POS')>-1||u.indexOf('RANK')>-1){
+    colTypes.push('Integer');
+   }
+   // 3. Porcentagem
+   else if(u.indexOf('%')>-1||u.indexOf('TAXA')>-1){
+    colTypes.push('Percent');
+   }
+   // 4. Moeda (Valores financeiros)
+   else if(u.indexOf('R$')>-1||u.indexOf('VALOR')>-1||u.indexOf('CRÉDITO')>-1||u.indexOf('CREDITO')>-1||
+           u.indexOf('EMPENHADO')>-1||u.indexOf('LIQUIDADO')>-1||u.indexOf('PAGO')>-1||
+           u.indexOf('PROVISÃO')>-1||u.indexOf('PROVISAO')>-1||u.indexOf('SALDO')>-1||
+           u.indexOf('REDUÇ')>-1||u.indexOf('LÍQUIDO')>-1||u.indexOf('LIQUIDO')>-1||
+           u.indexOf('RECEBIDO')>-1||u.indexOf('DISP')>-1){
+    colTypes.push('Currency');
+   }
+   else{
+    colTypes.push('String');
+   }
   }
  });
  var trs=table.querySelectorAll('tbody tr');var rows=[];
@@ -1583,7 +1607,9 @@ function bcmsExportTable(btn,tid,filename){
    var sortVal=td.getAttribute('data-sort');var exp=colTypes[idx]||'String';
    var fullText=td.getAttribute('data-full-desc')||td.getAttribute('title')||td.textContent.replace('›','').trim();
    if(!td.getAttribute('data-full-desc')&&!td.getAttribute('title')){fullText=td.textContent.replace('›','').trim();}
-   if(exp==='Integer'){
+   if(exp==='String'){
+    rowData.push({v:fullText,t:'String',s:'Default'});
+   } else if(exp==='Integer'){
     var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseInt(sortVal,10):parseInt(fullText.replace(/\D/g,''),10);
     if(isNaN(numVal)||numVal<0){rowData.push({v:fullText||'—',t:'String',s:'Default'});}
     else{rowData.push({v:numVal,t:'Number',s:'Integer'});}
