@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "0 11 * * *"
   workflow_dispatch: {}
+  push:
+    branches:
+      - main
 
 # Permissões: escrever o histórico no repo + publicar no Pages.
 permissions:

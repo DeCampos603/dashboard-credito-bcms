@@ -1,19 +1,13 @@
-# Dashboard Crédito Disponível — BCMS
+# Dashboard Crédito Disponível — OMDS Ba Ap Log Ex
 
-Painel web (HTML estático) do **Crédito Disponível** do BCMS — UASG **160329** (OGU)
-e **167329** (Fundo do Exército) — gerado a partir do export do Tesouro Gerencial
-`CRÉDITO DISP.xlsx` publicado no Google Drive e **atualizado automaticamente todos os dias**
-via **GitHub Actions**, hospedado no **GitHub Pages**.
+Painel web (HTML estático) do **Crédito Disponível** das Organizações Militares Diretamente Subordinadas (OMDS) da **Base de Apoio Logístico do Exército** — **BCMS** (160329/167329), **Ba Ap Log** (160238/167238), **D C Mun** (160246/167246), **BMSA** (160304/167304), **1º D Sup** (160307/167307) e **ECT** (160321/167321) — gerado a partir do export do Tesouro Gerencial `CRÉDITO DISP.xlsx` publicado no Google Drive e **atualizado automaticamente todos os dias** via **GitHub Actions**, hospedado no **GitHub Pages**.
 
-- **URL pública** (depois de publicar): `https://SEU-USUARIO.github.io/NOME-DO-REPO/`
-- Qualquer pessoa com o link abre no navegador, **sem login**.
-- Acumula um **histórico diário** → gráfico de tendência do Crédito Disponível.
+- **URL pública**: `https://DeCampos603.github.io/dashboard-credito-bcms/`
+- **Exportação em Excel (.xls formatado)**: Download instantâneo com tipos numéricos, formatação de moeda e cabeçalhos estilizados.
+- **Aba de Ranking & Comparativo OMDS**: Pódio gamificado (🥇, 🥈, 🥉), indicadores globais do Comando e gráficos comparativos de execução orçamentária.
+- **Histórico e Tendência**: Acumula snapshots para acompanhamento da evolução do saldo.
 
-> ⚠️ **O GitHub Pages é público.** Ao publicar, os números do BCMS (Crédito Disponível,
-> empenhado, liquidado, pago, detalhe por NC) ficam **visíveis para qualquer pessoa com o link**
-> e podem ser indexados por buscadores. Boa parte desse dado de execução já é público
-> (Portal da Transparência / SIAFI), mas a decisão de expor é sua. Páginas com controle de
-> acesso só existem em planos pagos (GitHub Enterprise).
+> ⚠️ **O GitHub Pages é público.** Ao publicar, os números (Crédito Disponível, empenhado, liquidado, pago, detalhe por NC) ficam **visíveis para qualquer pessoa com o link**.
 
 ---
 

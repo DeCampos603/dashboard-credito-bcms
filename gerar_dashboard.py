@@ -486,6 +486,7 @@ def tabela_html(tid, celulas, com_fonte, ativo):
     return (f'<div class="tabpanel" id="{tid}" role="tabpanel"{disp_style}>'
             f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
             f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND ou aplicação…" oninput="bcmsSearch(this,\'{tid}\')">'
+            f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_em_tela_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
             f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células</span></div>'
             f'<div class="tbl-scroll"><table class="det"><thead><tr>{"".join(ths)}</tr></thead>'
             f'<tbody>{"".join(body)}</tbody>{tfoot}</table></div></div>')
@@ -626,6 +627,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         body = "".join(mov_row(m) for m in lst)
         return (f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
                 f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, ação, ND ou operação…" oninput="bcmsSearch(this,\'{tid}\')">'
+                f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'movimentacao_{tid}\')" title="Baixar movimentação em Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
                 f'<span class="tbl-count" id="cnt-{tid}" data-unit="NC(s)" aria-live="polite">{len(lst)} NC(s)</span></div>'
                 f'<div class="tbl-scroll" id="{tid}"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{body}</tbody></table></div>')
 
@@ -720,11 +722,12 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         f'<div class="et-kpi"><span>Células</span><b>{len(emtela)}</b></div>'
         f'<div class="et-kpi"><span>Idade média</span><b>{idade_media} dias</b></div>'
         f'<div class="et-kpi"><span>Mais antigo</span><b>{idade_max} dias</b></div>'
+        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_{sfx}\')" title="Baixar relação de créditos em tela em planilha formatada para Excel"><span class="btn-excel-ic">📥</span> Baixar em Excel</button></div>'
         f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
         '<p class="sec-nota">O que está disponível para empenhar, por célula (Ação · PI · ND): o que é, o valor e '
         '<b>há quantos dias está em tela</b> (desde o recebimento que compõe o saldo). '
         '<b>Clique numa linha</b> para detalhar. Cor dos dias: verde ≤30 · âmbar 31–60 · vermelho &gt;60.</p>'
-        f'<div class="tbl-scroll"><table class="det"><thead><tr>{et_ths}</tr></thead>'
+        f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det"><thead><tr>{et_ths}</tr></thead>'
         f'<tbody>{"".join(et_row(c) for c in emtela)}</tbody></table></div></section>'
     )
 
@@ -805,6 +808,242 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
 </section>"""
     return frag, celdata, ncdata, daydata
 
+# ---------------- módulo Ranking e Comparativo OMDS ----------------
+def svg_comparativo_barras(u_stats, metric="cred", titulo="Crédito Disponível por Unidade (R$)"):
+    itens = [(u["sigla"], u[metric], u["accent"]) for u in u_stats if round(u[metric], 2) != 0]
+    itens.sort(key=lambda x: x[1], reverse=True)
+    if not itens:
+        return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">sem valores</p></div>'
+    vmax = max(x[1] for x in itens) or 1
+    labW, rh, pad = 110, 36, 12
+    zx = labW + 10
+    plotW = 440
+    W = zx + plotW + 140
+    H = pad * 2 + rh * len(itens)
+    el = []
+    for i, (sigla, val, accent) in enumerate(itens):
+        y = pad + i * rh
+        w = max(4, (val / vmax) * plotW)
+        el.append(f'<text x="{labW-8}" y="{y+rh/2+4:.0f}" text-anchor="end" class="s-cat" style="font-weight:700">{esc(sigla)}</text>')
+        el.append(f'<rect x="{zx}" y="{y+4}" width="{w:.1f}" height="{rh-8}" rx="4" style="fill:{accent}"><title>{esc(sigla)}: {esc(brl(val))}</title></rect>')
+        el.append(f'<text x="{zx+w+8:.1f}" y="{y+rh/2+4:.0f}" class="s-num s-on2" style="font-weight:700">{esc(brl(val))}</text>')
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="{esc(titulo)}">{"".join(el)}</svg>'
+    return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div>{svg}</div>'
+
+def svg_comparativo_exec(u_stats, media_cmd):
+    itens = [(u["sigla"], u["exec_pct"], u["accent"], u["prov"], u["emp"]) for u in u_stats]
+    itens.sort(key=lambda x: x[1], reverse=True)
+    labW, rh, pad = 110, 36, 12
+    zx = labW + 10
+    plotW = 440
+    W = zx + plotW + 90
+    H = pad * 2 + rh * len(itens) + 24
+    el = []
+    # linha de média do comando
+    x_media = zx + (min(100.0, media_cmd) / 100.0) * plotW
+    el.append(f'<line x1="{x_media:.1f}" y1="{pad-4}" x2="{x_media:.1f}" y2="{H-pad-16}" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3"/>')
+    el.append(f'<text x="{x_media:.1f}" y="{H-pad-2}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gold)">Média do Comando: {media_cmd:.1f}%</text>')
+    for i, (sigla, pct_v, accent, prov, emp) in enumerate(itens):
+        y = pad + i * rh
+        w = max(4, (min(100.0, pct_v) / 100.0) * plotW)
+        el.append(f'<text x="{labW-8}" y="{y+rh/2+4:.0f}" text-anchor="end" class="s-cat" style="font-weight:700">{esc(sigla)}</text>')
+        # background track
+        el.append(f'<rect x="{zx}" y="{y+4}" width="{plotW}" height="{rh-8}" rx="4" fill="var(--track)"/>')
+        el.append(f'<rect x="{zx}" y="{y+4}" width="{w:.1f}" height="{rh-8}" rx="4" style="fill:{accent}"><title>{esc(sigla)}: {pct_v:.1f}% empenhado ({esc(brl(emp))} de {esc(brl(prov))})</title></rect>')
+        el.append(f'<text x="{zx+w+8:.1f}" y="{y+rh/2+4:.0f}" class="s-num" font-weight="700">{pct_v:.1f}%</text>')
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Taxa de Execução Orçamentária por OMDS">{"".join(el)}</svg>'
+    return f'<div class="card chart"><div class="eyebrow">Taxa de Execução Orçamentária (% Empenhado / Recebido)</div>{svg}</div>'
+
+def secao_comparativo_omds(res, hist, data_str, periodo):
+    u_stats = []
+    for u in UNIDADES:
+        alvos_u = _par(u)
+        tot_prov = sum(res[c]["prov"] for c, _ in alvos_u)
+        tot_conc = sum(res[c]["conc"] for c, _ in alvos_u)
+        tot_emp = sum(res[c]["emp"] for c, _ in alvos_u)
+        tot_liq = sum(res[c]["liq"] for c, _ in alvos_u)
+        tot_pag = sum(res[c]["pag"] for c, _ in alvos_u)
+        tot_cred = sum(res[c]["cred"] for c, _ in alvos_u)
+        n_cel = sum(len([c for c in res[cod]["celulas"].values() if c["cred"] > 0.005]) for cod, _ in alvos_u)
+        exec_pct = pct(tot_emp, tot_prov)
+        liq_pct = pct(tot_liq, tot_emp)
+        pag_pct = pct(tot_pag, tot_liq)
+        u_stats.append({
+            "key": u["key"], "sigla": u["sigla"], "nome": u["nome"], "logo": u["logo"],
+            "accent": u["accent"], "ogu": u["ogu"], "fex": u["fex"],
+            "prov": tot_prov, "conc": tot_conc, "emp": tot_emp, "liq": tot_liq,
+            "pag": tot_pag, "cred": tot_cred, "exec_pct": exec_pct,
+            "liq_pct": liq_pct, "pag_pct": pag_pct, "n_cel": n_cel
+        })
+    
+    # Totais do Comando Consolidado
+    cmd_prov = sum(x["prov"] for x in u_stats)
+    cmd_emp = sum(x["emp"] for x in u_stats)
+    cmd_liq = sum(x["liq"] for x in u_stats)
+    cmd_pag = sum(x["pag"] for x in u_stats)
+    cmd_cred = sum(x["cred"] for x in u_stats)
+    cmd_n_cel = sum(x["n_cel"] for x in u_stats)
+    cmd_exec_pct = pct(cmd_emp, cmd_prov)
+    cmd_liq_pct = pct(cmd_liq, cmd_emp)
+    cmd_pag_pct = pct(cmd_pag, cmd_liq)
+    
+    # Ranking por execução e por crédito
+    rank_exec = sorted(u_stats, key=lambda x: x["exec_pct"], reverse=True)
+    
+    # Pódio dos Top 3 (Execução)
+    podio_order = []
+    if len(rank_exec) >= 2:
+        podio_order.append((rank_exec[1], 2, "🥈 2º Lugar", "silver"))
+    if len(rank_exec) >= 1:
+        podio_order.append((rank_exec[0], 1, "🥇 1º Lugar", "gold"))
+    if len(rank_exec) >= 3:
+        podio_order.append((rank_exec[2], 3, "🥉 3º Lugar", "bronze"))
+    
+    podio_cards = []
+    for u, pos, badge, cls in podio_order:
+        podio_cards.append(
+            f'<div class="podium-step podium-{cls}" onclick="trocaOMDSPorKey(\'{u["key"]}\')" title="Clique para abrir o painel detalhado de {esc(u["sigla"])}">'
+            f'<div class="podium-badge">{badge}</div>'
+            f'<div class="podium-avatar-wrap"><img src="assets/logos/{u["logo"]}" alt="{esc(u["sigla"])}" class="podium-logo" onerror="this.style.display=\'none\'"></div>'
+            f'<div class="podium-sigla">{esc(u["sigla"])}</div>'
+            f'<div class="podium-nome">{esc(u["nome"])}</div>'
+            f'<div class="podium-stat-pill"><span class="stat-l">Execução</span><b class="stat-v num">{u["exec_pct"]:.1f}%</b></div>'
+            f'<div class="podium-substat">Disponível: <span class="num">{esc(brl(u["cred"]))}</span></div>'
+            f'<button type="button" class="podium-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Acessar Unidade ›</button>'
+            f'</div>'
+        )
+    
+    # KPIs do Comando
+    kpis_cmd = (
+        kpi_tile("Provisão Recebida (Comando)", brl(cmd_prov), "6 OMDS", "prov") +
+        kpi_tile("Empenhado (Comando)", brl(cmd_emp), f"{cmd_exec_pct:.1f}% de execução", "emp") +
+        kpi_tile("Liquidado (Comando)", brl(cmd_liq), f"{cmd_liq_pct:.1f}% do empenhado", "liq") +
+        kpi_tile("Crédito Disponível", brl(cmd_cred), f"{cmd_n_cel} células ativas", "pag")
+    )
+    
+    # Gráficos comparativos
+    ch_cred = svg_comparativo_barras(u_stats, "cred", "Crédito Disponível por Unidade (R$)")
+    ch_exec = svg_comparativo_exec(u_stats, cmd_exec_pct)
+    
+    def _th_r(h, numc):
+        cls = ' class="num"' if numc else ''
+        return (f'<th{cls} tabindex="0" role="button" aria-sort="none" onclick="bcmsSort(this)" '
+                f'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsSort(this)}}">{esc(h)}<span class="sort"></span></th>')
+
+    # Tabela comparativa detalhada
+    ths = (
+        _th_r("Pos.", False) +
+        _th_r("Organização Militar (OMDS)", False) +
+        _th_r("UASGs", False) +
+        _th_r("Provisão Recebida", True) +
+        _th_r("Empenhado", True) +
+        _th_r("% Execução", True) +
+        _th_r("Crédito Disponível", True) +
+        _th_r("Liquidado", True) +
+        _th_r("% Liquidação", True) +
+        _th_r("Pago", True) +
+        _th_r("Células", True) +
+        _th_r("Ação", False)
+    )
+    
+    body_rows = []
+    for pos, u in enumerate(rank_exec, 1):
+        medalha = "🥇 1º" if pos == 1 else ("🥈 2º" if pos == 2 else ("🥉 3º" if pos == 3 else f"{pos}º"))
+        bar_w = min(100.0, u["exec_pct"])
+        body_rows.append(
+            f'<tr class="cel-row" tabindex="0" role="button" onclick="trocaOMDSPorKey(\'{u["key"]}\')" '
+            f'title="Clique para ir ao painel do {esc(u["sigla"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();trocaOMDSPorKey(\'{u["key"]}\')}}">'
+            f'<td class="mono2" style="font-weight:700">{medalha}</td>'
+            f'<td><div class="tbl-om-cell"><img src="assets/logos/{u["logo"]}" alt="" class="tbl-om-logo" onerror="this.style.display=\'none\'"><b>{esc(u["sigla"])}</b> <span class="tbl-om-sub">{esc(u["nome"])}</span></div></td>'
+            f'<td class="mono2">{esc(u["ogu"])} / {esc(u["fex"])}</td>'
+            f'<td class="num" data-sort="{u["prov"]:.2f}">{esc(brl(u["prov"]))}</td>'
+            f'<td class="num" data-sort="{u["emp"]:.2f}">{esc(brl(u["emp"]))}</td>'
+            f'<td class="num" data-sort="{u["exec_pct"]:.2f}"><div class="tbl-pct-cell"><span style="font-weight:700">{u["exec_pct"]:.1f}%</span><div class="mini-track"><div class="mini-fill" style="width:{bar_w:.1f}%;background:{u["accent"]}"></div></div></div></td>'
+            f'<td class="num anchor col-pos" data-sort="{u["cred"]:.2f}">{esc(brl(u["cred"]))}</td>'
+            f'<td class="num" data-sort="{u["liq"]:.2f}">{esc(brl(u["liq"]))}</td>'
+            f'<td class="num" data-sort="{u["liq_pct"]:.2f}">{u["liq_pct"]:.1f}%</td>'
+            f'<td class="num" data-sort="{u["pag"]:.2f}">{esc(brl(u["pag"]))}</td>'
+            f'<td class="num" data-sort="{u["n_cel"]}">{u["n_cel"]}</td>'
+            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Abrir ›</button></td>'
+            f'</tr>'
+        )
+    
+    tfoot_tbl = (
+        f'<tfoot><tr>'
+        f'<td colspan="3"><b>TOTAL CONSOLIDADO DO COMANDO (6 OMDS)</b></td>'
+        f'<td class="num"><b>{esc(brl(cmd_prov))}</b></td>'
+        f'<td class="num"><b>{esc(brl(cmd_emp))}</b></td>'
+        f'<td class="num"><b>{cmd_exec_pct:.1f}%</b></td>'
+        f'<td class="num anchor col-pos"><b>{esc(brl(cmd_cred))}</b></td>'
+        f'<td class="num"><b>{esc(brl(cmd_liq))}</b></td>'
+        f'<td class="num"><b>{cmd_liq_pct:.1f}%</b></td>'
+        f'<td class="num"><b>{esc(brl(cmd_pag))}</b></td>'
+        f'<td class="num"><b>{cmd_n_cel}</b></td>'
+        f'<td>—</td>'
+        f'</tr></tfoot>'
+    )
+    
+    tabela_ranking_html = (
+        f'<div class="tbl-tools">'
+        f'<label class="visually-hidden" for="q-tab-ranking-det">Buscar</label>'
+        f'<input type="search" id="q-tab-ranking-det" class="tbl-search" placeholder="Buscar no comparativo por OMDS, UASG..." oninput="bcmsSearch(this,\'tab-ranking-det\')">'
+        f'<button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-ranking-det\',\'ranking_comparativo_omds\')" title="Baixar comparativo completo das OMDS em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Planilha Excel</button>'
+        f'<span class="tbl-count" id="cnt-tab-ranking-det" data-unit="unidades" aria-live="polite">6 unidades</span>'
+        f'</div>'
+        f'<div class="tbl-scroll" id="tab-ranking-det"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{"".join(body_rows)}</tbody>{tfoot_tbl}</table></div>'
+    )
+    
+    hero_eq_cmd = (
+        f'<span class="eq-t eq-prov">{esc(brl(cmd_prov))}</span>'
+        f'<i class="eq-op">−</i>'
+        f'<span class="eq-t eq-emp">{esc(brl(cmd_emp))}</span>'
+        f'<i class="eq-op">=</i>'
+        f'<span class="eq-t eq-disp">{esc(brl(cmd_cred))}</span>'
+    )
+    
+    frag = f"""<section class="unidade unidade-ranking" data-key="RANKING" data-sigla="Comando" style="display:none">
+  <div class="ranking-header-card">
+    <div class="rh-tag">🏆 BENCHMARKING ORÇAMENTÁRIO & FINANCEIRO</div>
+    <h2 class="rh-title">Ranking & Comparativo Consolidado das OMDS</h2>
+    <p class="rh-desc">Visão executiva integrada das 6 Organizações Militares Diretamente Subordinadas da Base de Apoio Logístico do Exército. Acompanhe os indicadores de desempenho, taxa de execução orçamentária (% Empenhado) e créditos em tela.</p>
+  </div>
+
+  <section class="hero hero-cmd">
+    <div class="hero-l">
+      <div class="eyebrow">Crédito Disponível · Consolidado do Comando (6 OMDS)</div>
+      <div class="hero-num num">{esc(brl(cmd_cred))}</div>
+      <div class="hero-eq">{hero_eq_cmd}</div>
+      <div class="hero-eq-lbl"><span>Provisão Recebida Total</span><span>Empenhado Total</span><span>Disponível Total</span></div>
+    </div>
+    <div class="hero-r">
+      <div class="delta flat">Consolidado das 12 UASGs (OGU + FEx)</div>
+      {svg_util(cmd_prov, cmd_emp, cmd_cred)}
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="eyebrow">Indicadores Globais do Comando</div>
+    <div class="kpis">{kpis_cmd}</div>
+  </section>
+
+  <section class="sec">
+    <div class="eyebrow">🏆 Pódio de Eficiência Orçamentária (% Empenhado / Recebido)</div>
+    <p class="sec-nota">Destaque para as organizações com maior percentual de execução das dotações orçamentárias recebidas no exercício. Clique em uma unidade para detalhar.</p>
+    <div class="podium-wrap">{"".join(podio_cards)}</div>
+  </section>
+
+  <section class="sec">
+    <div class="eyebrow">Comparativos Visuais entre as Unidades</div>
+    <div class="grid2">{ch_exec}{ch_cred}</div>
+  </section>
+
+  <section class="sec">
+    <div class="eyebrow">Tabela Comparativa e Benchmarking Completo</div>
+    <p class="sec-nota">Relação completa de todas as OMDS com dados consolidados de OGU e FEx. Ordene por qualquer coluna ou clique no botão para exportar para Excel (.xlsx).</p>
+    {tabela_ranking_html}
+  </section>
+</section>"""
+    return frag
 
 # ---------------- shell da página (multi-OMDS) ----------------
 def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
@@ -816,6 +1055,11 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
                   for h in hist]
         frag, cel, ncd, day = conteudo_unidade(res, hist_u, data_str, periodo, u)
         frags.append(frag); CEL.update(cel); NCD.update(ncd); DAY.update(day)
+    
+    # Seção Ranking & Comparativo
+    ranking_frag = secao_comparativo_omds(res, hist, data_str, periodo)
+    frags.append(ranking_frag)
+
     banner = ""
     if alertas:
         itens = "".join(f"<li>{esc(a)}</li>" for a in alertas)
@@ -826,6 +1070,12 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
         f'<img src="assets/logos/{u["logo"]}" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
         f'<span>{esc(u["sigla"])}</span></button>'
         for i, u in enumerate(UNIDADES))
+    omds += (
+        '<button class="omds omds-rank" data-key="RANKING" aria-current="false" '
+        'title="Ranking e Comparativo entre todas as Unidades da Base de Apoio Logístico" onclick="trocaOMDS(this)">'
+        '<span class="rank-icon" aria-hidden="true">🏆</span>'
+        '<span>Ranking & Comparativo</span></button>'
+    )
     ujs = json.dumps({u["key"]: {"sigla": u["sigla"], "nome": u["nome"], "ogu": u["ogu"], "fex": u["fex"],
                                  "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
     u0 = UNIDADES[0]
@@ -913,11 +1163,20 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .sec-nota{font-size:12.5px;color:var(--ink-muted);margin:-4px 0 12px;max-width:900px;line-height:1.55}
 .sec-nota b{color:var(--ink)}
 .sec{margin-top:30px}
+
+/* Botões Excel */
+.btn-excel{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#107C41,#0B5E31);color:#ffffff!important;border:1px solid #0E6B38;border-radius:8px;padding:8px 14px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 5px rgba(16,124,65,.22);transition:all .16s ease;white-space:nowrap}
+.btn-excel:hover{background:linear-gradient(135deg,#148C4A,#0E733D);box-shadow:0 4px 12px rgba(16,124,65,.35);transform:translateY(-1px)}
+.btn-excel:active{transform:translateY(0);box-shadow:0 1px 3px rgba(16,124,65,.2)}
+.btn-excel-ic{font-size:14px;line-height:1}
+.btn-excel-lg{padding:10px 18px;font-size:14px;border-radius:9px}
+
 /* abas de topo */
 .toptabs{display:flex;gap:6px;margin:20px 0 6px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:5px}
 .toptab{flex:1;background:none;border:none;color:var(--ink-muted);font:650 14px var(--sans);padding:10px 14px;border-radius:8px;cursor:pointer}
 .toptab.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 .toptab:hover:not(.on){color:var(--ink)}
+
 /* resumo hero */
 .resumo-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--hero-soft);border:1px solid var(--border);border-left:4px solid var(--success);border-radius:12px;padding:16px 22px;margin-top:18px}
 .rh-l{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted)}
@@ -925,6 +1184,7 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .rh-meta{font-size:12.5px;color:var(--ink-muted);text-align:right}
 .rh-delay{color:var(--warning-ink);font-weight:600}
 .col-pos{color:var(--success-strong)}.col-neg{color:var(--danger)}.col-warn{color:var(--warning-ink)}
+
 /* módulo créditos em tela */
 .et-head{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;margin-bottom:12px}
 .et-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 16px;display:flex;flex-direction:column;gap:2px;min-width:130px;box-shadow:var(--shadow)}
@@ -932,14 +1192,17 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .et-kpi b{font-size:19px;font-weight:700}
 .et-hero{background:var(--hero-soft);border-left:4px solid var(--success)}
 .et-hero b{font-size:24px;color:var(--success-strong)}
+.et-action{display:flex;align-items:center}
 .et-meta{margin-left:auto;align-self:center;font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.5}
 .m-kpis b.neg{color:var(--danger)}.m-kpis b.op{font-size:12px;font-weight:600;line-height:1.3}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+
 /* topbar */
 .topbar{max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:12px}
 .brasao{width:46px;height:46px;object-fit:contain;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
 .bcms-bar{height:5px;background:linear-gradient(to bottom,var(--accent,#CE2B2B) 50%,#1E6FD0 50%)}
+
 /* barra OMDS (troca de organização) */
 .omds-nav{border-bottom:1px solid var(--border);background:var(--surface)}
 .omds-nav-in{max-width:1200px;margin:0 auto;padding:9px 24px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
@@ -949,6 +1212,57 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-fon
 .omds:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .omds.on{color:#fff;background:var(--accent,#CE2B2B);border-color:var(--accent,#CE2B2B);box-shadow:var(--shadow)}
 .omds.on img{filter:drop-shadow(0 0 1px rgba(255,255,255,.6))}
+
+/* Navegação Ranking */
+.omds-rank{background:linear-gradient(135deg,var(--surface-2),#FFF2CC);border-color:#E2C66A;color:#7A5506}
+:root[data-theme=dark] .omds-rank{background:linear-gradient(135deg,#1A2838,#3B2E15);border-color:#937025;color:#E0B463}
+.omds-rank.on{background:linear-gradient(135deg,#C8901E,#9B6D0F)!important;border-color:#9B6D0F!important;color:#fff!important}
+.rank-icon{font-size:15px}
+
+/* Header Ranking */
+.ranking-header-card{margin-top:20px;padding:24px 28px;background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--gold);border-radius:14px;box-shadow:var(--shadow)}
+.rh-tag{font-size:11.5px;font-weight:800;letter-spacing:.12em;color:var(--gold);margin-bottom:6px}
+.rh-title{font-family:var(--serif);font-size:26px;font-weight:700;margin-bottom:6px;line-height:1.2}
+.rh-desc{font-size:13.5px;color:var(--ink-muted);max-width:860px;line-height:1.6}
+
+/* Pódio */
+.podium-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px;align-items:end}
+.podium-step{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 18px 18px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:all .18s ease;display:flex;flex-direction:column;align-items:center}
+.podium-step:hover{transform:translateY(-4px);box-shadow:var(--shadow-h);border-color:var(--border-strong)}
+.podium-gold{border-top:5px solid #E5B33A;background:linear-gradient(to bottom,color-mix(in srgb,#FFD700 8%,var(--surface)),var(--surface));order:2;padding-top:28px;margin-bottom:12px}
+.podium-silver{border-top:5px solid #A8B2C0;background:linear-gradient(to bottom,color-mix(in srgb,#C0C0C0 8%,var(--surface)),var(--surface));order:1}
+.podium-bronze{border-top:5px solid #CD7F32;background:linear-gradient(to bottom,color-mix(in srgb,#CD7F32 8%,var(--surface)),var(--surface));order:3}
+.podium-badge{display:inline-block;font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:12px}
+.podium-gold .podium-badge{background:#FFF5D6;color:#855A00;border-color:#F0D070}
+:root[data-theme=dark] .podium-gold .podium-badge{background:#3B2C08;color:#F0D070;border-color:#6E5110}
+.podium-avatar-wrap{width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;padding:6px}
+.podium-gold .podium-avatar-wrap{width:76px;height:76px;border-color:#E5B33A;box-shadow:0 0 16px rgba(229,179,58,.3)}
+.podium-logo{width:100%;height:100%;object-fit:contain}
+.podium-sigla{font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+.podium-nome{font-size:11.5px;color:var(--ink-muted);margin-bottom:14px;max-width:200px;line-height:1.3;height:30px;overflow:hidden}
+.podium-stat-pill{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.podium-stat-pill .stat-l{font-size:11px;text-transform:uppercase;color:var(--ink-muted);font-weight:600}
+.podium-stat-pill .stat-v{font-size:17px;font-weight:800;color:var(--success-strong)}
+.podium-substat{font-size:12px;color:var(--ink-muted);margin-bottom:14px}
+.podium-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11.5px;font-weight:700;color:var(--primary);cursor:pointer;transition:all .14s ease;width:100%}
+.podium-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Tabela Comparativa OMDS */
+.tbl-om-cell{display:flex;align-items:center;gap:10px}
+.tbl-om-logo{width:26px;height:26px;object-fit:contain;flex:none}
+.tbl-om-sub{font-size:11.5px;color:var(--ink-muted);font-weight:400;display:block}
+.tbl-pct-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.mini-track{width:60px;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
+.mini-fill{height:100%;border-radius:3px}
+.tbl-action-btn{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--primary);cursor:pointer}
+.tbl-action-btn:hover{background:var(--primary);color:#fff}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0F1B2A;color:#FFFFFF;padding:12px 18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;z-index:9999;opacity:0;transform:translateY(12px);transition:all .25s cubic-bezier(.16,1,.3,1);pointer-events:none;border:1px solid rgba(255,255,255,.15)}
+:root[data-theme=dark] .toast{background:#1A2838;color:#E7EDF4;border-color:var(--border-strong)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-ic{font-size:16px}
+
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
 .subtitle{font-size:12.5px;color:var(--ink-muted);margin-top:2px}
 .topbar-r{display:flex;align-items:center;gap:10px}
@@ -962,11 +1276,14 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 :root[data-theme=dark] .ic-sun,html:not([data-theme]) .ic-sun{display:block}
 :root[data-theme=dark] .ic-moon{display:block}:root[data-theme=dark] .ic-sun{display:none}
 @media(prefers-color-scheme:dark){html:not([data-theme]) .ic-sun{display:none}html:not([data-theme]) .ic-moon{display:block}}
+
 /* banner */
 .banner{background:color-mix(in srgb,var(--danger) 12%,var(--surface));border:1px solid var(--danger);border-radius:10px;padding:12px 16px;margin-top:20px;font-size:13px}
 .banner ul{margin:6px 0 0 18px}
+
 /* hero */
 .hero{margin-top:24px;background:var(--hero-soft);border:1px solid var(--border);border-left:4px solid var(--success);border-radius:12px;padding:22px 26px;display:grid;grid-template-columns:1.35fr 1fr;gap:24px;align-items:center}
+.hero-cmd{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
 .hero-num{font-size:48px;font-weight:700;letter-spacing:-.02em;color:var(--success-strong);line-height:1.05;margin:6px 0 12px}
 .hero-eq{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;font-size:15px}
 .hero-eq .eq-op{font-style:normal;font-size:24px;font-weight:300;color:var(--ink-muted)}
@@ -978,6 +1295,7 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .delta{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:10px;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border)}
 .delta.up{color:var(--success-strong)}.delta.down{color:var(--danger)}.delta.flat{color:var(--ink-muted);font-weight:500}
 .delta small{font-weight:400;color:var(--ink-muted)}
+
 /* svg text classes */
 .svg{width:100%;height:auto;display:block}
 .s-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;fill:var(--ink-muted)}
@@ -993,6 +1311,7 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .s-grid{stroke:var(--border);stroke-width:1}.s-ax{font-size:11px;fill:var(--ink-muted)}
 .s-line{fill:none;stroke:var(--success);stroke-width:2.4}.s-area{fill:var(--success);opacity:.10}
 .s-dot{fill:var(--success)}.s-conv{font-size:10.5px;fill:var(--ink-muted)}
+
 /* kpis */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:15px 16px;box-shadow:var(--shadow)}
@@ -1001,8 +1320,10 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .kpi-l{font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-muted);text-transform:uppercase}
 .kpi-v{font-size:24px;font-weight:700;margin:5px 0}
 .chip{display:inline-block;font-size:11px;color:var(--ink-muted);background:var(--surface-2);border-radius:999px;padding:2px 9px}
+
 /* grids */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
 /* uasg */
 .uasg{display:flex;flex-direction:column;gap:8px}
 .uasg-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1017,9 +1338,11 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .exec-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-muted);margin-bottom:4px}
 .exec-track{height:7px;background:var(--track);border-radius:4px;overflow:hidden}
 .exec-fill{height:100%;background:var(--primary);border-radius:4px}
+
 /* chart */
 .chart .eyebrow{margin-bottom:8px}.chart.wide{grid-column:1/-1}
 .vazio{color:var(--ink-muted);font-size:12px;font-style:italic;padding:8px 0}
+
 /* tabs + table */
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:12px;overflow-x:auto}
 .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-muted);font:600 13px var(--sans);padding:9px 14px;cursor:pointer;white-space:nowrap}
@@ -1027,7 +1350,7 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .tab:hover{color:var(--ink)}
 .tbl-tools{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .tbl-search{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--ink);font:14px var(--sans)}
-.tbl-count{font-size:12px;color:var(--ink-muted)}
+.tbl-count{font-size:12px;color:var(--ink-muted);margin-left:auto}
 .tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
 table.det{border-collapse:collapse;width:100%;font-size:14px}
 .det th{position:sticky;top:0;background:var(--surface-2);color:var(--ink-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:10px 12px;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--border)}
@@ -1044,6 +1367,7 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 .det tfoot td{padding:10px 12px;font-weight:700;background:var(--surface-2);border-top:1px solid var(--border-strong)}
 .cel-row{cursor:pointer}.cel-row .chev{float:right;margin-left:8px;color:var(--ink-muted);font-weight:400;transition:transform .12s,color .12s}
 .cel-row:hover .chev{color:var(--success-strong);transform:translateX(2px)}
+
 /* modal drill-down */
 .modal{position:fixed;inset:0;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;background:rgba(8,14,24,.55);overflow-y:auto}
 .modal.open{display:flex}
@@ -1070,15 +1394,25 @@ table.det{border-collapse:collapse;width:100%;font-size:14px}
 .m-nc-val.neg{color:var(--danger)}
 .m-nc-op{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-muted);margin-top:3px}
 .m-nc-desc{font-size:12.5px;color:var(--ink);margin-top:5px;line-height:1.5;white-space:pre-wrap}
+
 /* footer */
 .rodape{max-width:1200px;margin:40px auto 0;padding:20px 24px;border-top:1px solid var(--border);color:var(--ink-muted);font-size:12px;line-height:1.7}
 .rodape b{color:var(--ink)}
 .rodape-brand{color:var(--warning-ink);font-weight:700;font-size:13px;letter-spacing:.02em;margin-bottom:8px}
+
 /* focus + motion */
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
 /* responsive */
-@media(max-width:1023px){.grid2{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+@media(max-width:1023px){
+.grid2{grid-template-columns:1fr}
+.hero{grid-template-columns:1fr}
+.podium-wrap{grid-template-columns:1fr;gap:12px}
+.podium-gold{order:1;margin-bottom:0;padding-top:22px}
+.podium-silver{order:2}
+.podium-bronze{order:3}
+}
 @media(max-width:640px){
 .wrap{padding:0 16px 48px}.topbar{padding:14px 16px;flex-wrap:wrap}
 h1{font-size:22px}.subtitle{display:none}
@@ -1110,18 +1444,31 @@ function bcmsView(btn,which){
  var vc=m.querySelector('.view-completo');if(vc)vc.style.display=which==='completo'?'':'none';
  window.scrollTo(0,0);}
 function trocaOMDS(btn){
- var key=btn.getAttribute('data-key');var u=UNIDADES[key];if(!u)return;
+ var key=btn.getAttribute('data-key');
  document.querySelectorAll('.omds-nav .omds').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-current','false');});
  btn.classList.add('on');btn.setAttribute('aria-current','true');
  document.querySelectorAll('.unidade').forEach(function(s){s.style.display=(s.getAttribute('data-key')===key)?'':'none';});
- document.documentElement.style.setProperty('--accent',u.accent);
- var em=document.getElementById('emblema');if(em){em.src='assets/logos/'+u.logo;em.alt='Brasão '+u.sigla;}
- var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — '+u.sigla;
- var n=document.getElementById('uNome');if(n)n.textContent=u.nome;
- var uu=document.getElementById('uUasg');if(uu)uu.textContent='UASGs '+u.ogu+' (OGU) e '+u.fex+' (FEx)';
- try{document.title='Crédito Disponível — '+u.sigla;}catch(e){}
+ if(key==='RANKING'){
+  document.documentElement.style.setProperty('--accent','#C8901E');
+  var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='Brasão Base de Apoio Logístico';}
+  var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — Ranking & Comparativo OMDS';
+  var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio Logístico do Exército';
+  var uu=document.getElementById('uUasg');if(uu)uu.textContent='Consolidado das 6 Organizações Militares Diretamente Subordinadas';
+  try{document.title='Crédito Disponível — Ranking & Comparativo OMDS';}catch(e){}
+ } else {
+  var u=UNIDADES[key];if(!u)return;
+  document.documentElement.style.setProperty('--accent',u.accent);
+  var em=document.getElementById('emblema');if(em){em.src='assets/logos/'+u.logo;em.alt='Brasão '+u.sigla;}
+  var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — '+u.sigla;
+  var n=document.getElementById('uNome');if(n)n.textContent=u.nome;
+  var uu=document.getElementById('uUasg');if(uu)uu.textContent='UASGs '+u.ogu+' (OGU) e '+u.fex+' (FEx)';
+  try{document.title='Crédito Disponível — '+u.sigla;}catch(e){}
+ }
  try{localStorage.setItem('bcms-omds',key);}catch(e){}
  window.scrollTo(0,0);}
+function trocaOMDSPorKey(key){
+ var btn=document.querySelector('.omds-nav .omds[data-key="'+key+'"]');
+ if(btn){btn.click();window.scrollTo({top:0,behavior:'smooth'});}}
 (function(){try{var k=localStorage.getItem('bcms-omds');if(k){var b=document.querySelector('.omds-nav .omds[data-key="'+k+'"]');if(b&&!b.classList.contains('on'))b.click();}}catch(e){}})();
 function bcmsSearch(inp,tid){var q=inp.value.toLowerCase();var tb=document.getElementById(tid).querySelector('tbody');
  var rows=tb.querySelectorAll('tr');var n=0;
@@ -1147,7 +1494,62 @@ function bcmsSort(th){var table=th.closest('table');var idx=Array.prototype.inde
   if(va<vb)return dir==='ascending'?-1:1;if(va>vb)return dir==='ascending'?1:-1;return 0;});
  rows.forEach(function(r){tb.appendChild(r);});}
 function bcmsEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function bcmsEscXml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];});}
 function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−R$ ':'R$ ')+i+','+s[1];}
+function bcmsToast(msg){
+ var old=document.getElementById('bcms-toast');if(old)old.remove();
+ var t=document.createElement('div');t.id='bcms-toast';t.className='toast';
+ t.innerHTML='<span class="toast-ic">✨</span><span>'+bcmsEsc(msg)+'</span>';
+ document.body.appendChild(t);
+ setTimeout(function(){t.classList.add('show');},10);
+ setTimeout(function(){t.classList.remove('show');setTimeout(function(){if(t.parentNode)t.remove();},300);},3500);}
+function bcmsExportTable(btn,tid,filename){
+ var container=document.getElementById(tid);if(!container)return;
+ var table=container.tagName==='TABLE'?container:container.querySelector('table');if(!table)return;
+ filename=(filename||'exportacao_credito')+'_'+(new Date().toISOString().slice(0,10));
+ var ths=table.querySelectorAll('thead th');var headers=[];
+ ths.forEach(function(th){var txt=th.textContent.replace('▲','').replace('▼','').trim();if(txt&&txt!=='Ação'&&txt!=='AÇÃO')headers.push(txt);});
+ var trs=table.querySelectorAll('tbody tr');var rows=[];
+ trs.forEach(function(tr){if(tr.style.display==='none')return;
+  var cells=tr.querySelectorAll('td');var rowData=[];
+  cells.forEach(function(td,idx){if(idx>=headers.length)return;
+   var sortVal=td.getAttribute('data-sort');var txt=td.textContent.replace('›','').trim();
+   if(sortVal!==null&&!isNaN(parseFloat(sortVal))){rowData.push({v:parseFloat(sortVal),t:'Number'});}
+   else{rowData.push({v:txt,t:'String'});}});
+  if(rowData.length)rows.push(rowData);});
+ var xml='<?xml version="1.0" encoding="UTF-8"?>\n'+
+  '<?mso-application progid="Excel.Sheet"?>\n'+
+  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n'+
+  ' xmlns:o="urn:schemas-microsoft-com:office:office"\n'+
+  ' xmlns:x="urn:schemas-microsoft-com:office:excel"\n'+
+  ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'+
+  '<Styles>\n'+
+  ' <Style ss:ID="Default" ss:Name="Normal"><Font ss:FontName="Calibri" ss:Size="11" ss:Color="#000000"/><Alignment ss:Vertical="Center"/></Style>\n'+
+  ' <Style ss:ID="Header"><Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C4A73" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n'+
+  ' <Style ss:ID="Title"><Font ss:FontName="Calibri" ss:Size="14" ss:Bold="1" ss:Color="#1C4A73"/><Alignment ss:Vertical="Center"/></Style>\n'+
+  ' <Style ss:ID="Currency"><NumberFormat ss:Format="&quot;R$&quot; #,##0.00"/></Style>\n'+
+  ' <Style ss:ID="Percent"><NumberFormat ss:Format="0.0%"/></Style>\n'+
+  ' <Style ss:ID="Bold"><Font ss:FontName="Calibri" ss:Bold="1"/></Style>\n'+
+  '</Styles>\n'+
+  '<Worksheet ss:Name="Crédito Disponível">\n'+
+  '<Table ss:DefaultRowHeight="20">\n';
+ headers.forEach(function(){xml+=' <Column ss:AutoFitWidth="1" ss:Width="120"/>\n';});
+ xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — RELATÓRIO DE CRÉDITO DISPONÍVEL</Data></Cell></Row>\n';
+ xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+'</Data></Cell></Row>\n';
+ xml+=' <Row ss:Height="10"/>\n';
+ xml+=' <Row ss:Height="24">\n';
+ headers.forEach(function(h){xml+='  <Cell ss:StyleID="Header"><Data ss:Type="String">'+bcmsEscXml(h)+'</Data></Cell>\n';});
+ xml+=' </Row>\n';
+ rows.forEach(function(r){xml+=' <Row ss:Height="20">\n';
+  r.forEach(function(c){
+   if(c.t==='Number'){xml+='  <Cell ss:StyleID="Currency"><Data ss:Type="Number">'+c.v+'</Data></Cell>\n';}
+   else{xml+='  <Cell><Data ss:Type="String">'+bcmsEscXml(c.v)+'</Data></Cell>\n';}});
+  xml+=' </Row>\n';});
+ xml+='</Table></Worksheet></Workbook>';
+ var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8;'});
+ var link=document.createElement('a');link.href=URL.createObjectURL(blob);
+ link.download=filename+'.xls';document.body.appendChild(link);link.click();document.body.removeChild(link);
+ bcmsToast('📊 Planilha Excel gerada com sucesso! Download iniciado.');}
 function bcmsCel(row){var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
  var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
  var fonte=d.u==='OGU'?'OGU (Orçamento Geral da União)':(d.u==='FEx'?'FEx (Fundo do Exército)':(d.u||'—'));
@@ -1232,3 +1634,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
