@@ -80,6 +80,88 @@ def baixar(file_id):
     return tmp
 
 # ---------------- ETL ----------------
+def _dt_br(s):
+    try:
+        dd, mm, aa = str(s).split("/")
+        return datetime.date(int(aa), int(mm), int(dd))
+    except Exception:
+        return None
+
+def anotar_trocas_nd(res):
+    """Identifica as TROCAS INTERNAS DE ND ("mudança/alteração de ND") e rastreia a NC de ORIGEM.
+
+    Como a planilha não traz o vínculo, ele é deduzido da ESTRUTURA (validado em 100% dos
+    261 casos de AGO/2026): uma troca de ND é uma mesma NC que, dentro da MESMA Ação+PI,
+    lança valores opostos que se anulam — sai da ND antiga (linha negativa) e entra na ND
+    nova (linha positiva). A NC de origem é então a que trouxe o crédito para a célula da
+    ND antiga; se essa também for uma troca, sobe-se a cadeia até a DESCENTRALIZAÇÃO
+    original (a que carrega o objeto real). Anota em cada linha positiva:
+        L["nd_de"]     -> ND de onde o crédito veio
+        L["nc_origem"] -> {nc, obj, dia, emit, op} da NC que originou o crédito
+    """
+    for cod, d in res.items():
+        linhas = d["linhas"]
+        if not linhas:
+            continue
+        por_nc = {}
+        for L in linhas:
+            if L["nc"]:
+                por_nc.setdefault(L["nc"], []).append(L)
+        # trocas[nc][(acao,pi)] = (nd_origem, nd_destino, valor)
+        trocas = {}
+        for nc, ls in por_nc.items():
+            grupos = {}
+            for L in ls:
+                grupos.setdefault((L["acao"], L["pi"]), []).append(L)
+            for k, gl in grupos.items():
+                pos = [x for x in gl if x["cred"] > 0.005]
+                neg = [x for x in gl if x["cred"] < -0.005]
+                if pos and neg and abs(sum(x["cred"] for x in gl)) <= 0.05:
+                    trocas.setdefault(nc, {})[k] = (neg[0]["nd"], pos[0]["nd"], pos[0]["cred"])
+        if not trocas:
+            continue
+        # entradas de crédito por célula (candidatas a origem)
+        entradas = {}
+        for L in linhas:
+            if L["cred"] > 0.005 and L["nc"]:
+                entradas.setdefault((L["acao"], L["pi"], L["nd"]), []).append(L)
+
+        def rastrear(nc_alt, acao, pi, nd_org, valor, prof=0, visto=None):
+            if visto is None:
+                visto = set()
+            if prof > 6 or nc_alt in visto:
+                return None
+            visto.add(nc_alt)
+            dt_alt = None
+            for L in por_nc.get(nc_alt, []):
+                dt_alt = _dt_br(L["dia"])
+                if dt_alt:
+                    break
+            cands = [L for L in entradas.get((acao, pi, nd_org), [])
+                     if L["nc"] != nc_alt
+                     and (_dt_br(L["dia"]) or datetime.date.min) <= (dt_alt or datetime.date.max)]
+            if not cands:
+                return None
+            exatos = [c for c in cands if abs(c["cred"] - valor) < 0.05]
+            cands = exatos or sorted(cands, key=lambda c: (_dt_br(c["dia"]) or datetime.date.min), reverse=True)
+            orig = cands[0]
+            t = trocas.get(orig["nc"], {}).get((acao, pi))
+            if t:  # a origem também é troca de ND -> sobe a cadeia até a descentralização real
+                acima = rastrear(orig["nc"], acao, pi, t[0], t[2], prof + 1, visto)
+                if acima:
+                    return acima
+            return orig
+
+        for nc, mp in trocas.items():
+            for (acao, pi), (nd_org, nd_dst, val) in mp.items():
+                orig = rastrear(nc, acao, pi, nd_org, val)
+                for L in por_nc.get(nc, []):
+                    if L["acao"] == acao and L["pi"] == pi and L["cred"] > 0.005:
+                        L["nd_de"] = nd_org
+                        if orig:
+                            L["nc_origem"] = {"nc": orig["nc"], "obj": orig["obj"], "dia": orig["dia"],
+                                              "emit": orig["emit"], "op": orig["op"]}
+
 def etl(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = None
@@ -229,6 +311,8 @@ def etl(path):
             # Recebido (líq) − Empenhado/Consumido = Crédito Disponível (fecha por construção)
             cel["aloc"] = cel["cpos"]
             cel["emp"]  = cel["cneg"]
+
+    anotar_trocas_nd(res)
 
     alertas = []
     for cod, d in res.items():
@@ -697,7 +781,9 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                     "dt": dt,
                     "dias": dias,
                     "cred": val_nc,
-                    "cid": cl.get("cid", "")
+                    "cid": cl.get("cid", ""),
+                    "nd_de": L.get("nd_de", ""),
+                    "nc_origem": L.get("nc_origem"),
                 })
             if restante > 0.005:
                 emtela_ncs.append({
@@ -720,6 +806,23 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 })
 
     emtela_ncs.sort(key=lambda x: (x["dias"] if x["dias"] is not None else -1, x["cred"]), reverse=True)
+    # Dados por LINHA em tela (uma NC específica), para o detalhamento não misturar NCs
+    # de objetos diferentes que apenas compartilham o mesmo PI.
+    teladata = {}
+    for _i, _c in enumerate(emtela_ncs, 1):
+        _tid = "%s_t%d" % (sfx, _i)
+        _c["tid"] = _tid
+        _org = _c.get("nc_origem") or {}
+        teladata[_tid] = {
+            "nc": _c["nc"], "uasg": _c["uasg"], "u": _c.get("fonte", ""),
+            "acao": _c["acao"], "pi": _c["pi"], "pinome": _c.get("pi_nome", ""),
+            "nd": _c["nd"], "ndnome": _c.get("nd_nome", ""),
+            "v": round(_c["cred"], 2), "dias": _c["dias"], "dia": _c.get("dia", ""),
+            "obj": _c.get("obj", ""), "op": _c.get("op", ""), "emit": _c.get("emit", ""),
+            "cid": _c.get("cid", ""), "nd_de": _c.get("nd_de", ""),
+            "org": ({"nc": _org.get("nc", ""), "obj": _org.get("obj", ""), "dia": _org.get("dia", ""),
+                     "emit": _org.get("emit", "")} if _org else None),
+        }
     tot_emtela = sum(c["cred"] for c in emtela_ncs)
     idades = [c["dias"] for c in emtela_ncs if c["dias"] is not None]
     idade_media = round(sum(idades) / len(idades)) if idades else 0
@@ -742,17 +845,27 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
             dsort = dias
         refd = c["dt"].strftime("%d/%m/%y") if c["dt"] else "—"
         cid = esc(c.get("cid", ""))
-        desc_completa = esc(c.get("obj", ""))
+        # Troca de ND: a descrição própria ("MUDANÇA DE ND", "DETALHAMENTO…") não diz o objeto.
+        # Mostra o objeto REAL da NC de origem, sinalizando a troca.
+        org = c.get("nc_origem")
+        if org and org.get("obj"):
+            desc_completa = esc(org["obj"])
+            selo = f'<span class="tag-nd" title="Crédito recebido por mudança de ND (de {esc(c.get("nd_de",""))} para {esc(c["nd"])}) — objeto herdado da NC de origem {esc(org["nc"])}">↪ ND {esc(c.get("nd_de",""))}</span> '
+        else:
+            desc_completa = esc(c.get("obj", ""))
+            selo = ""
         desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
+        desc_resumo = selo + desc_resumo
         # nº curto da NC (o completo fica no title e no modal): "160504…2026NC401667" -> "NC 401667 · 160504"
         nc_full = str(c["nc"] or "")
-        m_nc = re.search(r"NC0*(\d+)$", nc_full)
+        m_nc = re.search(r"NC(\d+)$", nc_full)
         if m_nc:
             nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">· {esc(nc_full[:6])}</span>'
         else:
             nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
-        return (f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Clique para detalhar a célula / notas de crédito" '
-                f'onclick="bcmsCel(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsCel(this)}}">'
+        tid = esc(c.get("tid", ""))
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-tela="{tid}" data-cel="{cid}" title="Clique para ver o que está em tela desta NC" '
+                f'onclick="bcmsTela(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsTela(this)}}">'
                 f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
                 f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
                 f'<td class="mono2">{esc(acao_nd)}</td>'
@@ -867,7 +980,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
   </section>
   </div>
 </section>"""
-    return frag, celdata, ncdata, daydata
+    return frag, celdata, ncdata, daydata, teladata
 
 # ---------------- módulo Ranking e Comparativo OMDS ----------------
 def svg_comparativo_barras(u_stats, metric="cred", titulo="Crédito Disponível por Unidade (R$)"):
@@ -1099,14 +1212,14 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
 
 # ---------------- shell da página (multi-OMDS) ----------------
 def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
-    frags, CEL, NCD, DAY = [], {}, {}, {}
+    frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
     for u in UNIDADES:
         hist_u = [{"data": h.get("data"),
                    "total": {"cred": round(h.get(u["ogu"], {}).get("cred", 0.0)
                                            + h.get(u["fex"], {}).get("cred", 0.0), 2)}}
                   for h in hist]
-        frag, cel, ncd, day = conteudo_unidade(res, hist_u, data_str, periodo, u)
-        frags.append(frag); CEL.update(cel); NCD.update(ncd); DAY.update(day)
+        frag, cel, ncd, day, tela = conteudo_unidade(res, hist_u, data_str, periodo, u)
+        frags.append(frag); CEL.update(cel); NCD.update(ncd); DAY.update(day); TELA.update(tela)
     
     ranking_frag = secao_comparativo_omds(res, hist, data_str, periodo)
     frags.append(ranking_frag)
@@ -1135,6 +1248,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     celdata_json = json.dumps(CEL, ensure_ascii=False).replace("</", "<\\/")
     ncdata_json = json.dumps(NCD, ensure_ascii=False).replace("</", "<\\/")
     daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
+    teladata_json = json.dumps(TELA, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
@@ -1176,7 +1290,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo líquido não empenhado no Tesouro Gerencial / SIAFI). O detalhe é o saldo real por célula orçamentária (Ação · PI · ND). A soma das células reconcilia com exatidão matemática com o total consolidado de cada OM.</p>
   <p>Fonte: CRÉDITO DISP.xlsx (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var UNIDADES={ujs};</script>
+<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};</script>
 <script>{JS}</script>
 </body></html>"""
 
@@ -1969,6 +2083,43 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .det-compact .pill-fonte { padding: 1px 7px; font-size: 0.6875rem; }
 .nc-num { font-weight: 700; letter-spacing: .01em; }
 .nc-ug { color: var(--ink-muted); font-weight: 500; }
+/* selo de crédito vindo de mudança de ND (objeto herdado da NC de origem) */
+.tag-nd {
+  display: inline-block; padding: 0 6px; margin-right: 5px; border-radius: 5px;
+  background: var(--warning-bg, rgba(181,130,43,.14)); color: var(--warning-ink, #8A631C);
+  font-size: 0.6875rem; font-weight: 700; white-space: nowrap; vertical-align: 1px;
+}
+/* ---- modal por etapas do crédito ---- */
+.m-etapas { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.m-etapa {
+  border: 1px solid var(--border); background: var(--bg-subtle); color: var(--ink-muted);
+  border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; font-weight: 600;
+  cursor: pointer; transition: all .15s ease; font-family: inherit;
+}
+.m-etapa:hover { color: var(--ink); border-color: var(--border-strong); }
+.m-etapa.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.m-etapa-body { padding-top: 14px; }
+.m-tela-card {
+  display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; border-radius: 14px;
+  background: var(--hero-soft, rgba(15,122,90,.10)); border: 1px solid var(--success, #0F7A5A);
+}
+.m-tela-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--success-strong, #0B5E45); }
+.m-tela-val { font-size: 2rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.m-tela-meta { font-size: 0.8125rem; color: var(--ink-muted); }
+.m-org { margin-top: 14px; border: 1px dashed var(--warning, #B5822B); border-radius: 12px; overflow: hidden; }
+.m-org-h { padding: 8px 14px; background: var(--warning-bg, rgba(181,130,43,.12)); font-size: 0.8125rem; color: var(--warning-ink, #8A631C); }
+.m-org-b { padding: 10px 14px; }
+.m-org-b span { font-size: 0.75rem; color: var(--ink-muted); }
+.m-org-b p { margin-top: 4px; font-size: 0.875rem; color: var(--ink); }
+.m-nc-desc.big { font-size: 0.9375rem; line-height: 1.5; color: var(--ink); }
+.m-nc-esta { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+.m-nc-tag { font-style: normal; font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+  background: var(--primary); color: #fff; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+.m-barra { margin: 14px 0 4px; }
+.m-barra-t { display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 5px; color: var(--ink-muted); }
+.m-barra-t b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.m-barra-track { height: 10px; border-radius: 999px; background: var(--track, #E4E8EF); overflow: hidden; }
+.m-barra-fill { height: 100%; border-radius: 999px; background: var(--success, #0F7A5A); }
 .det .mono2 { font-size: 0.8125rem; color: var(--ink-muted); }
 .cell-neg { color: var(--danger); background: var(--danger-bg); }
 .det tfoot td { padding: 12px 14px; font-weight: 700; background: var(--bg-subtle); border-top: 2px solid var(--border-strong); }
@@ -2584,6 +2735,85 @@ function bcmsExportTable(btn,tid,filename){
   var link=document.createElement('a');link.href=URL.createObjectURL(blob);
   link.download=filename+'.xls';document.body.appendChild(link);link.click();document.body.removeChild(link);
   bcmsToast('📊 Planilha Excel gerada com sucesso! Download iniciado.');
+}
+
+/* ---- Detalhamento por NC "em tela", dividido nas ETAPAS do crédito ----
+   Card principal = SÓ o que está realmente disponível em tela desta NC.
+   Abas: Em tela | Histórico do PI | Liquidação | Pagamento.
+   (Antes o clique abria a célula inteira, misturando NCs de objetos diferentes
+    que só compartilham o mesmo PI.) */
+var BTELA=null;
+function bcmsTela(row){
+  var t=TELADATA[row.getAttribute('data-tela')];
+  if(!t){return bcmsCel(row);}   /* fallback: comportamento antigo */
+  BTELA=t;
+  bcmsTelaAba('tela');
+  var m=document.getElementById('modal');
+  m.classList.add('open');m.setAttribute('aria-hidden','false');
+  var x=document.querySelector('.modal-x');if(x)x.focus();
+}
+function bcmsTelaAba(aba){
+  var t=BTELA;if(!t)return;
+  var c=CELDATA[t.cid]||{};
+  var fonte=t.u==='OGU'?'OGU (Orçamento Geral da União)':(t.u==='FEx'?'FEx (Fundo do Exército)':(t.u||'—'));
+  var ncCurta=(String(t.nc).match(/NC(\d+)$/)||[])[1];
+  var h='<h3 id="modal-title">'+(ncCurta?'NC '+bcmsEsc(ncCurta):bcmsEsc(t.nc))+'</h3>';
+  h+='<p class="m-sub">'+bcmsEsc(t.uasg+' · '+fonte+' · Ação '+t.acao+' · PI '+t.pi+' · ND '+t.nd+(t.ndnome?' — '+t.ndnome:''))+'</p>';
+  /* etapas */
+  var abas=[['tela','🟢 Em tela'],['hist','📜 Histórico do PI'],['liq','🧾 Liquidação'],['pag','💰 Pagamento']];
+  h+='<div class="m-etapas" role="tablist">';
+  abas.forEach(function(a){
+    h+='<button class="m-etapa'+(a[0]===aba?' on':'')+'" role="tab" aria-selected="'+(a[0]===aba)+'" onclick="bcmsTelaAba(\''+a[0]+'\')">'+a[1]+'</button>';
+  });
+  h+='</div><div class="m-etapa-body">';
+  if(aba==='tela'){
+    var idade=(t.dias===null||t.dias===undefined)?'—':(t.dias+' dia'+(t.dias===1?'':'s'));
+    h+='<div class="m-tela-card"><span class="m-tela-lbl">Disponível em tela nesta NC</span>'
+      +'<b class="m-tela-val">'+bcmsBRL(t.v)+'</b>'
+      +'<span class="m-tela-meta">Recebido em '+bcmsEsc(t.dia||'—')+' · há '+idade+(t.emit?' · Emitente '+bcmsEsc(t.emit):'')+'</span></div>';
+    if(t.org){
+      h+='<div class="m-org"><div class="m-org-h">↪ Crédito recebido por <b>mudança de ND</b>'
+        +(t.nd_de?' (de '+bcmsEsc(t.nd_de)+' para '+bcmsEsc(t.nd)+')':'')+'</div>'
+        +'<div class="m-org-b"><span>Objeto original — NC '+bcmsEsc(t.org.nc)
+        +(t.org.dia?' de '+bcmsEsc(t.org.dia):'')+(t.org.emit?' · emitente '+bcmsEsc(t.org.emit):'')+'</span>'
+        +'<p>'+bcmsEsc(t.org.obj||'—')+'</p></div></div>';
+    }
+    h+='<div class="m-ncs-h">Descrição desta NC</div><div class="m-nc-desc big">'+bcmsEsc(t.obj||'—')+'</div>';
+    if(t.op) h+='<p class="m-formula">Operação: '+bcmsEsc(t.op)+'</p>';
+  } else if(aba==='hist'){
+    h+='<p class="m-formula">Todas as movimentações da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — recebimentos, detalhamentos, mudanças de ND e anulações.</p>';
+    h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(c.r||0)+'</b></span><span>Empenhado<b>'+bcmsBRL(c.e||0)+'</b></span><span class="ok">Disponível<b>'+bcmsBRL(c.d||0)+'</b></span></div>';
+    var itens='';
+    (c.ncs||[]).forEach(function(n){
+      if(!n[0])return;var neg=n[2]<0;var meta=[];
+      if(n[4])meta.push('Emitente '+bcmsEsc(n[4]));
+      if(n[1])meta.push(bcmsEsc(n[1]));
+      if(n[5])meta.push('em '+bcmsEsc(n[5]));
+      var ehEsta=(n[0]===t.nc);
+      itens+='<div class="m-nc'+(ehEsta?' m-nc-esta':'')+'"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+(ehEsta?' <i class="m-nc-tag">esta NC</i>':'')+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
+      if(meta.length)itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
+      if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
+      itens+='</div>';
+    });
+    h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem movimentações.</p>')+'</div>';
+  } else if(aba==='liq'){
+    var emp=c.e||0,liq=c.l||0;
+    h+='<div class="m-kpis"><span>Empenhado<b>'+bcmsBRL(emp)+'</b></span><span class="ok">Liquidado<b>'+bcmsBRL(liq)+'</b></span><span>A liquidar<b>'+bcmsBRL(Math.max(0,emp-liq))+'</b></span></div>';
+    h+=bcmsBarra(liq,emp,'Liquidado sobre o empenhado');
+    h+='<p class="m-formula">Liquidação é a etapa em que a despesa é atestada (bem/serviço entregue). Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega liquidação por NC individual.</p>';
+  } else {
+    var liq2=c.l||0,pag=c.p||0;
+    h+='<div class="m-kpis"><span>Liquidado<b>'+bcmsBRL(liq2)+'</b></span><span class="ok">Pago<b>'+bcmsBRL(pag)+'</b></span><span>A pagar<b>'+bcmsBRL(Math.max(0,liq2-pag))+'</b></span></div>';
+    h+=bcmsBarra(pag,liq2,'Pago sobre o liquidado');
+    h+='<p class="m-formula">Pagamento é a quitação efetiva da despesa liquidada. Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega pagamento por NC individual.</p>';
+  }
+  h+='</div>';
+  document.getElementById('modal-body').innerHTML=h;
+}
+function bcmsBarra(v,total,rot){
+  var p=total>0?Math.min(100,Math.max(0,v/total*100)):0;
+  return '<div class="m-barra"><div class="m-barra-t"><span>'+bcmsEsc(rot)+'</span><b>'+p.toFixed(1)+'%</b></div>'
+    +'<div class="m-barra-track"><div class="m-barra-fill" style="width:'+p.toFixed(1)+'%"></div></div></div>';
 }
 
 function bcmsCel(row){
