@@ -107,6 +107,31 @@ def etl(path):
     C = dict(prov=col("PROVISAO RECEBIDA"), cred=col("CREDITO DISPONIVEL"),
              emp=col("DESPESAS EMPENHADAS"), liq=col("DESPESAS LIQUIDADAS"), pag=col("DESPESAS PAGAS"),
              conc=col("PROVISAO CONCEDIDA", req=False))
+    # [FIX layout 2026-08] Os rótulos (Ação/PI/ND/NC + descrições) ficam em linhas de
+    # cabeçalho ACIMA da linha de métricas e a fonte JÁ MUDOU de posições. Resolve por
+    # NOME varrendo as linhas de cabeçalho, com fallback p/ as posições atuais conhecidas
+    # (col 6/7/8/9/10/5/11/12/13/1). Antes liam posições fixas ERRADAS (col 4/6/11/8/9/…),
+    # o que embaralhava os rótulos (Ação lia o nome da UG, ND lia a descrição da NC) e
+    # quebrava a soma por célula — o empenho não abatia o recebimento e o "em tela" inflava.
+    hdrL = {}
+    for rr in range(max(1, hdr_row - 4), hdr_row + 1):
+        for c in range(1, ws.max_column + 1):
+            nn = norm(ws.cell(rr, c).value)
+            if nn and nn not in hdrL:
+                hdrL[nn] = c
+    def colL(name, fb):
+        c = hdrL.get(name)
+        return c if c else fb
+    CA    = colL("ACAO GOVERNO", 6)           # código da Ação de Governo
+    CPI   = colL("PI", 7)                      # código do Plano Interno
+    CPID  = CPI + 1                            # descrição do PI (coluna à direita, sem cabeçalho próprio)
+    CND   = colL("NATUREZA DESPESA", 9)        # código da Natureza de Despesa
+    CNDD  = CND + 1                            # descrição da ND
+    CNC   = colL("NC", 5)                      # número da Nota de Crédito
+    COBJ  = colL("NC - DESCRICAO", 11)         # descrição/objeto da NC
+    COP   = colL("NC - OPERACAO (TIPO)", 12)   # operação (recebimento/detalhamento/anulação)
+    CDIA  = colL("NC - DIA EMISSAO", 13)       # data de emissão da NC
+    CEMIT = colL("EMITENTE - UG", 1)           # UG emitente
     data_row = None
     for r in range(hdr_row + 1, min(hdr_row + 8, ws.max_row + 1)):
         if norm(ws.cell(r, 3).value).replace("'", "").isdigit():
@@ -148,16 +173,16 @@ def etl(path):
         d["emp"]  += emp;  d["liq"]  += liq;  d["pag"]  += pag
         d["n"]    += 1
 
-        acao     = disp(ws.cell(r, 4).value)
-        pi       = disp(ws.cell(r, 6).value)
-        pi_nome  = disp(ws.cell(r, 7).value)
-        nd       = disp(ws.cell(r, 11).value)
-        nd_nome  = disp(ws.cell(r, 12).value)
-        nc       = disp(ws.cell(r, 8).value)
-        dia      = disp(ws.cell(r, 9).value)
-        emit     = disp(ws.cell(r, 10).value)
-        op       = disp(ws.cell(r, 14).value)
-        obj      = disp(ws.cell(r, 13).value)
+        acao     = disp(ws.cell(r, CA).value)
+        pi       = disp(ws.cell(r, CPI).value)
+        pi_nome  = disp(ws.cell(r, CPID).value)
+        nd       = disp(ws.cell(r, CND).value)
+        nd_nome  = disp(ws.cell(r, CNDD).value)
+        nc       = disp(ws.cell(r, CNC).value)
+        dia      = disp(ws.cell(r, CDIA).value)
+        emit     = disp(ws.cell(r, CEMIT).value)
+        op       = disp(ws.cell(r, COP).value)
+        obj      = disp(ws.cell(r, COBJ).value)
         
         # fallback na busca de descrição caso a coluna 13 esteja vazia
         if not obj:
@@ -181,10 +206,13 @@ def etl(path):
         if k_cel not in d["celulas"]:
             d["celulas"][k_cel] = {"acao": acao, "pi": pi, "pi_nome": pi_nome, "nd": nd, "nd_nome": nd_nome,
                                    "prov": 0.0, "conc": 0.0, "cred": 0.0, "emp": 0.0, "liq": 0.0, "pag": 0.0,
-                                   "n_nc": 0, "ncs": []}
+                                   "cpos": 0.0, "cneg": 0.0, "n_nc": 0, "ncs": []}
         cel = d["celulas"][k_cel]
         cel["prov"] += prov; cel["conc"] += conc; cel["cred"] += cred
         cel["emp"]  += emp;  cel["liq"]  += liq;  cel["pag"]  += pag
+        # decompõe a col. Crédito Disponível: movimentos + (recebido) e − (consumido/empenho/anulação)
+        if cred >= 0: cel["cpos"] += cred
+        else:         cel["cneg"] += -cred
         if nc:
             cel["n_nc"] += 1
             cel["ncs"].append((nc, dia, emit, op, cred, obj))
@@ -198,7 +226,9 @@ def etl(path):
 
     for d in res.values():
         for cel in d["celulas"].values():
-            cel["aloc"] = cel["prov"] - cel["conc"]
+            # Recebido (líq) − Empenhado/Consumido = Crédito Disponível (fecha por construção)
+            cel["aloc"] = cel["cpos"]
+            cel["emp"]  = cel["cneg"]
 
     alertas = []
     for cod, d in res.items():
@@ -710,15 +740,21 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 dcls = "badge-age age-green"
             dtxt = f'{dias}d'
             dsort = dias
-        refd = c["dt"].strftime("%d/%m/%Y") if c["dt"] else "—"
+        refd = c["dt"].strftime("%d/%m/%y") if c["dt"] else "—"
         cid = esc(c.get("cid", ""))
         desc_completa = esc(c.get("obj", ""))
-        desc_resumo = desc_completa[:75] + ("…" if len(desc_completa) > 75 else "")
-        nc_lbl = esc(c["nc"])
+        desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
+        # nº curto da NC (o completo fica no title e no modal): "160504…2026NC401667" -> "NC 401667 · 160504"
+        nc_full = str(c["nc"] or "")
+        m_nc = re.search(r"NC0*(\d+)$", nc_full)
+        if m_nc:
+            nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">· {esc(nc_full[:6])}</span>'
+        else:
+            nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
         return (f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Clique para detalhar a célula / notas de crédito" '
                 f'onclick="bcmsCel(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsCel(this)}}">'
                 f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
-                f'<td class="mono2" style="font-weight:700">{nc_lbl}</td>'
+                f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
                 f'<td class="mono2">{esc(acao_nd)}</td>'
                 f'<td class="obj" title="{desc_completa}" data-full-desc="{desc_completa}">{desc_resumo}</td>'
                 f'<td class="mono2">{esc(refd)}</td>'
@@ -727,10 +763,10 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
 
     et_ths = (
         _th("Fonte", False) +
-        _th("Nota de Crédito (NC)", False) +
+        _th("NC", False) +
         _th("Ação · ND", False) +
-        _th("Descrição Completa da NC", False) +
-        _th("Recebido em", False) +
+        _th("Descrição do objeto da NC", False) +
+        _th("Recebido", False) +
         _th("Crédito em Tela", True) +
         _th("Idade", True)
     )
@@ -750,7 +786,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="bcmsSearch(this,\'tab-emtela-{sfx}\')">'
         f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-emtela-{sfx}" data-unit="NC(s) em tela" aria-live="polite">{len(emtela_ncs)} NC(s) em tela</span></div>'
-        f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det"><thead><tr>{et_ths}</tr></thead>'
+        f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det det-compact"><thead><tr>{et_ths}</tr></thead>'
         f'<tbody>{"".join(et_row(c) for c in emtela_ncs)}</tbody>'
         f'<tfoot><tr><td colspan="5">TOTAL · {len(emtela_ncs)} Nota(s) de Crédito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>—</td></tr></tfoot></table></div></section>'
     )
@@ -1921,6 +1957,18 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .det td.anchor { font-weight: 700; }
 .det tbody tr:hover { background: var(--bg-subtle); }
 .det .obj { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-muted); }
+/* [COMPACTA] lista de NC: linhas mais baixas e mais texto útil visível.
+   Reduz padding/fonte (46px -> ~32px por linha) e devolve à descrição o espaço
+   liberado pelo nº curto da NC. */
+.det-compact td { padding: 5px 10px; line-height: 1.35; }
+.det-compact th { padding: 8px 10px; }
+.det-compact tfoot td { padding: 8px 10px; }
+.det-compact .obj { max-width: 560px; color: var(--ink); }
+.det-compact .mono2 { font-size: 0.78125rem; }
+.det-compact .badge-age { padding: 1px 7px; font-size: 0.6875rem; }
+.det-compact .pill-fonte { padding: 1px 7px; font-size: 0.6875rem; }
+.nc-num { font-weight: 700; letter-spacing: .01em; }
+.nc-ug { color: var(--ink-muted); font-weight: 500; }
 .det .mono2 { font-size: 0.8125rem; color: var(--ink-muted); }
 .cell-neg { color: var(--danger); background: var(--danger-bg); }
 .det tfoot td { padding: 12px 14px; font-weight: 700; background: var(--bg-subtle); border-top: 2px solid var(--border-strong); }
@@ -2118,6 +2166,22 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
   width: 100%;
   padding: 28px 30px;
   animation: modalIn .25s var(--ease-spring);
+  /* [FIX janela fora da tela] o painel NUNCA excede a viewport: limita a altura e
+     rola o conteúdo por dentro (o ✕ fica sempre visível). Antes crescia sem limite
+     e, com align-items:center, o topo era cortado e ficava inalcançável. */
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#modal-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  margin-right: -10px;
+  padding-right: 10px;
 }
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(10px); }
