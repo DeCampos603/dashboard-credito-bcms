@@ -864,7 +864,10 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         else:
             nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
         tid = esc(c.get("tid", ""))
-        return (f'<tr class="cel-row" tabindex="0" role="button" data-tela="{tid}" data-cel="{cid}" title="Clique para ver o que está em tela desta NC" '
+        faixa = "none" if dias is None else ("r" if dias > 60 else ("a" if dias > 30 else "v"))
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-tela="{tid}" data-cel="{cid}" '
+                f'data-fonte="{esc(c.get("fonte",""))}" data-acao="{esc(c["acao"])}" data-nd="{esc(c["nd"])}" '
+                f'data-faixa="{faixa}" data-val="{c["cred"]:.2f}" title="Clique para ver o que está em tela desta NC" '
                 f'onclick="bcmsTela(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsTela(this)}}">'
                 f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
                 f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
@@ -879,10 +882,28 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         _th("NC", False) +
         _th("Ação · ND", False) +
         _th("Descrição do objeto da NC", False) +
-        _th("Recebido", False) +
+        _th("Recebido em", False) +
         _th("Crédito em Tela", True) +
         _th("Idade", True)
     )
+
+    # opções dos filtros — só o que existe de fato nesta unidade
+    _fontes = sorted({c.get("fonte", "") for c in emtela_ncs if c.get("fonte")})
+    _acoes = sorted({c["acao"] for c in emtela_ncs if c["acao"]})
+    _nds = sorted({c["nd"] for c in emtela_ncs if c["nd"]})
+    _nd_lbl = {}
+    for _c in emtela_ncs:
+        if _c["nd"] and _c["nd"] not in _nd_lbl and _c.get("nd_nome"):
+            _nd_lbl[_c["nd"]] = _c["nd_nome"]
+    opt_fonte = '<option value="">Fonte: todas</option>' + "".join(
+        f'<option value="{esc(_f)}">{esc(_f)}{" · OGU (exercício corrente)" if _f == "160" else (" · FEx (exercícios anteriores)" if _f == "167" else "")}</option>' for _f in _fontes)
+    opt_acao = '<option value="">Ação: todas</option>' + "".join(
+        f'<option value="{esc(_a)}">{esc(_a)}</option>' for _a in _acoes)
+    opt_nd = '<option value="">ND: todas</option>' + "".join(
+        f'<option value="{esc(_n)}">{esc(_n)}{esc(" — " + _nd_lbl[_n][:26]) if _nd_lbl.get(_n) else ""}</option>'
+        for _n in _nds)
+    _cb = "bcmsFiltra('%s')" % sfx
+    _cbl = "bcmsLimpaFiltros('%s')" % sfx
 
     emtela_html = (
         '<section class="sec"><div class="eyebrow">Créditos em tela — por Nota de Crédito (NC)</div>'
@@ -896,9 +917,19 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         '<p class="sec-nota">Relação dos <b>créditos disponíveis por Nota de Crédito (NC)</b> com descrição completa do objeto e <b>dias em tela</b> (desde o lançamento da NC). '
         '<b>Clique em uma linha</b> para abrir a ficha completa. Legenda de idade: <span class="badge-age age-green">≤30d</span> recente · <span class="badge-age age-amber">31–60d</span> atenção · <span class="badge-age age-red">&gt;60d</span> crítico.</p>'
         f'<div class="tbl-tools"><label class="visually-hidden" for="q-tab-emtela-{sfx}">Buscar</label>'
-        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="bcmsSearch(this,\'tab-emtela-{sfx}\')">'
-        f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
+        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="{_cb}">'
+        f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Exporta exatamente as linhas visíveis, conforme os filtros aplicados"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-emtela-{sfx}" data-unit="NC(s) em tela" aria-live="polite">{len(emtela_ncs)} NC(s) em tela</span></div>'
+        f'<div class="tbl-filtros" id="flt-{sfx}" role="group" aria-label="Filtros da lista de créditos em tela">'
+        '<span class="flt-lbl">Filtrar:</span>'
+        f'<select class="flt" id="f-fonte-{sfx}" aria-label="Filtrar por fonte" onchange="{_cb}">{opt_fonte}</select>'
+        f'<select class="flt" id="f-acao-{sfx}" aria-label="Filtrar por ação de governo" onchange="{_cb}">{opt_acao}</select>'
+        f'<select class="flt" id="f-nd-{sfx}" aria-label="Filtrar por natureza de despesa" onchange="{_cb}">{opt_nd}</select>'
+        f'<select class="flt" id="f-idade-{sfx}" aria-label="Filtrar por idade em tela" onchange="{_cb}">'
+        '<option value="">Idade: todas</option><option value="v">≤ 30 dias</option>'
+        '<option value="a">31 a 60 dias</option><option value="r">&gt; 60 dias</option></select>'
+        f'<button type="button" class="flt-limpa" onclick="{_cbl}" title="Limpar todos os filtros">✕ Limpar</button>'
+        f'<span class="flt-resumo" id="flt-res-{sfx}" aria-live="polite"></span></div>'
         f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det det-compact"><thead><tr>{et_ths}</tr></thead>'
         f'<tbody>{"".join(et_row(c) for c in emtela_ncs)}</tbody>'
         f'<tfoot><tr><td colspan="5">TOTAL · {len(emtela_ncs)} Nota(s) de Crédito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>—</td></tr></tfoot></table></div></section>'
@@ -2089,6 +2120,28 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
   background: var(--warning-bg, rgba(181,130,43,.14)); color: var(--warning-ink, #8A631C);
   font-size: 0.6875rem; font-weight: 700; white-space: nowrap; vertical-align: 1px;
 }
+/* ---- barra de filtros da lista em tela ---- */
+.tbl-filtros {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 12px; margin-bottom: 10px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.flt-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); }
+.flt {
+  font-family: inherit; font-size: 0.8125rem; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 8px; padding: 6px 10px; max-width: 240px; cursor: pointer;
+}
+.flt:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.flt-limpa {
+  font-family: inherit; font-size: 0.75rem; font-weight: 600; color: var(--ink-muted);
+  background: transparent; border: 1px solid var(--border-strong); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer;
+}
+.flt-limpa:hover { color: var(--danger); border-color: var(--danger); }
+.flt-resumo { font-size: 0.8125rem; color: var(--ink-muted); font-weight: 600; }
+.flt-resumo.on { color: var(--primary); }
+@media (max-width: 640px) { .flt { flex: 1 1 100%; max-width: none; } }
 /* ---- modal por etapas do crédito ---- */
 .m-etapas { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 .m-etapa {
@@ -2635,6 +2688,68 @@ function bcmsToast(msg){
   setTimeout(function(){t.classList.remove('show');setTimeout(function(){if(t.parentNode)t.remove();},300);},3500);
 }
 
+/* ---- Filtros combinados da lista "em tela" (Fonte + Ação + ND + Idade + busca).
+   O botão Exportar Excel usa exatamente o que sobra visível aqui. ---- */
+function bcmsFiltra(sfx){
+  var tid='tab-emtela-'+sfx;
+  var cont=document.getElementById(tid); if(!cont) return;
+  var tb=cont.querySelector('tbody'); if(!tb) return;
+  var v=function(id){var e=document.getElementById(id+'-'+sfx); return e?e.value:'';};
+  var q=(v('q-tab-emtela')||'').toLowerCase();
+  var fFonte=v('f-fonte'), fAcao=v('f-acao'), fNd=v('f-nd'), fId=v('f-idade');
+  var n=0, soma=0;
+  tb.querySelectorAll('tr').forEach(function(r){
+    var ok=true;
+    if(fFonte && r.getAttribute('data-fonte')!==fFonte) ok=false;
+    if(ok&&fAcao && r.getAttribute('data-acao')!==fAcao) ok=false;
+    if(ok&&fNd && r.getAttribute('data-nd')!==fNd) ok=false;
+    if(ok&&fId && r.getAttribute('data-faixa')!==fId) ok=false;
+    if(ok&&q && r.textContent.toLowerCase().indexOf(q)===-1) ok=false;
+    r.style.display=ok?'':'none';
+    if(ok){n++; soma+=parseFloat(r.getAttribute('data-val')||'0')||0;}
+  });
+  var cnt=document.getElementById('cnt-'+tid);
+  if(cnt){var u=cnt.getAttribute('data-unit')||'linha(s)'; cnt.textContent=n+' '+u;}
+  /* rodapé passa a refletir o subconjunto filtrado */
+  var tf=cont.querySelector('tfoot tr');
+  if(tf){
+    var tds=tf.querySelectorAll('td');
+    var ativo=!!(fFonte||fAcao||fNd||fId||q);
+    if(tds.length){tds[0].textContent=(ativo?'FILTRADO · ':'TOTAL · ')+n+' Nota(s) de Crédito em tela';}
+    if(tds.length>1){tds[tds.length-2].textContent=bcmsBRL(soma);}
+  }
+  var res=document.getElementById('flt-res-'+sfx);
+  if(res){
+    var pk=[];
+    if(fFonte)pk.push('Fonte '+fFonte);
+    if(fAcao)pk.push('Ação '+fAcao);
+    if(fNd)pk.push('ND '+fNd);
+    if(fId)pk.push({v:'≤30d',a:'31–60d',r:'>60d'}[fId]||fId);
+    if(q)pk.push('“'+q+'”');
+    res.textContent=pk.length?(pk.join(' · ')+' — '+bcmsBRL(soma)):'';
+    res.className='flt-resumo'+(pk.length?' on':'');
+  }
+}
+function bcmsLimpaFiltros(sfx){
+  ['f-fonte','f-acao','f-nd','f-idade'].forEach(function(id){
+    var e=document.getElementById(id+'-'+sfx); if(e)e.value='';});
+  var b=document.getElementById('q-tab-emtela-'+sfx); if(b)b.value='';
+  bcmsFiltra(sfx);
+}
+/* Descreve os filtros ativos, p/ registrar no cabeçalho da planilha exportada. */
+function bcmsFiltrosAtivos(tid){
+  var m=/^tab-emtela-(.+)$/.exec(tid||''); if(!m) return '';
+  var sfx=m[1];
+  var v=function(id){var e=document.getElementById(id+'-'+sfx); return e?e.value:'';};
+  var pk=[];
+  if(v('f-fonte'))pk.push('Fonte: '+v('f-fonte'));
+  if(v('f-acao'))pk.push('Ação: '+v('f-acao'));
+  if(v('f-nd'))pk.push('ND: '+v('f-nd'));
+  var fi=v('f-idade'); if(fi)pk.push('Idade: '+({v:'até 30 dias',a:'31 a 60 dias',r:'mais de 60 dias'}[fi]||fi));
+  var q=v('q-tab-emtela'); if(q)pk.push('Busca: "'+q+'"');
+  return pk.length?pk.join(' · '):'';
+}
+
 function bcmsExportTable(btn,tid,filename){
   var container=document.getElementById(tid);if(!container)return;
   var table=container.tagName==='TABLE'?container:container.querySelector('table');if(!table)return;
@@ -2672,6 +2787,10 @@ function bcmsExportTable(btn,tid,filename){
     var cells=tr.querySelectorAll('td');var rowData=[];
     cells.forEach(function(td,idx){if(idx>=headers.length)return;
       var sortVal=td.getAttribute('data-sort');var exp=colTypes[idx]||'String';
+      /* guarda: conteúdo com cara de data (dd/mm/aa) é texto, nunca número —
+         senão a coluna "Recebido" (data) era somada como se fosse moeda. */
+      var _txtCel=td.textContent.trim();
+      if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(_txtCel)) exp='String';
       var fullText=td.getAttribute('data-full-desc')||td.getAttribute('title')||td.textContent.replace('›','').trim();
       if(!td.getAttribute('data-full-desc')&&!td.getAttribute('title')){fullText=td.textContent.replace('›','').trim();}
       if(exp==='String'){
@@ -2718,7 +2837,8 @@ function bcmsExportTable(btn,tid,filename){
     xml+=' <Column ss:AutoFitWidth="1" ss:Width="'+w+'"/>\n';
   });
   xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — RELATÓRIO DE CRÉDITOS DISPONÍVEIS</Data></Cell></Row>\n';
-  xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+' · Detalhamento por Nota de Crédito (NC)</Data></Cell></Row>\n';
+  var _flt=(typeof bcmsFiltrosAtivos==='function')?bcmsFiltrosAtivos(tid):'';
+  xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+' · '+rows.length+' registro(s)'+(_flt?' · FILTROS APLICADOS — '+_flt:' · sem filtros (lista completa)')+'</Data></Cell></Row>\n';
   xml+=' <Row ss:Height="10"/>\n';
   xml+=' <Row ss:Height="24">\n';
   headers.forEach(function(h){xml+='  <Cell ss:StyleID="Header"><Data ss:Type="String">'+bcmsEscXml(h)+'</Data></Cell>\n';});
