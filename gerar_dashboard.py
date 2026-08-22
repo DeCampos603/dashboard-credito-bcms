@@ -1,46 +1,46 @@
 # -*- coding: utf-8 -*-
 """
-Gera um dashboard HTML autocontido de CRÃ‰DITO DISPONÃVEL do BCMS
-(UASG 160329 - OGU e 167329 - Fundo do ExÃ©rcito) e das OMDS da Ba Ap Log Ex
-a partir do export do Tesouro Gerencial 'CRÃ‰DITO DISP.xlsx' publicado no Google Drive.
+Gera um dashboard HTML autocontido de CRÉDITO DISPONÍVEL do BCMS
+(UASG 160329 - OGU e 167329 - Fundo do Exército) e das OMDS da Ba Ap Log Ex
+a partir do export do Tesouro Gerencial 'CRÉDITO DISP.xlsx' publicado no Google Drive.
 
-- Baixa o xlsx pÃºblico do Drive (ou usa --local para testar com arquivo local).
-- LÃª a aba 'CRÃ‰DITO DISP' (cabeÃ§alho dinÃ¢mico), valida o layout por nome de coluna,
-  filtra as OMDS e calcula KPIs, quebras por AÃ§Ã£o/ND e detalhe por NC.
-- VALIDAÃ‡ÃƒO anti-falha: CrÃ©dito DisponÃ­vel tem de fechar com Recebido âˆ’ Concedido âˆ’ Empenhado.
-- Acumula um snapshot diÃ¡rio em data/history.json (para o grÃ¡fico de tendÃªncia).
+- Baixa o xlsx público do Drive (ou usa --local para testar com arquivo local).
+- Lê a aba 'CRÉDITO DISP' (cabeçalho dinâmico), valida o layout por nome de coluna,
+  filtra as OMDS e calcula KPIs, quebras por Ação/ND e detalhe por NC.
+- VALIDAÇÃO anti-falha: Crédito Disponível tem de fechar com Recebido − Concedido − Empenhado.
+- Acumula um snapshot diário em data/history.json (para o gráfico de tendência).
 - Escreve site/index.html (self-contained: CSS Moderno + Google Fonts + SVG + Tabela + Excel) e site/data/history.json.
 
-Design UI/UX & Neurodesign SÃªnior (ui-ux-cognitive-engineering.md):
-- Design tokens semÃ¢nticos completos em HSL (Light & Dark mode com zero fadiga visual).
+Design UI/UX & Neurodesign Sênior (ui-ux-cognitive-engineering.md):
+- Design tokens semânticos completos em HSL (Light & Dark mode com zero fadiga visual).
 - Tipografia fluida (clamp), Google Fonts Inter + JetBrains Mono + Newsreader.
-- EquaÃ§Ã£o matemÃ¡tica em chips visuais (Recebido âˆ’ Empenhado = DisponÃ­vel).
-- PÃ³dio gamificado 3D (ðŸ¥‡, ðŸ¥ˆ, ðŸ¥‰) com benchmarking de execuÃ§Ã£o orÃ§amentÃ¡ria.
-- Badges cromÃ¡ticos de idade de crÃ©dito em tela (â‰¤30d, 31â€“60d, >60d).
-- ExportaÃ§Ã£o nativa para Excel (.xls formatado) com tipos de dados numÃ©ricos e toast feedback.
-- Modal drill-down com fÃ­sica spring e backdrop blur.
-- Conformidade estrita WCAG 2.2 AA/AAA, 60fps GPU e zero clichÃªs amadores.
+- Equação matemática em chips visuais (Recebido − Empenhado = Disponível).
+- Pódio gamificado 3D (🥇, 🥈, 🥉) com benchmarking de execução orçamentária.
+- Badges cromáticos de idade de crédito em tela (≤30d, 31–60d, >60d).
+- Exportação nativa para Excel (.xls formatado) com tipos de dados numéricos e toast feedback.
+- Modal drill-down com física spring e backdrop blur.
+- Conformidade estrita WCAG 2.2 AA/AAA, 60fps GPU e zero clichês amadores.
 
 Uso:
-    python gerar_dashboard.py                 # baixa do Drive (FileId padrÃ£o / env DRIVE_FILE_ID)
+    python gerar_dashboard.py                 # baixa do Drive (FileId padrão / env DRIVE_FILE_ID)
     python gerar_dashboard.py --local X.xlsx  # usa arquivo local (teste)
-    python gerar_dashboard.py --date 2026-07-14  # forÃ§a a data do snapshot (default: hoje)
+    python gerar_dashboard.py --date 2026-07-14  # força a data do snapshot (default: hoje)
 """
 import os, sys, json, argparse, datetime, urllib.request, tempfile, html, math, re, shutil
 import openpyxl
 
 HDR_ROW, DATA_ROW = 8, 9
-# Manifesto das OMDS da Ba Ap Log â€” cada OM = par OGU (16xxxx) + FEx (167xxx).
+# Manifesto das OMDS da Ba Ap Log — cada OM = par OGU (16xxxx) + FEx (167xxx).
 UNIDADES = [
-    {"sigla": "BCMS",      "nome": "BatalhÃ£o Central de ManutenÃ§Ã£o e Suprimento", "ogu": "160329", "fex": "167329", "logo": "BCMS.png",    "accent": "#CE2B2B", "key": "BCMS"},
-    {"sigla": "Ba Ap Log", "nome": "Base de Apoio LogÃ­stico do ExÃ©rcito",          "ogu": "160238", "fex": "167238", "logo": "BAAPLOG.png", "accent": "#D83030", "key": "BAAPLOG"},
-    {"sigla": "D C Mun",   "nome": "DepÃ³sito Central de MuniÃ§Ã£o",                  "ogu": "160246", "fex": "167246", "logo": "DCMUN.png",   "accent": "#047CC0", "key": "DCMUN"},
+    {"sigla": "BCMS",      "nome": "Batalhão Central de Manutenção e Suprimento", "ogu": "160329", "fex": "167329", "logo": "BCMS.png",    "accent": "#CE2B2B", "key": "BCMS"},
+    {"sigla": "Ba Ap Log", "nome": "Base de Apoio Logístico do Exército",          "ogu": "160238", "fex": "167238", "logo": "BAAPLOG.png", "accent": "#D83030", "key": "BAAPLOG"},
+    {"sigla": "D C Mun",   "nome": "Depósito Central de Munição",                  "ogu": "160246", "fex": "167246", "logo": "DCMUN.png",   "accent": "#047CC0", "key": "DCMUN"},
     {"sigla": "BMSA",      "nome": "BMSA",                                         "ogu": "160304", "fex": "167304", "logo": "BMSA.png",    "accent": "#DB2819", "key": "BMSA"},
-    {"sigla": "1Âº D Sup",  "nome": "1Âº DepÃ³sito de Suprimento",                    "ogu": "160307", "fex": "167307", "logo": "1DSUP.png",   "accent": "#DE2B30", "key": "DSUP1"},
+    {"sigla": "1º D Sup",  "nome": "1º Depósito de Suprimento",                    "ogu": "160307", "fex": "167307", "logo": "1DSUP.png",   "accent": "#DE2B30", "key": "DSUP1"},
     {"sigla": "ECT",       "nome": "ECT",                                          "ogu": "160321", "fex": "167321", "logo": "Ect.png",     "accent": "#B33338", "key": "ECT"},
 ]
 def _par(u):  # par de UASGs (OGU, FEx) de uma unidade, no formato (cod, label)
-    return [(u["ogu"], f'{u["sigla"]} Â· OGU'), (u["fex"], f'{u["sigla"]} Â· FEx')]
+    return [(u["ogu"], f'{u["sigla"]} · OGU'), (u["fex"], f'{u["sigla"]} · FEx')]
 
 ALVOS = [p for u in UNIDADES for p in _par(u)]
 FONTE_CURTA = {}
@@ -59,7 +59,7 @@ def to_num(v):
     if v is None: return 0.0
     if isinstance(v, (int, float)): return float(v)
     s = str(v).strip().replace("'", "")
-    if s in ("", "-", "-9", "NAO SE APLICA", "NÃƒO SE APLICA"): return 0.0
+    if s in ("", "-", "-9", "NAO SE APLICA", "NÃO SE APLICA"): return 0.0
     try: return float(s)
     except ValueError:
         try: return float(s.replace(".", "").replace(",", "."))
@@ -67,7 +67,7 @@ def to_num(v):
 
 def disp(v):
     s = "" if v is None else str(v).strip().replace("'", "")
-    return "" if s in ("-9", "NAO SE APLICA", "NÃƒO SE APLICA") else s
+    return "" if s in ("-9", "NAO SE APLICA", "NÃO SE APLICA") else s
 
 def baixar(file_id):
     url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
@@ -76,7 +76,7 @@ def baixar(file_id):
     with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
         f.write(r.read())
     if os.path.getsize(tmp) < 1000:
-        raise SystemExit("Download muito pequeno â€” verifique o compartilhamento pÃºblico do arquivo.")
+        raise SystemExit("Download muito pequeno — verifique o compartilhamento público do arquivo.")
     return tmp
 
 # ---------------- ETL ----------------
@@ -88,16 +88,16 @@ def _dt_br(s):
         return None
 
 def anotar_trocas_nd(res):
-    """Identifica as TROCAS INTERNAS DE ND ("mudanÃ§a/alteraÃ§Ã£o de ND") e rastreia a NC de ORIGEM.
+    """Identifica as TROCAS INTERNAS DE ND ("mudança/alteração de ND") e rastreia a NC de ORIGEM.
 
-    Como a planilha nÃ£o traz o vÃ­nculo, ele Ã© deduzido da ESTRUTURA (validado em 100% dos
-    261 casos de AGO/2026): uma troca de ND Ã© uma mesma NC que, dentro da MESMA AÃ§Ã£o+PI,
-    lanÃ§a valores opostos que se anulam â€” sai da ND antiga (linha negativa) e entra na ND
-    nova (linha positiva). A NC de origem Ã© entÃ£o a que trouxe o crÃ©dito para a cÃ©lula da
-    ND antiga; se essa tambÃ©m for uma troca, sobe-se a cadeia atÃ© a DESCENTRALIZAÃ‡ÃƒO
+    Como a planilha não traz o vínculo, ele é deduzido da ESTRUTURA (validado em 100% dos
+    261 casos de AGO/2026): uma troca de ND é uma mesma NC que, dentro da MESMA Ação+PI,
+    lança valores opostos que se anulam — sai da ND antiga (linha negativa) e entra na ND
+    nova (linha positiva). A NC de origem é então a que trouxe o crédito para a célula da
+    ND antiga; se essa também for uma troca, sobe-se a cadeia até a DESCENTRALIZAÇÃO
     original (a que carrega o objeto real). Anota em cada linha positiva:
-        L["nd_de"]     -> ND de onde o crÃ©dito veio
-        L["nc_origem"] -> {nc, obj, dia, emit, op} da NC que originou o crÃ©dito
+        L["nd_de"]     -> ND de onde o crédito veio
+        L["nc_origem"] -> {nc, obj, dia, emit, op} da NC que originou o crédito
     """
     for cod, d in res.items():
         linhas = d["linhas"]
@@ -120,7 +120,7 @@ def anotar_trocas_nd(res):
                     trocas.setdefault(nc, {})[k] = (neg[0]["nd"], pos[0]["nd"], pos[0]["cred"])
         if not trocas:
             continue
-        # entradas de crÃ©dito por cÃ©lula (candidatas a origem)
+        # entradas de crédito por célula (candidatas a origem)
         entradas = {}
         for L in linhas:
             if L["cred"] > 0.005 and L["nc"]:
@@ -146,7 +146,7 @@ def anotar_trocas_nd(res):
             cands = exatos or sorted(cands, key=lambda c: (_dt_br(c["dia"]) or datetime.date.min), reverse=True)
             orig = cands[0]
             t = trocas.get(orig["nc"], {}).get((acao, pi))
-            if t:  # a origem tambÃ©m Ã© troca de ND -> sobe a cadeia atÃ© a descentralizaÃ§Ã£o real
+            if t:  # a origem também é troca de ND -> sobe a cadeia até a descentralização real
                 acima = rastrear(orig["nc"], acao, pi, t[0], t[2], prof + 1, visto)
                 if acima:
                     return acima
@@ -166,7 +166,7 @@ def etl(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = None
     for nm in wb.sheetnames:
-        if norm(nm).startswith("CREDITO DISP") or "CRÃ‰DITO DISP" in nm:
+        if norm(nm).startswith("CREDITO DISP") or "CRÉDITO DISP" in nm:
             ws = wb[nm]; break
     if ws is None:
         ws = wb.active
@@ -176,7 +176,7 @@ def etl(path):
         if "CREDITO DISPONIVEL" in rowvals or "PROVISAO RECEBIDA" in rowvals:
             hdr_row = r; break
     if not hdr_row:
-        raise SystemExit("NÃ£o encontrei o cabeÃ§alho (PROVISAO RECEBIDA / CREDITO DISPONIVEL) â€” a fonte no Drive pode ter mudado de formato.")
+        raise SystemExit("Não encontrei o cabeçalho (PROVISAO RECEBIDA / CREDITO DISPONIVEL) — a fonte no Drive pode ter mudado de formato.")
     hdr = {}
     for c in range(1, ws.max_column + 1):
         n = norm(ws.cell(hdr_row, c).value)
@@ -184,17 +184,17 @@ def etl(path):
     def col(name, req=True):
         c = hdr.get(name)
         if not c and req:
-            raise SystemExit(f"Coluna '{name}' nÃ£o encontrada (aba '{ws.title}') â€” a fonte mudou de layout.")
+            raise SystemExit(f"Coluna '{name}' não encontrada (aba '{ws.title}') — a fonte mudou de layout.")
         return c
     C = dict(prov=col("PROVISAO RECEBIDA"), cred=col("CREDITO DISPONIVEL"),
              emp=col("DESPESAS EMPENHADAS"), liq=col("DESPESAS LIQUIDADAS"), pag=col("DESPESAS PAGAS"),
              conc=col("PROVISAO CONCEDIDA", req=False))
-    # [FIX layout 2026-08] Os rÃ³tulos (AÃ§Ã£o/PI/ND/NC + descriÃ§Ãµes) ficam em linhas de
-    # cabeÃ§alho ACIMA da linha de mÃ©tricas e a fonte JÃ MUDOU de posiÃ§Ãµes. Resolve por
-    # NOME varrendo as linhas de cabeÃ§alho, com fallback p/ as posiÃ§Ãµes atuais conhecidas
-    # (col 6/7/8/9/10/5/11/12/13/1). Antes liam posiÃ§Ãµes fixas ERRADAS (col 4/6/11/8/9/â€¦),
-    # o que embaralhava os rÃ³tulos (AÃ§Ã£o lia o nome da UG, ND lia a descriÃ§Ã£o da NC) e
-    # quebrava a soma por cÃ©lula â€” o empenho nÃ£o abatia o recebimento e o "em tela" inflava.
+    # [FIX layout 2026-08] Os rótulos (Ação/PI/ND/NC + descrições) ficam em linhas de
+    # cabeçalho ACIMA da linha de métricas e a fonte JÁ MUDOU de posições. Resolve por
+    # NOME varrendo as linhas de cabeçalho, com fallback p/ as posições atuais conhecidas
+    # (col 6/7/8/9/10/5/11/12/13/1). Antes liam posições fixas ERRADAS (col 4/6/11/8/9/…),
+    # o que embaralhava os rótulos (Ação lia o nome da UG, ND lia a descrição da NC) e
+    # quebrava a soma por célula — o empenho não abatia o recebimento e o "em tela" inflava.
     hdrL = {}
     for rr in range(max(1, hdr_row - 4), hdr_row + 1):
         for c in range(1, ws.max_column + 1):
@@ -204,15 +204,15 @@ def etl(path):
     def colL(name, fb):
         c = hdrL.get(name)
         return c if c else fb
-    CA    = colL("ACAO GOVERNO", 6)           # cÃ³digo da AÃ§Ã£o de Governo
-    CPI   = colL("PI", 7)                      # cÃ³digo do Plano Interno
-    CPID  = CPI + 1                            # descriÃ§Ã£o do PI (coluna Ã  direita, sem cabeÃ§alho prÃ³prio)
-    CND   = colL("NATUREZA DESPESA", 9)        # cÃ³digo da Natureza de Despesa
-    CNDD  = CND + 1                            # descriÃ§Ã£o da ND
-    CNC   = colL("NC", 5)                      # nÃºmero da Nota de CrÃ©dito
-    COBJ  = colL("NC - DESCRICAO", 11)         # descriÃ§Ã£o/objeto da NC
-    COP   = colL("NC - OPERACAO (TIPO)", 12)   # operaÃ§Ã£o (recebimento/detalhamento/anulaÃ§Ã£o)
-    CDIA  = colL("NC - DIA EMISSAO", 13)       # data de emissÃ£o da NC
+    CA    = colL("ACAO GOVERNO", 6)           # código da Ação de Governo
+    CPI   = colL("PI", 7)                      # código do Plano Interno
+    CPID  = CPI + 1                            # descrição do PI (coluna à direita, sem cabeçalho próprio)
+    CND   = colL("NATUREZA DESPESA", 9)        # código da Natureza de Despesa
+    CNDD  = CND + 1                            # descrição da ND
+    CNC   = colL("NC", 5)                      # número da Nota de Crédito
+    COBJ  = colL("NC - DESCRICAO", 11)         # descrição/objeto da NC
+    COP   = colL("NC - OPERACAO (TIPO)", 12)   # operação (recebimento/detalhamento/anulação)
+    CDIA  = colL("NC - DIA EMISSAO", 13)       # data de emissão da NC
     CEMIT = colL("EMITENTE - UG", 1)           # UG emitente
     data_row = None
     for r in range(hdr_row + 1, min(hdr_row + 8, ws.max_row + 1)):
@@ -266,7 +266,7 @@ def etl(path):
         op       = disp(ws.cell(r, COP).value)
         obj      = disp(ws.cell(r, COBJ).value)
         
-        # fallback na busca de descriÃ§Ã£o caso a coluna 13 esteja vazia
+        # fallback na busca de descrição caso a coluna 13 esteja vazia
         if not obj:
             for ci in (15, 16, 17, 18, 19, 20):
                 if ci <= ws.max_column:
@@ -292,7 +292,7 @@ def etl(path):
         cel = d["celulas"][k_cel]
         cel["prov"] += prov; cel["conc"] += conc; cel["cred"] += cred
         cel["emp"]  += emp;  cel["liq"]  += liq;  cel["pag"]  += pag
-        # decompÃµe a col. CrÃ©dito DisponÃ­vel: movimentos + (recebido) e âˆ’ (consumido/empenho/anulaÃ§Ã£o)
+        # decompõe a col. Crédito Disponível: movimentos + (recebido) e − (consumido/empenho/anulação)
         if cred >= 0: cel["cpos"] += cred
         else:         cel["cneg"] += -cred
         if nc:
@@ -308,7 +308,7 @@ def etl(path):
 
     for d in res.values():
         for cel in d["celulas"].values():
-            # Recebido (lÃ­q) âˆ’ Empenhado/Consumido = CrÃ©dito DisponÃ­vel (fecha por construÃ§Ã£o)
+            # Recebido (líq) − Empenhado/Consumido = Crédito Disponível (fecha por construção)
             cel["aloc"] = cel["cpos"]
             cel["emp"]  = cel["cneg"]
 
@@ -319,13 +319,13 @@ def etl(path):
         if d["n"] == 0: continue
         saldo_calc = d["prov"] - d["conc"] - d["emp"]
         if abs(saldo_calc - d["cred"]) > 0.05:
-            alertas.append(f"{d['nome']}: CrÃ©dito DisponÃ­vel ({d['cred']:.2f}) difere de Recebidoâˆ’Concedidoâˆ’Empenhado ({saldo_calc:.2f}).")
+            alertas.append(f"{d['nome']}: Crédito Disponível ({d['cred']:.2f}) difere de Recebido−Concedido−Empenhado ({saldo_calc:.2f}).")
         if d["emp"] < -0.01:
             alertas.append(f"{d['nome']}: Empenhado negativo ({d['emp']:.2f}).")
 
     return res, periodo, alertas
 
-# ---------------- histÃ³rico ----------------
+# ---------------- histórico ----------------
 def atualizar_historico(res, data_str):
     os.makedirs(DATA, exist_ok=True)
     hist = []
@@ -346,21 +346,21 @@ def atualizar_historico(res, data_str):
         json.dump(hist, f, ensure_ascii=False, indent=1)
     return hist
 
-# ---------------- formataÃ§Ã£o ----------------
+# ---------------- formatação ----------------
 def _fmt(v):
     s = f"{abs(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return s
 
 def brl(v):
-    return ("âˆ’R$Â " if v < 0 else "R$Â ") + _fmt(v)
+    return ("−R$ " if v < 0 else "R$ ") + _fmt(v)
 
 def num(v):
-    return ("âˆ’" if v < 0 else "") + _fmt(v)
+    return ("−" if v < 0 else "") + _fmt(v)
 
 def pct(a, b): return (100.0 * a / b) if b else 0.0
 
 def abrev(v):
-    a = abs(v); s = "âˆ’" if v < 0 else ""
+    a = abs(v); s = "−" if v < 0 else ""
     if a >= 1e6: return s + f"{a/1e6:.1f}".replace(".", ",") + " mi"
     if a >= 1e3: return s + f"{a/1e3:.0f} mil"
     return s + f"{a:.0f}"
@@ -372,55 +372,55 @@ def _r(x, y, w, h, var, extra=""):
     return f'<rect x="{x:.1f}" y="{y:.1f}" width="{max(0,w):.1f}" height="{h:.1f}" style="fill:var(--{var})" {extra}/>'
 
 def svg_util(recebido, empenhado, disponivel):
-    """Barra empilhada de utilizaÃ§Ã£o: Recebido = Empenhado + DisponÃ­vel."""
+    """Barra empilhada de utilização: Recebido = Empenhado + Disponível."""
     if recebido <= 0:
-        return '<p class="vazio">Sem provisÃ£o recebida</p>'
+        return '<p class="vazio">Sem provisão recebida</p>'
     x0, x1, y, h, W, H = 4, 636, 40, 32, 640, 92
     plot = x1 - x0
     fe = max(0.0, min(1.0, empenhado / recebido))
     we = plot * fe
     wd = plot - we
     pe, pd = pct(empenhado, recebido), pct(disponivel, recebido)
-    return f'''<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="UtilizaÃ§Ã£o do crÃ©dito recebido">
-<title>ProvisÃ£o Recebida {brl(recebido)}: Empenhado {brl(empenhado)} ({pe:.1f}%) + CrÃ©dito DisponÃ­vel {brl(disponivel)} ({pd:.1f}%)</title>
-<text x="{x0}" y="20" class="s-lbl">PROVISÃƒO RECEBIDA TOTAL Â· {esc(brl(recebido))}</text>
+    return f'''<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Utilização do crédito recebido">
+<title>Provisão Recebida {brl(recebido)}: Empenhado {brl(empenhado)} ({pe:.1f}%) + Crédito Disponível {brl(disponivel)} ({pd:.1f}%)</title>
+<text x="{x0}" y="20" class="s-lbl">PROVISÃO RECEBIDA TOTAL · {esc(brl(recebido))}</text>
 <line x1="{x0}" y1="26" x2="{x1}" y2="26" class="s-brk"/><line x1="{x0}" y1="26" x2="{x0}" y2="32" class="s-brk"/><line x1="{x1}" y1="26" x2="{x1}" y2="32" class="s-brk"/>
 {_r(x0, y, we, h, "warning-main", 'rx="6"')}
 {_r(x0+we, y, wd, h, "success-main", 'rx="6"')}
 <line x1="{x0+we:.1f}" y1="{y}" x2="{x0+we:.1f}" y2="{y+h}" style="stroke:var(--bg-surface);stroke-width:2.5"/>
-<text x="{x0+8}" y="{y+h+17}" class="s-seg">Empenhado {esc(brl(empenhado))} Â· {pe:.1f}%</text>
-<text x="{x1-8}" y="{y+h+17}" text-anchor="end" class="s-seg s-seg-ok">CrÃ©dito DisponÃ­vel {esc(brl(disponivel))} Â· {pd:.1f}%</text>
+<text x="{x0+8}" y="{y+h+17}" class="s-seg">Empenhado {esc(brl(empenhado))} · {pe:.1f}%</text>
+<text x="{x1-8}" y="{y+h+17}" text-anchor="end" class="s-seg s-seg-ok">Crédito Disponível {esc(brl(disponivel))} · {pd:.1f}%</text>
 </svg>'''
 
 def svg_waterfall(recebido, empenhado, disponivel, mini=False):
-    """Waterfall horizontal: Recebida â†’ (âˆ’)Empenhado â†’ (=)DisponÃ­vel."""
+    """Waterfall horizontal: Recebida → (−)Empenhado → (=)Disponível."""
     if recebido <= 0:
         return '<p class="vazio">Sem dados</p>'
     if mini:
         W, H, xL, rh, gap, fs = 360, 118, 112, 26, 10, 10
-        L1, L2, L3 = "Recebido", "(âˆ’) Empenhado", "(=) DisponÃ­vel"
+        L1, L2, L3 = "Recebido", "(−) Empenhado", "(=) Disponível"
     else:
         W, H, xL, rh, gap, fs = 720, 196, 190, 42, 16, 13
-        L1, L2, L3 = "ProvisÃ£o Recebida", "(âˆ’) Empenhado", "(=) CrÃ©dito DisponÃ­vel"
+        L1, L2, L3 = "Provisão Recebida", "(−) Empenhado", "(=) Crédito Disponível"
     xR = W - 24
     plot = xR - xL
     R = recebido
     def X(v): return xL + (v / R) * plot
     y1 = 14; y2 = y1 + rh + gap; y3 = y2 + rh + gap
     xd = X(max(disponivel, 0))
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="ComposiÃ§Ã£o do crÃ©dito">',
-             f'<title>ProvisÃ£o Recebida {brl(recebido)} menos Empenhado {brl(empenhado)} igual a CrÃ©dito DisponÃ­vel {brl(disponivel)}</title>',
-             f'<desc>{esc(brl(recebido))} âˆ’ {esc(brl(empenhado))} = {esc(brl(disponivel))}</desc>']
-    # linha 1 â€” Recebida
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Composição do crédito">',
+             f'<title>Provisão Recebida {brl(recebido)} menos Empenhado {brl(empenhado)} igual a Crédito Disponível {brl(disponivel)}</title>',
+             f'<desc>{esc(brl(recebido))} − {esc(brl(empenhado))} = {esc(brl(disponivel))}</desc>']
+    # linha 1 — Recebida
     parts.append(_r(xL, y1, plot, rh, "primary-600", 'rx="5"'))
     parts.append(f'<text x="{xL-10}" y="{y1+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(L1)}</text>')
     parts.append(f'<text x="{xR-8}" y="{y1+rh/2+4:.0f}" text-anchor="end" class="s-val s-on">{esc(brl(recebido))}</text>')
-    # linha 2 â€” Empenhado (flutuante)
+    # linha 2 — Empenhado (flutuante)
     we = plot - (xd - xL)
     parts.append(_r(xd, y2, we, rh, "warning-main", 'rx="5"'))
     parts.append(f'<text x="{xL-10}" y="{y2+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(L2)}</text>')
-    parts.append(f'<text x="{xd+8:.1f}" y="{y2+rh/2+4:.0f}" class="s-val s-on">âˆ’{esc(brl(empenhado).replace("R$Â ","R$Â "))}</text>')
-    # linha 3 â€” DisponÃ­vel
+    parts.append(f'<text x="{xd+8:.1f}" y="{y2+rh/2+4:.0f}" class="s-val s-on">−{esc(brl(empenhado).replace("R$ ","R$ "))}</text>')
+    # linha 3 — Disponível
     parts.append(_r(xL, y3, xd - xL, rh, "success-main", 'rx="5"'))
     parts.append(f'<text x="{xL-10}" y="{y3+rh/2+4:.0f}" text-anchor="end" class="s-cat s-cat-ok">{esc(L3)}</text>')
     parts.append(f'<text x="{xd+8:.1f}" y="{y3+rh/2+4:.0f}" class="s-val s-ok">{esc(brl(disponivel))}</text>')
@@ -438,7 +438,7 @@ def svg_diverg(itens, titulo, max_itens=8):
     if round(resto, 2) != 0:
         itens.append(("Outras", resto))
     if not itens:
-        return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">Sem valores no perÃ­odo</p></div>'
+        return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">Sem valores no período</p></div>'
     vmax = max(abs(v) for _, v in itens) or 1
     labW, rh, pad = 150, 32, 10
     zx = labW + 246
@@ -449,7 +449,7 @@ def svg_diverg(itens, titulo, max_itens=8):
     for i, (k, v) in enumerate(itens):
         y = pad + i * rh
         w = abs(v) / vmax * half
-        lbl = k if len(k) <= 24 else k[:23] + "â€¦"
+        lbl = k if len(k) <= 24 else k[:23] + "…"
         el.append(f'<text x="{labW-8}" y="{y+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(lbl)}</text>')
         if v >= 0:
             el.append(_r(zx, y+5, w, rh-10, "success-main", f'rx="4"><title>{esc(k)}: {esc(brl(v))}</title></rect'.replace("/>", ">")))
@@ -477,8 +477,8 @@ def svg_funil(cod, d):
         el.append(f'<text x="{xL+w+8:.1f}" y="{y+rh/2+4:.0f}" class="s-num s-on2">{esc(num(val))}</text>')
         if conv:
             el.append(f'<text x="{W-4}" y="{y+rh/2+4:.0f}" text-anchor="end" class="s-conv">{conv}</text>')
-    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="EstÃ¡gios {cod}">{"".join(el)}</svg>'
-    return f'<div class="card chart"><div class="eyebrow">EstÃ¡gios da Despesa Â· {esc(cod)} {esc(FONTE_CURTA[cod])}</div>{svg}</div>'
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Estágios {cod}">{"".join(el)}</svg>'
+    return f'<div class="card chart"><div class="eyebrow">Estágios da Despesa · {esc(cod)} {esc(FONTE_CURTA[cod])}</div>{svg}</div>'
 
 def svg_tendencia(hist):
     wk, order = {}, []
@@ -520,9 +520,9 @@ def svg_tendencia(hist):
     if n >= 1:
         dt, v = pts[-1]
         el.append(f'<text x="{X(n-1):.1f}" y="{Y(v)-12:.1f}" text-anchor="end" class="s-num s-ok">{esc(brl(v))}</text>')
-    nota = "" if n > 1 else '<p class="vazio">A curva semanal se desenvolve a partir da 2Âª semana de histÃ³rico.</p>'
-    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="TendÃªncia semanal do CrÃ©dito DisponÃ­vel">{"".join(el)}</svg>'
-    return f'<div class="card chart wide"><div class="eyebrow">TendÃªncia HistÃ³rica Â· CrÃ©dito DisponÃ­vel Consolidado</div>{svg}{nota}</div>'
+    nota = "" if n > 1 else '<p class="vazio">A curva semanal se desenvolve a partir da 2ª semana de histórico.</p>'
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Tendência semanal do Crédito Disponível">{"".join(el)}</svg>'
+    return f'<div class="card chart wide"><div class="eyebrow">Tendência Histórica · Crédito Disponível Consolidado</div>{svg}{nota}</div>'
 
 # ---------------- componentes HTML ----------------
 def kpi_tile(label, valor, chip, cls):
@@ -535,21 +535,21 @@ def uasg_card(cod, d):
     return (f'<div class="card uasg">'
             f'<div class="uasg-h"><span class="uasg-cod num">{esc(cod)}</span>'
             f'<span class="pill-fonte">{esc(FONTE_CURTA[cod])}</span>'
-            f'<span class="uasg-nome">{esc(d["nome"].split("Â·")[1].strip())}</span></div>'
-            f'<div class="uasg-disp"><span class="uasg-disp-l">CrÃ©dito DisponÃ­vel</span>'
+            f'<span class="uasg-nome">{esc(d["nome"].split("·")[1].strip())}</span></div>'
+            f'<div class="uasg-disp"><span class="uasg-disp-l">Crédito Disponível</span>'
             f'<span class="uasg-disp-v num">{esc(brl(d["cred"]))}</span></div>'
-            f'<div class="uasg-eq num">{esc(brl(d["prov"]))} <i>âˆ’</i> {esc(brl(d["emp"]))}</div>'
+            f'<div class="uasg-eq num">{esc(brl(d["prov"]))} <i>−</i> {esc(brl(d["emp"]))}</div>'
             f'{svg_waterfall(d["prov"], d["emp"], d["cred"], mini=True)}'
             f'<div class="uasg-exec"><div class="exec-l"><span>Empenhado / Recebido</span><span class="num">{barp:.1f}%</span></div>'
             f'<div class="exec-track"><div class="exec-fill" style="width:{min(barp,100):.1f}%"></div></div></div>'
             f'</div>')
 
 def tabela_html(tid, celulas, com_fonte, ativo):
-    """RelaÃ§Ã£o de crÃ©dito EM TELA por cÃ©lula orÃ§amentÃ¡ria (saldo lÃ­quido positivo)."""
-    cols = (["Fonte"] if com_fonte else []) + ["AÃ§Ã£o", "PI", "ND", "AplicaÃ§Ã£o", "Recebido (lÃ­q)", "Empenhado", "CrÃ©dito Disp."]
+    """Relação de crédito EM TELA por célula orçamentária (saldo líquido positivo)."""
+    cols = (["Fonte"] if com_fonte else []) + ["Ação", "PI", "ND", "Aplicação", "Recebido (líq)", "Empenhado", "Crédito Disp."]
     ths = []
     for c in cols:
-        numc = c in ("Recebido (lÃ­q)", "Empenhado", "CrÃ©dito Disp.")
+        numc = c in ("Recebido (líq)", "Empenhado", "Crédito Disp.")
         cls = ' class="num"' if numc else ''
         ths.append(f'<th{cls} tabindex="0" role="button" aria-sort="none" onclick="bcmsSort(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsSort(this)}}">{esc(c)}<span class="sort"></span></th>')
     body = []
@@ -559,45 +559,45 @@ def tabela_html(tid, celulas, com_fonte, ativo):
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
         cid = esc(c.get("cid", ""))
         body.append(
-            f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Ver as notas de crÃ©dito desta cÃ©lula (descriÃ§Ã£o completa)" '
+            f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Ver as notas de crédito desta célula (descrição completa)" '
             f'onclick="bcmsCel(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsCel(this)}}">'
             f'{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
             f'<td class="obj" title="{esc(aplic)}">{esc(aplic[:60])}</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
-            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">â€º</i></td></tr>')
+            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
     ncols = len(cols)
-    tfoot = (f'<tfoot><tr><td colspan="{ncols-1}">TOTAL Â· {len(celulas)} cÃ©lula(s) com crÃ©dito em tela</td>'
+    tfoot = (f'<tfoot><tr><td colspan="{ncols-1}">TOTAL · {len(celulas)} célula(s) com crédito em tela</td>'
              f'<td class="num anchor">{esc(brl(tot))}</td></tr></tfoot>')
     disp_style = "" if ativo else ' style="display:none"'
     return (f'<div class="tabpanel" id="{tid}" role="tabpanel"{disp_style}>'
             f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
-            f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por aÃ§Ã£o, PI, ND ou aplicaÃ§Ã£oâ€¦" oninput="bcmsSearch(this,\'{tid}\')">'
-            f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_em_tela_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">ðŸ“Š</span> Exportar Excel</button>'
-            f'<span class="tbl-count" id="cnt-{tid}" data-unit="cÃ©lula(s)" aria-live="polite">{len(celulas)} cÃ©lulas</span></div>'
+            f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND ou aplicação…" oninput="bcmsSearch(this,\'{tid}\')">'
+            f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_em_tela_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
+            f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células</span></div>'
             f'<div class="tbl-scroll"><table class="det"><thead><tr>{"".join(ths)}</tr></thead>'
             f'<tbody>{"".join(body)}</tbody>{tfoot}</table></div></div>')
 
-# ---------------- pÃ¡gina da unidade ----------------
+# ---------------- página da unidade ----------------
 def conteudo_unidade(res, hist, data_str, periodo, u):
     ALVOS = _par(u); sfx = u["key"]
     tot = {k: sum(res[c][k] for c, _ in ALVOS) for k in ("prov", "conc", "cred", "emp", "liq", "pag", "n")}
-    ger = datetime.datetime.now().strftime("%d/%m/%Y Ã s %H:%M")
+    ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
     posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
 
     delta_html = ""
     if len(hist) >= 2:
         dv = hist[-1]["total"]["cred"] - hist[-2]["total"]["cred"]
         if round(dv, 2) != 0:
-            seta = "â–²" if dv > 0 else "â–¼"
+            seta = "▲" if dv > 0 else "▼"
             cls = "up" if dv > 0 else "down"
             delta_html = f'<div class="delta {cls}"><span>{seta}</span> {esc(num(dv))} <small>vs. dia anterior</small></div>'
         else:
-            delta_html = '<div class="delta flat">Sem variaÃ§Ã£o vs. dia anterior</div>'
+            delta_html = '<div class="delta flat">Sem variação vs. dia anterior</div>'
     else:
-        delta_html = '<div class="delta flat">1Âº dia de histÃ³rico</div>'
+        delta_html = '<div class="delta flat">1º dia de histórico</div>'
 
-    kpis = (kpi_tile("ProvisÃ£o Recebida", brl(tot["prov"]), "", "prov") +
+    kpis = (kpi_tile("Provisão Recebida", brl(tot["prov"]), "", "prov") +
             kpi_tile("Empenhado", brl(tot["emp"]), f'{pct(tot["emp"],tot["prov"]):.1f}% do recebido', "emp") +
             kpi_tile("Liquidado", brl(tot["liq"]), f'{pct(tot["liq"],tot["emp"]):.1f}% do empenhado', "liq") +
             kpi_tile("Pago", brl(tot["pag"]), f'{pct(tot["pag"],tot["liq"]):.1f}% do liquidado', "pag"))
@@ -610,8 +610,8 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         for k, v in res[cod]["por_nd"].items(): nd[k] = nd.get(k, 0) + v
         nd_nome.update(res[cod]["nd_nome"])
     nd_lbl = {(f'{k} {nd_nome.get(k,"")[:18]}').strip(): v for k, v in nd.items()}
-    ch_acao = svg_diverg(acao.items(), "CrÃ©dito DisponÃ­vel por AÃ§Ã£o (R$)")
-    ch_nd = svg_diverg(nd_lbl.items(), "CrÃ©dito DisponÃ­vel por Natureza de Despesa (R$)")
+    ch_acao = svg_diverg(acao.items(), "Crédito Disponível por Ação (R$)")
+    ch_nd = svg_diverg(nd_lbl.items(), "Crédito Disponível por Natureza de Despesa (R$)")
     funis = "".join(svg_funil(cod, res[cod]) for cod, _ in ALVOS)
     trend = svg_tendencia(hist)
 
@@ -631,7 +631,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
             cid_map[key] = cid
             ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
                           for L in lin_idx.get(key, [])), key=lambda x: -x[2])
-            celdata[cid] = {"t": f'{c["acao"]} Â· PI {c["pi"]} Â· ND {c["nd"]}', "nome": c.get("nd_nome", ""),
+            celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
                             "acao": c["acao"], "pi": c["pi"], "pinome": c.get("pi_nome", ""),
                             "nd": c["nd"], "ndnome": c.get("nd_nome", ""),
@@ -652,8 +652,8 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
     cons_cel.sort(key=lambda x: x["cred"], reverse=True)
     ogu_c, fex_c = ALVOS[0][0], ALVOS[1][0]
     abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons-{sfx}\')" onkeydown="bcmsTabKey(event,this)">Consolidado</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{ogu_c}\')" onkeydown="bcmsTabKey(event,this)">{ogu_c} Â· OGU</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{fex_c}\')" onkeydown="bcmsTabKey(event,this)">{fex_c} Â· FEx</button>')
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{ogu_c}\')" onkeydown="bcmsTabKey(event,this)">{ogu_c} · OGU</button>'
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{fex_c}\')" onkeydown="bcmsTabKey(event,this)">{fex_c} · FEx</button>')
     tabs = (tabela_html(f"tab-cons-{sfx}", cons_cel, True, True) +
             tabela_html(f"tab-{ogu_c}", celulas_pos(ogu_c), False, False) +
             tabela_html(f"tab-{fex_c}", celulas_pos(fex_c), False, False))
@@ -678,7 +678,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                        "dia": m.get("dia", ""), "val": round(m["cred"], 2), "obj": m["obj"]}
     datas = sorted({m["dt"] for m in movs if m["dt"]}, reverse=True)
     max_date = datas[0] if datas else None
-    fmt_d = lambda d: d.strftime("%d/%m/%Y") if d else "â€”"
+    fmt_d = lambda d: d.strftime("%d/%m/%Y") if d else "—"
     daily = sorted([m for m in movs if m["dt"] == max_date] if max_date else [], key=lambda x: x["cred"], reverse=True)
     rec_d = sum(m["cred"] for m in daily if m["cred"] > 0)
     red_d = sum(m["cred"] for m in daily if m["cred"] < 0)
@@ -697,16 +697,16 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 f'<td class="mono2">{esc(m["nc"])}</td><td><span class="pill-fonte">{esc(FONTE_CURTA[m["uasg"]])}</span></td>'
                 f'<td>{esc(m["acao"])}</td><td class="mono2">{esc(m["nd"])}</td>'
                 f'<td class="obj" title="{esc(m["op"])}">{esc(m["op"][:28])}</td>'
-                f'<td class="num anchor{neg}" data-sort="{m["cred"]:.2f}">{esc(brl(m["cred"]))}<i class="chev" aria-hidden="true">â€º</i></td></tr>')
+                f'<td class="num anchor{neg}" data-sort="{m["cred"]:.2f}">{esc(brl(m["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
 
     def mov_tabela(tid, lst):
         if not lst:
-            return '<p class="vazio">Sem movimentaÃ§Ã£o de NC neste perÃ­odo.</p>'
-        ths = _th("NC", False) + _th("Fonte", False) + _th("AÃ§Ã£o", False) + _th("ND", False) + _th("OperaÃ§Ã£o", False) + _th("Valor", True)
+            return '<p class="vazio">Sem movimentação de NC neste período.</p>'
+        ths = _th("NC", False) + _th("Fonte", False) + _th("Ação", False) + _th("ND", False) + _th("Operação", False) + _th("Valor", True)
         body = "".join(mov_row(m) for m in lst)
         return (f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
-                f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, aÃ§Ã£o, ND ou operaÃ§Ã£oâ€¦" oninput="bcmsSearch(this,\'{tid}\')">'
-                f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'movimentacao_{tid}\')" title="Baixar movimentaÃ§Ã£o em Excel"><span class="btn-excel-ic">ðŸ“Š</span> Exportar Excel</button>'
+                f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, ação, ND ou operação…" oninput="bcmsSearch(this,\'{tid}\')">'
+                f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'movimentacao_{tid}\')" title="Baixar movimentação em Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
                 f'<span class="tbl-count" id="cnt-{tid}" data-unit="NC(s)" aria-live="polite">{len(lst)} NC(s)</span></div>'
                 f'<div class="tbl-scroll" id="{tid}"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{body}</tbody></table></div>')
 
@@ -726,15 +726,15 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
 
     def semana_tabela(rows):
         if not rows:
-            return '<p class="vazio">Sem movimentaÃ§Ã£o na Ãºltima semana.</p>'
-        heads = _th("Dia", False, False) + _th("NÂº NC", True, False) + _th("Recebido (+)", True, False) + _th("ReduÃ§Ãµes (âˆ’)", True, False) + _th("LÃ­quido", True, False)
+            return '<p class="vazio">Sem movimentação na última semana.</p>'
+        heads = _th("Dia", False, False) + _th("Nº NC", True, False) + _th("Recebido (+)", True, False) + _th("Reduções (−)", True, False) + _th("Líquido", True, False)
         body = ""
         for d, n, rec, red, liq, dk in rows:
             body += (f'<tr class="cel-row" tabindex="0" role="button" data-day="{dk}" title="Ver as NCs deste dia" '
                      f'onclick="bcmsDay(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDay(this)}}">'
                      f'<td class="mono2">{fmt_d(d)}</td><td class="num">{n}</td>'
                      f'<td class="num col-pos">{esc(brl(rec))}</td><td class="num col-neg">{esc(brl(red))}</td>'
-                     f'<td class="num anchor">{esc(brl(liq))}<i class="chev" aria-hidden="true">â€º</i></td></tr>')
+                     f'<td class="num anchor">{esc(brl(liq))}<i class="chev" aria-hidden="true">›</i></td></tr>')
         foot = (f'<tfoot><tr><td>TOTAL</td><td class="num">{n_week}</td>'
                 f'<td class="num">{esc(brl(tot_rec))}</td><td class="num">{esc(brl(tot_red))}</td>'
                 f'<td class="num anchor">{esc(brl(tot_rec + tot_red))}</td></tr></tfoot>')
@@ -768,13 +768,13 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 emtela_ncs.append({
                     "uasg": cod,
                     "fonte": FONTE_CURTA.get(cod, ""),
-                    "nc": L.get("nc") or "(sem nÃºmero)",
+                    "nc": L.get("nc") or "(sem número)",
                     "acao": cl["acao"],
                     "pi": cl["pi"],
                     "pi_nome": cl.get("pi_nome", ""),
                     "nd": cl["nd"],
                     "nd_nome": cl.get("nd_nome", ""),
-                    "obj": L.get("obj", "") or "(sem descriÃ§Ã£o)",
+                    "obj": L.get("obj", "") or "(sem descrição)",
                     "op": L.get("op", ""),
                     "emit": L.get("emit", ""),
                     "dia": L.get("dia", ""),
@@ -795,7 +795,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                     "pi_nome": cl.get("pi_nome", ""),
                     "nd": cl["nd"],
                     "nd_nome": cl.get("nd_nome", ""),
-                    "obj": f"Saldo remanescente em tela da cÃ©lula {cl['acao']} Â· PI {cl['pi']} Â· ND {cl['nd']}",
+                    "obj": f"Saldo remanescente em tela da célula {cl['acao']} · PI {cl['pi']} · ND {cl['nd']}",
                     "op": "SALDO REMANESCENTE",
                     "emit": "",
                     "dia": "",
@@ -806,7 +806,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 })
 
     emtela_ncs.sort(key=lambda x: (x["dias"] if x["dias"] is not None else -1, x["cred"]), reverse=True)
-    # Dados por LINHA em tela (uma NC especÃ­fica), para o detalhamento nÃ£o misturar NCs
+    # Dados por LINHA em tela (uma NC específica), para o detalhamento não misturar NCs
     # de objetos diferentes que apenas compartilham o mesmo PI.
     teladata = {}
     for _i, _c in enumerate(emtela_ncs, 1):
@@ -830,10 +830,10 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
 
     def et_row(c):
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
-        acao_nd = f'{c["acao"]} Â· {c["nd"]}'
+        acao_nd = f'{c["acao"]} · {c["nd"]}'
         dias = c["dias"]
         if dias is None:
-            dcls, dtxt, dsort = "badge-age age-none", "â€”", -1
+            dcls, dtxt, dsort = "badge-age age-none", "—", -1
         else:
             if dias > 60:
                 dcls = "badge-age age-red"
@@ -843,31 +843,31 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 dcls = "badge-age age-green"
             dtxt = f'{dias}d'
             dsort = dias
-        refd = c["dt"].strftime("%d/%m/%y") if c["dt"] else "â€”"
+        refd = c["dt"].strftime("%d/%m/%y") if c["dt"] else "—"
         cid = esc(c.get("cid", ""))
-        # Troca de ND: a descriÃ§Ã£o prÃ³pria ("MUDANÃ‡A DE ND", "DETALHAMENTOâ€¦") nÃ£o diz o objeto.
+        # Troca de ND: a descrição própria ("MUDANÇA DE ND", "DETALHAMENTO…") não diz o objeto.
         # Mostra o objeto REAL da NC de origem, sinalizando a troca.
         org = c.get("nc_origem")
         if org and org.get("obj"):
             desc_completa = esc(org["obj"])
-            selo = f'<span class="tag-nd" title="CrÃ©dito recebido por mudanÃ§a de ND (de {esc(c.get("nd_de",""))} para {esc(c["nd"])}) â€” objeto herdado da NC de origem {esc(org["nc"])}">â†ª ND {esc(c.get("nd_de",""))}</span> '
+            selo = f'<span class="tag-nd" title="Crédito recebido por mudança de ND (de {esc(c.get("nd_de",""))} para {esc(c["nd"])}) — objeto herdado da NC de origem {esc(org["nc"])}">↪ ND {esc(c.get("nd_de",""))}</span> '
         else:
             desc_completa = esc(c.get("obj", ""))
             selo = ""
-        desc_resumo = desc_completa[:118] + ("â€¦" if len(desc_completa) > 118 else "")
+        desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
         desc_resumo = selo + desc_resumo
-        # nÂº curto da NC (o completo fica no title e no modal): "160504â€¦2026NC401667" -> "NC 401667 Â· 160504"
+        # nº curto da NC (o completo fica no title e no modal): "160504…2026NC401667" -> "NC 401667 · 160504"
         nc_full = str(c["nc"] or "")
         m_nc = re.search(r"NC(\d+)$", nc_full)
         if m_nc:
-            nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">Â· {esc(nc_full[:6])}</span>'
+            nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">· {esc(nc_full[:6])}</span>'
         else:
             nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
         tid = esc(c.get("tid", ""))
         faixa = "none" if dias is None else ("r" if dias > 60 else ("a" if dias > 30 else "v"))
         return (f'<tr class="cel-row" tabindex="0" role="button" data-tela="{tid}" data-cel="{cid}" '
                 f'data-fonte="{esc(c.get("fonte",""))}" data-acao="{esc(c["acao"])}" data-nd="{esc(c["nd"])}" '
-                f'data-faixa="{faixa}" data-val="{c["cred"]:.2f}" title="Clique para ver o que estÃ¡ em tela desta NC" '
+                f'data-faixa="{faixa}" data-val="{c["cred"]:.2f}" title="Clique para ver o que está em tela desta NC" '
                 f'onclick="bcmsTela(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsTela(this)}}">'
                 f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
                 f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
@@ -875,19 +875,19 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
                 f'<td class="obj" title="{desc_completa}" data-full-desc="{desc_completa}">{desc_resumo}</td>'
                 f'<td class="mono2">{esc(refd)}</td>'
                 f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}</td>'
-                f'<td class="num" data-sort="{dsort}"><span class="{dcls}">{dtxt}</span><i class="chev" aria-hidden="true">â€º</i></td></tr>')
+                f'<td class="num" data-sort="{dsort}"><span class="{dcls}">{dtxt}</span><i class="chev" aria-hidden="true">›</i></td></tr>')
 
     et_ths = (
         _th("Fonte", False) +
         _th("NC", False) +
-        _th("AÃ§Ã£o Â· ND", False) +
-        _th("DescriÃ§Ã£o do objeto da NC", False) +
+        _th("Ação · ND", False) +
+        _th("Descrição do objeto da NC", False) +
         _th("Recebido em", False) +
-        _th("CrÃ©dito em Tela", True) +
+        _th("Crédito em Tela", True) +
         _th("Idade", True)
     )
 
-    # opÃ§Ãµes dos filtros â€” sÃ³ o que existe de fato nesta unidade
+    # opções dos filtros — só o que existe de fato nesta unidade
     _fontes = sorted({c.get("fonte", "") for c in emtela_ncs if c.get("fonte")})
     _acoes = sorted({c["acao"] for c in emtela_ncs if c["acao"]})
     _nds = sorted({c["nd"] for c in emtela_ncs if c["nd"]})
@@ -896,69 +896,69 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
         if _c["nd"] and _c["nd"] not in _nd_lbl and _c.get("nd_nome"):
             _nd_lbl[_c["nd"]] = _c["nd_nome"]
     opt_fonte = '<option value="">Fonte: todas</option>' + "".join(
-        f'<option value="{esc(_f)}">{esc(_f)}{" Â· OGU (exercÃ­cio corrente)" if _f == "160" else (" Â· FEx (exercÃ­cios anteriores)" if _f == "167" else "")}</option>' for _f in _fontes)
-    opt_acao = '<option value="">AÃ§Ã£o: todas</option>' + "".join(
+        f'<option value="{esc(_f)}">{esc(_f)}{" · OGU (exercício corrente)" if _f == "160" else (" · FEx (exercícios anteriores)" if _f == "167" else "")}</option>' for _f in _fontes)
+    opt_acao = '<option value="">Ação: todas</option>' + "".join(
         f'<option value="{esc(_a)}">{esc(_a)}</option>' for _a in _acoes)
     opt_nd = '<option value="">ND: todas</option>' + "".join(
-        f'<option value="{esc(_n)}">{esc(_n)}{esc(" â€” " + _nd_lbl[_n][:26]) if _nd_lbl.get(_n) else ""}</option>'
+        f'<option value="{esc(_n)}">{esc(_n)}{esc(" — " + _nd_lbl[_n][:26]) if _nd_lbl.get(_n) else ""}</option>'
         for _n in _nds)
     _cb = "bcmsFiltra('%s')" % sfx
     _cbl = "bcmsLimpaFiltros('%s')" % sfx
 
     emtela_html = (
-        '<section class="sec"><div class="eyebrow">CrÃ©ditos em tela â€” por Nota de CrÃ©dito (NC)</div>'
+        '<section class="sec"><div class="eyebrow">Créditos em tela — por Nota de Crédito (NC)</div>'
         '<div class="et-head">'
-        f'<div class="et-kpi et-hero"><span>CrÃ©dito DisponÃ­vel em tela</span><b class="num">{esc(brl(tot_emtela))}</b></div>'
-        f'<div class="et-kpi"><span>Notas de CrÃ©dito</span><b class="num">{len(emtela_ncs)}</b></div>'
-        f'<div class="et-kpi"><span>Idade mÃ©dia</span><b class="num">{idade_media} dias</b></div>'
+        f'<div class="et-kpi et-hero"><span>Crédito Disponível em tela</span><b class="num">{esc(brl(tot_emtela))}</b></div>'
+        f'<div class="et-kpi"><span>Notas de Crédito</span><b class="num">{len(emtela_ncs)}</b></div>'
+        f'<div class="et-kpi"><span>Idade média</span><b class="num">{idade_media} dias</b></div>'
         f'<div class="et-kpi"><span>Mais antigo</span><b class="num">{idade_max} dias</b></div>'
-        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatÃ³rio detalhado de crÃ©ditos por NC em planilha Excel"><span class="btn-excel-ic">ðŸ“¥</span> Baixar RelatÃ³rio NC em Excel</button></div>'
-        f'<div class="et-meta">PosiÃ§Ã£o {esc(posicao)}<br><span class="rh-delay">â± dados com ~24h de defasagem</span></div></div>'
-        '<p class="sec-nota">RelaÃ§Ã£o dos <b>crÃ©ditos disponÃ­veis por Nota de CrÃ©dito (NC)</b> com descriÃ§Ã£o completa do objeto e <b>dias em tela</b> (desde o lanÃ§amento da NC). '
-        '<b>Clique em uma linha</b> para abrir a ficha completa. Legenda de idade: <span class="badge-age age-green">â‰¤30d</span> recente Â· <span class="badge-age age-amber">31â€“60d</span> atenÃ§Ã£o Â· <span class="badge-age age-red">&gt;60d</span> crÃ­tico.</p>'
+        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📥</span> Baixar Relatório NC em Excel</button></div>'
+        f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
+        '<p class="sec-nota">Relação dos <b>créditos disponíveis por Nota de Crédito (NC)</b> com descrição completa do objeto e <b>dias em tela</b> (desde o lançamento da NC). '
+        '<b>Clique em uma linha</b> para abrir a ficha completa. Legenda de idade: <span class="badge-age age-green">≤30d</span> recente · <span class="badge-age age-amber">31–60d</span> atenção · <span class="badge-age age-red">&gt;60d</span> crítico.</p>'
         f'<div class="tbl-tools"><label class="visually-hidden" for="q-tab-emtela-{sfx}">Buscar</label>'
-        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, AÃ§Ã£o, ND ou palavras na descriÃ§Ã£o completaâ€¦" oninput="{_cb}">'
-        f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Exporta exatamente as linhas visÃ­veis, conforme os filtros aplicados"><span class="btn-excel-ic">ðŸ“Š</span> Exportar Excel</button>'
+        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="{_cb}">'
+        f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Exporta exatamente as linhas visíveis, conforme os filtros aplicados"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-emtela-{sfx}" data-unit="NC(s) em tela" aria-live="polite">{len(emtela_ncs)} NC(s) em tela</span></div>'
-        f'<div class="tbl-filtros" id="flt-{sfx}" role="group" aria-label="Filtros da lista de crÃ©ditos em tela">'
+        f'<div class="tbl-filtros" id="flt-{sfx}" role="group" aria-label="Filtros da lista de créditos em tela">'
         '<span class="flt-lbl">Filtrar:</span>'
         f'<select class="flt" id="f-fonte-{sfx}" aria-label="Filtrar por fonte" onchange="{_cb}">{opt_fonte}</select>'
-        f'<select class="flt" id="f-acao-{sfx}" aria-label="Filtrar por aÃ§Ã£o de governo" onchange="{_cb}">{opt_acao}</select>'
+        f'<select class="flt" id="f-acao-{sfx}" aria-label="Filtrar por ação de governo" onchange="{_cb}">{opt_acao}</select>'
         f'<select class="flt" id="f-nd-{sfx}" aria-label="Filtrar por natureza de despesa" onchange="{_cb}">{opt_nd}</select>'
         f'<select class="flt" id="f-idade-{sfx}" aria-label="Filtrar por idade em tela" onchange="{_cb}">'
-        '<option value="">Idade: todas</option><option value="v">â‰¤ 30 dias</option>'
+        '<option value="">Idade: todas</option><option value="v">≤ 30 dias</option>'
         '<option value="a">31 a 60 dias</option><option value="r">&gt; 60 dias</option></select>'
-        f'<button type="button" class="flt-limpa" onclick="{_cbl}" title="Limpar todos os filtros">âœ• Limpar</button>'
+        f'<button type="button" class="flt-limpa" onclick="{_cbl}" title="Limpar todos os filtros">✕ Limpar</button>'
         f'<span class="flt-resumo" id="flt-res-{sfx}" aria-live="polite"></span></div>'
         f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det det-compact"><thead><tr>{et_ths}</tr></thead>'
         f'<tbody>{"".join(et_row(c) for c in emtela_ncs)}</tbody>'
-        f'<tfoot><tr><td colspan="5">TOTAL Â· {len(emtela_ncs)} Nota(s) de CrÃ©dito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>â€”</td></tr></tfoot></table></div></section>'
+        f'<tfoot><tr><td colspan="5">TOTAL · {len(emtela_ncs)} Nota(s) de Crédito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>—</td></tr></tfoot></table></div></section>'
     )
 
     resumo_html = (
         emtela_html
-        + f'<section class="sec"><div class="eyebrow">MovimentaÃ§Ã£o de NC â€” {fmt_d(max_date)} (dia anterior)</div>'
-        f'<p class="sec-nota">Notas de crÃ©dito com lanÃ§amento em <b>{fmt_d(max_date)}</b> (Ãºltimo dia com movimento â€” dados com ~24h de defasagem): '
-        f'<b>{len(daily)}</b> NC(s) Â· Recebido <b>{esc(brl(rec_d))}</b> Â· ReduÃ§Ãµes <b>{esc(brl(red_d))}</b> Â· LÃ­quido <b>{esc(brl(rec_d + red_d))}</b>. '
-        'Clique em uma NC para detalhÃ¡-la.</p>'
+        + f'<section class="sec"><div class="eyebrow">Movimentação de NC — {fmt_d(max_date)} (dia anterior)</div>'
+        f'<p class="sec-nota">Notas de crédito com lançamento em <b>{fmt_d(max_date)}</b> (último dia com movimento — dados com ~24h de defasagem): '
+        f'<b>{len(daily)}</b> NC(s) · Recebido <b>{esc(brl(rec_d))}</b> · Reduções <b>{esc(brl(red_d))}</b> · Líquido <b>{esc(brl(rec_d + red_d))}</b>. '
+        'Clique em uma NC para detalhá-la.</p>'
         + mov_tabela(f"mov-dia-{sfx}", daily) + '</section>'
-        '<section class="sec"><div class="eyebrow">Resumo semanal â€” Ãºltimos 7 dias com movimentaÃ§Ã£o</div>'
-        '<p class="sec-nota">MovimentaÃ§Ã£o de NC por dia: recebimentos (+), reduÃ§Ãµes/anulaÃ§Ãµes (âˆ’) e lÃ­quido. <b>Clique em um dia</b> para ver as NCs daquele dia.</p>'
+        '<section class="sec"><div class="eyebrow">Resumo semanal — últimos 7 dias com movimentação</div>'
+        '<p class="sec-nota">Movimentação de NC por dia: recebimentos (+), reduções/anulações (−) e líquido. <b>Clique em um dia</b> para ver as NCs daquele dia.</p>'
         + semana_tabela(week_rows) + '</section>'
     )
 
     hero_eq = (
         f'<div class="hero-eq-box"><span class="eq-tag">RECEBIDO</span><span class="eq-val num">{esc(brl(tot["prov"]))}</span></div>'
-        f'<span class="hero-eq-sign">âˆ’</span>'
+        f'<span class="hero-eq-sign">−</span>'
         f'<div class="hero-eq-box"><span class="eq-tag">EMPENHADO</span><span class="eq-val num eq-emp">{esc(brl(tot["emp"]))}</span></div>'
         f'<span class="hero-eq-sign">=</span>'
-        f'<div class="hero-eq-box eq-highlight"><span class="eq-tag">DISPONÃVEL</span><span class="eq-val num eq-disp">{esc(brl(tot["cred"]))}</span></div>'
+        f'<div class="hero-eq-box eq-highlight"><span class="eq-tag">DISPONÍVEL</span><span class="eq-val num eq-disp">{esc(brl(tot["cred"]))}</span></div>'
     )
     disp = "" if (u is UNIDADES[0]) else ' style="display:none"'
     frag = f"""<section class="unidade" data-key="{sfx}" data-sigla="{esc(u['sigla'])}"{disp}>
-  <div class="toptabs" role="tablist" aria-label="VisÃµes do painel">
-    <button class="toptab on" role="tab" aria-selected="true" onclick="bcmsView(this,'resumo')">ðŸ“‹ Resumo Executivo & CrÃ©ditos em Tela</button>
-    <button class="toptab" role="tab" aria-selected="false" onclick="bcmsView(this,'completo')">ðŸ“Š Detalhamento Completo & GrÃ¡ficos</button>
+  <div class="toptabs" role="tablist" aria-label="Visões do painel">
+    <button class="toptab on" role="tab" aria-selected="true" onclick="bcmsView(this,'resumo')">📋 Resumo Executivo & Créditos em Tela</button>
+    <button class="toptab" role="tab" aria-selected="false" onclick="bcmsView(this,'completo')">📊 Detalhamento Completo & Gráficos</button>
   </div>
   <div class="view-resumo">
   {resumo_html}
@@ -966,7 +966,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
   <div class="view-completo" style="display:none">
   <section class="hero">
     <div class="hero-l">
-      <div class="eyebrow">CrÃ©dito DisponÃ­vel Â· Consolidado {esc(u['sigla'])}</div>
+      <div class="eyebrow">Crédito Disponível · Consolidado {esc(u['sigla'])}</div>
       <div class="hero-num num">{esc(brl(tot["cred"]))}</div>
       <div class="hero-eq">{hero_eq}</div>
     </div>
@@ -977,12 +977,12 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
   </section>
 
   <section class="sec">
-    <div class="eyebrow">ComposiÃ§Ã£o Visual da Disponibilidade</div>
+    <div class="eyebrow">Composição Visual da Disponibilidade</div>
     <div class="card">{svg_waterfall(tot["prov"], tot["emp"], tot["cred"])}</div>
   </section>
 
   <section class="sec">
-    <div class="eyebrow">Indicadores Globais de ExecuÃ§Ã£o</div>
+    <div class="eyebrow">Indicadores Globais de Execução</div>
     <div class="kpis">{kpis}</div>
   </section>
 
@@ -992,33 +992,33 @@ def conteudo_unidade(res, hist, data_str, periodo, u):
   </section>
 
   <section class="sec">
-    <div class="eyebrow">DistribuiÃ§Ã£o do CrÃ©dito DisponÃ­vel</div>
+    <div class="eyebrow">Distribuição do Crédito Disponível</div>
     <div class="grid2">{ch_acao}{ch_nd}</div>
   </section>
 
   <section class="sec">
-    <div class="eyebrow">EstÃ¡gios da Despesa por Fonte</div>
+    <div class="eyebrow">Estágios da Despesa por Fonte</div>
     <div class="grid2">{funis}</div>
   </section>
 
   <section class="sec">{trend}</section>
 
   <section class="sec">
-    <div class="eyebrow">CrÃ©dito DisponÃ­vel em tela â€” por cÃ©lula orÃ§amentÃ¡ria</div>
-    <p class="sec-nota">Saldo <b>lÃ­quido</b> por cÃ©lula (AÃ§Ã£o Â· PI Â· ND): <b>Recebido (lÃ­q) âˆ’ Empenhado = CrÃ©dito DisponÃ­vel</b> em cada linha. "Recebido (lÃ­q)" jÃ¡ compensa alteraÃ§Ãµes de ND, detalhamentos e anulaÃ§Ãµes (a alteraÃ§Ã£o <b>nÃ£o Ã© somada</b> com a NC original). SÃ³ aparecem cÃ©lulas com saldo &gt; 0; a soma fecha com o total consolidado. <b>Clique em uma linha</b> para ver as notas de crÃ©dito da cÃ©lula com a descriÃ§Ã£o completa.</p>
-    <div class="tabs" role="tablist" aria-label="CrÃ©dito em tela por UASG">{abas}</div>
+    <div class="eyebrow">Crédito Disponível em tela — por célula orçamentária</div>
+    <p class="sec-nota">Saldo <b>líquido</b> por célula (Ação · PI · ND): <b>Recebido (líq) − Empenhado = Crédito Disponível</b> em cada linha. "Recebido (líq)" já compensa alterações de ND, detalhamentos e anulações (a alteração <b>não é somada</b> com a NC original). Só aparecem células com saldo &gt; 0; a soma fecha com o total consolidado. <b>Clique em uma linha</b> para ver as notas de crédito da célula com a descrição completa.</p>
+    <div class="tabs" role="tablist" aria-label="Crédito em tela por UASG">{abas}</div>
     {tabs}
   </section>
   </div>
 </section>"""
     return frag, celdata, ncdata, daydata, teladata
 
-# ---------------- mÃ³dulo Ranking e Comparativo OMDS ----------------
-def svg_comparativo_barras(u_stats, metric="cred", titulo="CrÃ©dito DisponÃ­vel por Unidade (R$)"):
+# ---------------- módulo Ranking e Comparativo OMDS ----------------
+def svg_comparativo_barras(u_stats, metric="cred", titulo="Crédito Disponível por Unidade (R$)"):
     itens = [(u["sigla"], u[metric], u["accent"]) for u in u_stats if round(u[metric], 2) != 0]
     itens.sort(key=lambda x: x[1], reverse=True)
     if not itens:
-        return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">Sem valores no perÃ­odo</p></div>'
+        return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">Sem valores no período</p></div>'
     vmax = max(x[1] for x in itens) or 1
     labW, rh, pad = 110, 36, 12
     zx = labW + 10
@@ -1046,7 +1046,7 @@ def svg_comparativo_exec(u_stats, media_cmd):
     el = []
     x_media = zx + (min(100.0, media_cmd) / 100.0) * plotW
     el.append(f'<line x1="{x_media:.1f}" y1="{pad-4}" x2="{x_media:.1f}" y2="{H-pad-16}" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3"/>')
-    el.append(f'<text x="{x_media:.1f}" y="{H-pad-2}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gold)">MÃ©dia do Comando: {media_cmd:.1f}%</text>')
+    el.append(f'<text x="{x_media:.1f}" y="{H-pad-2}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gold)">Média do Comando: {media_cmd:.1f}%</text>')
     for i, (sigla, pct_v, accent, prov, emp) in enumerate(itens):
         y = pad + i * rh
         w = max(4, (min(100.0, pct_v) / 100.0) * plotW)
@@ -1054,8 +1054,8 @@ def svg_comparativo_exec(u_stats, media_cmd):
         el.append(f'<rect x="{zx}" y="{y+4}" width="{plotW}" height="{rh-8}" rx="4" fill="var(--track)"/>')
         el.append(f'<rect x="{zx}" y="{y+4}" width="{w:.1f}" height="{rh-8}" rx="4" style="fill:{accent}"><title>{esc(sigla)}: {pct_v:.1f}% empenhado ({esc(brl(emp))} de {esc(brl(prov))})</title></rect>')
         el.append(f'<text x="{zx+w+8:.1f}" y="{y+rh/2+4:.0f}" class="s-num" font-weight="700">{pct_v:.1f}%</text>')
-    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Taxa de ExecuÃ§Ã£o OrÃ§amentÃ¡ria por OMDS">{"".join(el)}</svg>'
-    return f'<div class="card chart"><div class="eyebrow">Taxa de ExecuÃ§Ã£o OrÃ§amentÃ¡ria (% Empenhado / Recebido)</div>{svg}</div>'
+    svg = f'<svg viewBox="0 0 {W} {H}" class="svg" role="img" aria-label="Taxa de Execução Orçamentária por OMDS">{"".join(el)}</svg>'
+    return f'<div class="card chart"><div class="eyebrow">Taxa de Execução Orçamentária (% Empenhado / Recebido)</div>{svg}</div>'
 
 def secao_comparativo_omds(res, hist, data_str, periodo):
     u_stats = []
@@ -1093,11 +1093,11 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
     
     podio_order = []
     if len(rank_exec) >= 2:
-        podio_order.append((rank_exec[1], 2, "ðŸ¥ˆ 2Âº Lugar", "silver"))
+        podio_order.append((rank_exec[1], 2, "🥈 2º Lugar", "silver"))
     if len(rank_exec) >= 1:
-        podio_order.append((rank_exec[0], 1, "ðŸ¥‡ 1Âº Lugar", "gold"))
+        podio_order.append((rank_exec[0], 1, "🥇 1º Lugar", "gold"))
     if len(rank_exec) >= 3:
-        podio_order.append((rank_exec[2], 3, "ðŸ¥‰ 3Âº Lugar", "bronze"))
+        podio_order.append((rank_exec[2], 3, "🥉 3º Lugar", "bronze"))
     
     podio_cards = []
     for u, pos, badge, cls in podio_order:
@@ -1107,20 +1107,20 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
             f'<div class="podium-avatar-wrap"><img src="assets/logos/{u["logo"]}" alt="{esc(u["sigla"])}" class="podium-logo" onerror="this.style.display=\'none\'"></div>'
             f'<div class="podium-sigla">{esc(u["sigla"])}</div>'
             f'<div class="podium-nome">{esc(u["nome"])}</div>'
-            f'<div class="podium-stat-pill"><span class="stat-l">ExecuÃ§Ã£o</span><b class="stat-v num">{u["exec_pct"]:.1f}%</b></div>'
-            f'<div class="podium-substat">DisponÃ­vel: <span class="num">{esc(brl(u["cred"]))}</span></div>'
-            f'<button type="button" class="podium-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Acessar Unidade â€º</button>'
+            f'<div class="podium-stat-pill"><span class="stat-l">Execução</span><b class="stat-v num">{u["exec_pct"]:.1f}%</b></div>'
+            f'<div class="podium-substat">Disponível: <span class="num">{esc(brl(u["cred"]))}</span></div>'
+            f'<button type="button" class="podium-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Acessar Unidade ›</button>'
             f'</div>'
         )
     
     kpis_cmd = (
-        kpi_tile("ProvisÃ£o Recebida (Comando)", brl(cmd_prov), "6 OMDS", "prov") +
-        kpi_tile("Empenhado (Comando)", brl(cmd_emp), f"{cmd_exec_pct:.1f}% de execuÃ§Ã£o", "emp") +
+        kpi_tile("Provisão Recebida (Comando)", brl(cmd_prov), "6 OMDS", "prov") +
+        kpi_tile("Empenhado (Comando)", brl(cmd_emp), f"{cmd_exec_pct:.1f}% de execução", "emp") +
         kpi_tile("Liquidado (Comando)", brl(cmd_liq), f"{cmd_liq_pct:.1f}% do empenhado", "liq") +
-        kpi_tile("CrÃ©dito DisponÃ­vel", brl(cmd_cred), f"{cmd_n_cel} cÃ©lulas ativas", "pag")
+        kpi_tile("Crédito Disponível", brl(cmd_cred), f"{cmd_n_cel} células ativas", "pag")
     )
     
-    ch_cred = svg_comparativo_barras(u_stats, "cred", "CrÃ©dito DisponÃ­vel por Unidade (R$)")
+    ch_cred = svg_comparativo_barras(u_stats, "cred", "Crédito Disponível por Unidade (R$)")
     ch_exec = svg_comparativo_exec(u_stats, cmd_exec_pct)
     
     def _th_r(h, numc):
@@ -1130,22 +1130,22 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
 
     ths = (
         _th_r("Pos.", False) +
-        _th_r("OrganizaÃ§Ã£o Militar (OMDS)", False) +
+        _th_r("Organização Militar (OMDS)", False) +
         _th_r("UASGs", False) +
-        _th_r("ProvisÃ£o Recebida", True) +
+        _th_r("Provisão Recebida", True) +
         _th_r("Empenhado", True) +
-        _th_r("% ExecuÃ§Ã£o", True) +
-        _th_r("CrÃ©dito DisponÃ­vel", True) +
+        _th_r("% Execução", True) +
+        _th_r("Crédito Disponível", True) +
         _th_r("Liquidado", True) +
-        _th_r("% LiquidaÃ§Ã£o", True) +
+        _th_r("% Liquidação", True) +
         _th_r("Pago", True) +
-        _th_r("CÃ©lulas", True) +
-        _th_r("AÃ§Ã£o", False)
+        _th_r("Células", True) +
+        _th_r("Ação", False)
     )
     
     body_rows = []
     for pos, u in enumerate(rank_exec, 1):
-        medalha = "ðŸ¥‡ 1Âº" if pos == 1 else ("ðŸ¥ˆ 2Âº" if pos == 2 else ("ðŸ¥‰ 3Âº" if pos == 3 else f"{pos}Âº"))
+        medalha = "🥇 1º" if pos == 1 else ("🥈 2º" if pos == 2 else ("🥉 3º" if pos == 3 else f"{pos}º"))
         bar_w = min(100.0, u["exec_pct"])
         body_rows.append(
             f'<tr class="cel-row" tabindex="0" role="button" onclick="trocaOMDSPorKey(\'{u["key"]}\')" '
@@ -1161,7 +1161,7 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
             f'<td class="num" data-sort="{u["liq_pct"]:.2f}">{u["liq_pct"]:.1f}%</td>'
             f'<td class="num" data-sort="{u["pag"]:.2f}">{esc(brl(u["pag"]))}</td>'
             f'<td class="num" data-sort="{u["n_cel"]}">{u["n_cel"]}</td>'
-            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Abrir â€º</button></td>'
+            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Abrir ›</button></td>'
             f'</tr>'
         )
     
@@ -1176,7 +1176,7 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         f'<td class="num"><b>{cmd_liq_pct:.1f}%</b></td>'
         f'<td class="num"><b>{esc(brl(cmd_pag))}</b></td>'
         f'<td class="num"><b>{cmd_n_cel}</b></td>'
-        f'<td>â€”</td>'
+        f'<td>—</td>'
         f'</tr></tfoot>'
     )
     
@@ -1184,30 +1184,30 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         f'<div class="tbl-tools">'
         f'<label class="visually-hidden" for="q-tab-ranking-det">Buscar</label>'
         f'<input type="search" id="q-tab-ranking-det" class="tbl-search" placeholder="Buscar no comparativo por OMDS, UASG..." oninput="bcmsSearch(this,\'tab-ranking-det\')">'
-        f'<button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-ranking-det\',\'ranking_comparativo_omds\')" title="Baixar comparativo completo das OMDS em planilha formatada para Excel"><span class="btn-excel-ic">ðŸ“Š</span> Exportar Planilha Excel</button>'
+        f'<button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-ranking-det\',\'ranking_comparativo_omds\')" title="Baixar comparativo completo das OMDS em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Planilha Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-ranking-det" data-unit="unidades" aria-live="polite">6 unidades</span>'
         f'</div>'
         f'<div class="tbl-scroll" id="tab-ranking-det"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{"".join(body_rows)}</tbody>{tfoot_tbl}</table></div>'
     )
     
     hero_eq_cmd = (
-        f'<div class="hero-eq-box"><span class="eq-tag">PROVISÃƒO TOTAL</span><span class="eq-val num">{esc(brl(cmd_prov))}</span></div>'
-        f'<span class="hero-eq-sign">âˆ’</span>'
+        f'<div class="hero-eq-box"><span class="eq-tag">PROVISÃO TOTAL</span><span class="eq-val num">{esc(brl(cmd_prov))}</span></div>'
+        f'<span class="hero-eq-sign">−</span>'
         f'<div class="hero-eq-box"><span class="eq-tag">EMPENHADO TOTAL</span><span class="eq-val num eq-emp">{esc(brl(cmd_emp))}</span></div>'
         f'<span class="hero-eq-sign">=</span>'
-        f'<div class="hero-eq-box eq-highlight"><span class="eq-tag">DISPONÃVEL COMANDO</span><span class="eq-val num eq-disp">{esc(brl(cmd_cred))}</span></div>'
+        f'<div class="hero-eq-box eq-highlight"><span class="eq-tag">DISPONÍVEL COMANDO</span><span class="eq-val num eq-disp">{esc(brl(cmd_cred))}</span></div>'
     )
     
     frag = f"""<section class="unidade unidade-ranking" data-key="RANKING" data-sigla="Comando" style="display:none">
   <div class="ranking-header-card">
-    <div class="rh-tag">ðŸ† BENCHMARKING ORÃ‡AMENTÃRIO & FINANCEIRO</div>
+    <div class="rh-tag">🏆 BENCHMARKING ORÇAMENTÁRIO & FINANCEIRO</div>
     <h2 class="rh-title">Ranking & Comparativo Consolidado das OMDS</h2>
-    <p class="rh-desc">VisÃ£o executiva integrada das 6 OrganizaÃ§Ãµes Militares Diretamente Subordinadas da Base de Apoio LogÃ­stico do ExÃ©rcito. Acompanhe os indicadores de desempenho, taxa de execuÃ§Ã£o orÃ§amentÃ¡ria (% Empenhado) e crÃ©ditos em tela.</p>
+    <p class="rh-desc">Visão executiva integrada das 6 Organizações Militares Diretamente Subordinadas da Base de Apoio Logístico do Exército. Acompanhe os indicadores de desempenho, taxa de execução orçamentária (% Empenhado) e créditos em tela.</p>
   </div>
 
   <section class="hero hero-cmd">
     <div class="hero-l">
-      <div class="eyebrow">CrÃ©dito DisponÃ­vel Â· Consolidado do Comando (6 OMDS)</div>
+      <div class="eyebrow">Crédito Disponível · Consolidado do Comando (6 OMDS)</div>
       <div class="hero-num num">{esc(brl(cmd_cred))}</div>
       <div class="hero-eq">{hero_eq_cmd}</div>
     </div>
@@ -1223,8 +1223,8 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
   </section>
 
   <section class="sec">
-    <div class="eyebrow">ðŸ† PÃ³dio de EficiÃªncia OrÃ§amentÃ¡ria (% Empenhado / Recebido)</div>
-    <p class="sec-nota">Destaque para as organizaÃ§Ãµes com maior percentual de execuÃ§Ã£o das dotaÃ§Ãµes orÃ§amentÃ¡rias recebidas no exercÃ­cio. Clique em uma unidade para detalhar.</p>
+    <div class="eyebrow">🏆 Pódio de Eficiência Orçamentária (% Empenhado / Recebido)</div>
+    <p class="sec-nota">Destaque para as organizações com maior percentual de execução das dotações orçamentárias recebidas no exercício. Clique em uma unidade para detalhar.</p>
     <div class="podium-wrap">{"".join(podio_cards)}</div>
   </section>
 
@@ -1235,13 +1235,13 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
 
   <section class="sec">
     <div class="eyebrow">Tabela Comparativa e Benchmarking Completo</div>
-    <p class="sec-nota">RelaÃ§Ã£o completa de todas as OMDS com dados consolidados de OGU e FEx. Ordene por qualquer coluna ou clique no botÃ£o para exportar para Excel (.xlsx).</p>
+    <p class="sec-nota">Relação completa de todas as OMDS com dados consolidados de OGU e FEx. Ordene por qualquer coluna ou clique no botão para exportar para Excel (.xlsx).</p>
     {tabela_ranking_html}
   </section>
 </section>"""
     return frag
 
-# ---------------- shell da pÃ¡gina (multi-OMDS) ----------------
+# ---------------- shell da página (multi-OMDS) ----------------
 def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
     for u in UNIDADES:
@@ -1258,7 +1258,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     banner = ""
     if alertas:
         itens = "".join(f"<li>{esc(a)}</li>" for a in alertas)
-        banner = f'<div class="banner" role="alert"><b>âš  VerificaÃ§Ã£o de ConsistÃªncia:</b><ul>{itens}</ul></div>'
+        banner = f'<div class="banner" role="alert"><b>⚠ Verificação de Consistência:</b><ul>{itens}</ul></div>'
     omds = "".join(
         f'<button class="omds{" on" if i == 0 else ""}" data-key="{u["key"]}" aria-current="{"true" if i == 0 else "false"}" '
         f'title="{esc(u["nome"])}" onclick="trocaOMDS(this)">'
@@ -1267,15 +1267,15 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
         for i, u in enumerate(UNIDADES))
     omds += (
         '<button class="omds omds-rank" data-key="RANKING" aria-current="false" '
-        'title="Ranking e Comparativo entre todas as Unidades da Base de Apoio LogÃ­stico" onclick="trocaOMDS(this)">'
-        '<span class="rank-icon" aria-hidden="true">ðŸ†</span>'
+        'title="Ranking e Comparativo entre todas as Unidades da Base de Apoio Logístico" onclick="trocaOMDS(this)">'
+        '<span class="rank-icon" aria-hidden="true">🏆</span>'
         '<span>Ranking & Comparativo</span></button>'
     )
     ujs = json.dumps({u["key"]: {"sigla": u["sigla"], "nome": u["nome"], "ogu": u["ogu"], "fex": u["fex"],
                                  "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
     u0 = UNIDADES[0]
     posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
-    ger = datetime.datetime.now().strftime("%d/%m/%Y Ã s %H:%M")
+    ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
     celdata_json = json.dumps(CEL, ensure_ascii=False).replace("</", "<\\/")
     ncdata_json = json.dumps(NCD, ensure_ascii=False).replace("</", "<\\/")
     daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
@@ -1283,8 +1283,8 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="Painel de CrÃ©dito DisponÃ­vel das OMDS da Base de Apoio LogÃ­stico do ExÃ©rcito â€” SIAFI / Tesouro Gerencial">
-<title>CrÃ©dito DisponÃ­vel â€” OMDS Ba Ap Log Ex</title>
+<meta name="description" content="Painel de Crédito Disponível das OMDS da Base de Apoio Logístico do Exército — SIAFI / Tesouro Gerencial">
+<title>Crédito Disponível — OMDS Ba Ap Log Ex</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
@@ -1293,39 +1293,39 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
 <div class="bcms-bar" aria-hidden="true"></div>
 <header class="topbar">
   <div class="brand">
-    <img class="brasao" id="emblema" src="assets/logos/{u0['logo']}" alt="BrasÃ£o {esc(u0['sigla'])}" loading="eager">
-    <div><h1 id="uTitulo">CrÃ©dito DisponÃ­vel â€” {esc(u0['sigla'])}</h1>
-    <p class="subtitle"><span id="uNome">{esc(u0['nome'])}</span> Â· Tesouro Gerencial / SIAFI Â· <span id="uUasg">UASGs {u0['ogu']} (OGU) e {u0['fex']} (FEx)</span></p></div>
+    <img class="brasao" id="emblema" src="assets/logos/{u0['logo']}" alt="Brasão {esc(u0['sigla'])}" loading="eager">
+    <div><h1 id="uTitulo">Crédito Disponível — {esc(u0['sigla'])}</h1>
+    <p class="subtitle"><span id="uNome">{esc(u0['nome'])}</span> · Tesouro Gerencial / SIAFI · <span id="uUasg">UASGs {u0['ogu']} (OGU) e {u0['fex']} (FEx)</span></p></div>
   </div>
   <div class="topbar-r">
-    <div class="selo-wrap"><span class="selo"><span class="live-dot" aria-hidden="true"></span> PosiÃ§Ã£o {esc(posicao)}</span><span class="selo-delay">â± dados com ~24h de defasagem</span></div>
+    <div class="selo-wrap"><span class="selo"><span class="live-dot" aria-hidden="true"></span> Posição {esc(posicao)}</span><span class="selo-delay">⏱ dados com ~24h de defasagem</span></div>
     <button class="theme" id="themeBtn" aria-pressed="false" aria-label="Alternar tema claro/escuro" onclick="bcmsTheme()" title="Alternar tema">
       <svg viewBox="0 0 24 24" class="ic-sun" aria-hidden="true"><circle cx="12" cy="12" r="4.5" style="fill:currentColor"/><g style="stroke:currentColor;stroke-width:1.8;stroke-linecap:round"><path d="M12 2v2.5M12 19.5v2.5M2 12h2.5M19.5 12h2.5M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M19.07 4.93l-1.77 1.77M6.7 17.3l-1.77 1.77"/></g></svg>
       <svg viewBox="0 0 24 24" class="ic-moon" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z" style="fill:currentColor"/></svg>
     </button>
   </div>
 </header>
-<nav class="omds-nav" aria-label="Trocar de organizaÃ§Ã£o militar"><div class="omds-nav-in">{omds}</div></nav>
+<nav class="omds-nav" aria-label="Trocar de organização militar"><div class="omds-nav-in">{omds}</div></nav>
 <main class="wrap">
   {banner}
   {"".join(frags)}
 </main>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true" onclick="if(event.target===this)bcmsCelClose()">
   <div class="modal-panel">
-    <button class="modal-x" aria-label="Fechar" onclick="bcmsCelClose()">âœ•</button>
+    <button class="modal-x" aria-label="Fechar" onclick="bcmsCelClose()">✕</button>
     <div id="modal-body"></div>
   </div>
 </div>
 <footer class="rodape">
-  <p class="rodape-brand">âš™ Comando da Base de Apoio LogÃ­stico do ExÃ©rcito Â· OMDS Subordinadas</p>
-  <p><b>Metodologia:</b> CrÃ©dito DisponÃ­vel = ProvisÃ£o Recebida âˆ’ ProvisÃ£o Concedida âˆ’ Despesas Empenhadas (saldo lÃ­quido nÃ£o empenhado no Tesouro Gerencial / SIAFI). O detalhe Ã© o saldo real por cÃ©lula orÃ§amentÃ¡ria (AÃ§Ã£o Â· PI Â· ND). A soma das cÃ©lulas reconcilia com exatidÃ£o matemÃ¡tica com o total consolidado de cada OM.</p>
-  <p>Fonte: CRÃ‰DITO DISP.xlsx (Google Drive / Tesouro Gerencial) Â· <b>â± Dados com defasagem de aproximadamente 24 horas.</b> Â· Painel atualizado em {esc(ger)}</p>
+  <p class="rodape-brand">⚙ Comando da Base de Apoio Logístico do Exército · OMDS Subordinadas</p>
+  <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo líquido não empenhado no Tesouro Gerencial / SIAFI). O detalhe é o saldo real por célula orçamentária (Ação · PI · ND). A soma das células reconcilia com exatidão matemática com o total consolidado de cada OM.</p>
+  <p>Fonte: CRÉDITO DISP.xlsx (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
 </footer>
 <script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};</script>
 <script>{JS}</script>
 </body></html>"""
 
-# ============ CSS / JS (Constantes SÃªnior UI/UX) ============
+# ============ CSS / JS (Constantes Sênior UI/UX) ============
 CSS = r"""
 /* ==========================================================================
    DESIGN TOKENS & MASTER UI/UX ARCHITECTURE (60fps GPU + WCAG 2.2 AAA)
@@ -1347,7 +1347,7 @@ CSS = r"""
   --neutral-900: #0F172A;
   --neutral-950: #020617;
 
-  /* SuperfÃ­cies & Fundo */
+  /* Superfícies & Fundo */
   --bg:          var(--neutral-50);
   --bg-surface:  var(--neutral-0);
   --bg-elevated: var(--neutral-0);
@@ -1363,13 +1363,13 @@ CSS = r"""
   --border-strong: var(--neutral-300);
   --border-focus:  #2563EB;
 
-  /* Cores de Marca & PrimÃ¡rias */
+  /* Cores de Marca & Primárias */
   --primary:        #1C4A73;
   --primary-strong: #143A5C;
   --primary-50:     #EFF6FF;
   --primary-600:    #2563EB;
 
-  /* Cores SemÃ¢nticas de Estado (WCAG AAA) */
+  /* Cores Semânticas de Estado (WCAG AAA) */
   --success:        #059669;
   --success-strong: #047857;
   --success-bg:     #ECFDF5;
@@ -1395,12 +1395,12 @@ CSS = r"""
   --focus:          #059669;
   --track:          #E2E8F0;
 
-  /* EstÃ¡gios Funil */
+  /* Estágios Funil */
   --stg1: #1C4A73;
   --stg2: #3B82F6;
   --stg3: #10B981;
 
-  /* Sombras FÃ­sicas em Camadas */
+  /* Sombras Físicas em Camadas */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow:    0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
@@ -1412,7 +1412,7 @@ CSS = r"""
   --mono:  'JetBrains Mono', Consolas, monospace;
   --serif: 'Newsreader', Georgia, serif;
 
-  /* TransiÃ§Ãµes Spring */
+  /* Transições Spring */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -1594,7 +1594,7 @@ body {
 }
 .sec-nota b { color: var(--ink); font-weight: 600; }
 
-/* BotÃµes Excel Profissionais */
+/* Botões Excel Profissionais */
 .btn-excel {
   position: relative;
   display: inline-flex;
@@ -1736,7 +1736,7 @@ h1 {
 }
 .selo-delay { font-size: 0.6875rem; color: var(--warning-ink); font-weight: 600; white-space: nowrap; }
 
-/* BotÃ£o Tema */
+/* Botão Tema */
 .theme {
   width: 48px;
   height: 48px;
@@ -1760,7 +1760,7 @@ h1 {
   html:not([data-theme]) .ic-moon { display: block; }
 }
 
-/* Barra de NavegaÃ§Ã£o OMDS */
+/* Barra de Navegação OMDS */
 .omds-nav {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
@@ -1818,7 +1818,7 @@ h1 {
 }
 .rank-icon { font-size: 0.9375rem; }
 
-/* Cards & SuperfÃ­cies */
+/* Cards & Superfícies */
 .card {
   position: relative;
   background: var(--bg-surface);
@@ -1992,7 +1992,7 @@ h1 {
 .exec-track { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
 .exec-fill { height: 100%; background: var(--primary-600); border-radius: 999px; }
 
-/* MÃ³dulo CrÃ©ditos em Tela por NC */
+/* Módulo Créditos em Tela por NC */
 .et-head {
   display: flex;
   flex-wrap: wrap;
@@ -2018,7 +2018,7 @@ h1 {
 .et-action { display: flex; align-items: center; }
 .et-meta { margin-left: auto; align-self: center; font-size: 0.75rem; color: var(--ink-muted); text-align: right; line-height: 1.5; }
 
-/* Badges de Idade de CrÃ©dito (SemÃ¡foro) */
+/* Badges de Idade de Crédito (Semáforo) */
 .badge-age {
   display: inline-block;
   padding: 2px 8px;
@@ -2032,7 +2032,7 @@ h1 {
 .age-red   { background: var(--danger-bg);  color: var(--danger);       border: 1px solid var(--danger-border); }
 .age-none  { color: var(--ink-muted); }
 
-/* PÃ­lula de Fonte (160 / 167) */
+/* Pílula de Fonte (160 / 167) */
 .pill-fonte {
   display: inline-block;
   font-size: 0.6875rem;
@@ -2132,9 +2132,9 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .det td.anchor { font-weight: 700; }
 .det tbody tr:hover { background: var(--bg-subtle); }
 .det .obj { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-muted); }
-/* [COMPACTA] lista de NC: linhas mais baixas e mais texto Ãºtil visÃ­vel.
-   Reduz padding/fonte (46px -> ~32px por linha) e devolve Ã  descriÃ§Ã£o o espaÃ§o
-   liberado pelo nÂº curto da NC. */
+/* [COMPACTA] lista de NC: linhas mais baixas e mais texto útil visível.
+   Reduz padding/fonte (46px -> ~32px por linha) e devolve à descrição o espaço
+   liberado pelo nº curto da NC. */
 .det-compact td { padding: 5px 10px; line-height: 1.35; }
 .det-compact th { padding: 8px 10px; }
 .det-compact tfoot td { padding: 8px 10px; }
@@ -2144,7 +2144,7 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .det-compact .pill-fonte { padding: 1px 7px; font-size: 0.6875rem; }
 .nc-num { font-weight: 700; letter-spacing: .01em; }
 .nc-ug { color: var(--ink-muted); font-weight: 500; }
-/* selo de crÃ©dito vindo de mudanÃ§a de ND (objeto herdado da NC de origem) */
+/* selo de crédito vindo de mudança de ND (objeto herdado da NC de origem) */
 .tag-nd {
   display: inline-block; padding: 0 6px; margin-right: 5px; border-radius: 5px;
   background: var(--warning-bg, rgba(181,130,43,.14)); color: var(--warning-ink, #8A631C);
@@ -2172,7 +2172,7 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .flt-resumo { font-size: 0.8125rem; color: var(--ink-muted); font-weight: 600; }
 .flt-resumo.on { color: var(--primary); }
 @media (max-width: 640px) { .flt { flex: 1 1 100%; max-width: none; } }
-/* ---- modal por etapas do crÃ©dito ---- */
+/* ---- modal por etapas do crédito ---- */
 .m-etapas { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 .m-etapa {
   border: 1px solid var(--border); background: var(--bg-subtle); color: var(--ink-muted);
@@ -2210,7 +2210,7 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .cel-row .chev { float: right; margin-left: 8px; color: var(--ink-soft); font-weight: 400; transition: transform .15s ease, color .15s ease; }
 .cel-row:hover .chev { color: var(--success); transform: translateX(3px); }
 
-/* PÃ³dio & Benchmarking (Ranking OMDS) */
+/* Pódio & Benchmarking (Ranking OMDS) */
 .ranking-header-card {
   margin-top: 24px;
   padding: 26px 30px;
@@ -2375,7 +2375,7 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 .s-dot { fill: var(--success); }
 .s-conv { font-size: 10.5px; fill: var(--ink-muted); }
 
-/* Modal Drill-Down (FÃ­sica Spring + Backdrop Blur) */
+/* Modal Drill-Down (Física Spring + Backdrop Blur) */
 .modal {
   position: fixed;
   inset: 0;
@@ -2401,8 +2401,8 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
   padding: 28px 30px;
   animation: modalIn .25s var(--ease-spring);
   /* [FIX janela fora da tela] o painel NUNCA excede a viewport: limita a altura e
-     rola o conteÃºdo por dentro (o âœ• fica sempre visÃ­vel). Antes crescia sem limite
-     e, com align-items:center, o topo era cortado e ficava inalcanÃ§Ã¡vel. */
+     rola o conteúdo por dentro (o ✕ fica sempre visível). Antes crescia sem limite
+     e, com align-items:center, o topo era cortado e ficava inalcançável. */
   max-height: calc(100vh - 48px);
   max-height: calc(100dvh - 48px);
   margin: auto;
@@ -2522,7 +2522,7 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 }
 .banner ul { margin: 6px 0 0 20px; }
 
-/* RodapÃ© */
+/* Rodapé */
 .rodape {
   max-width: 1280px;
   margin: 48px auto 0;
@@ -2613,19 +2613,19 @@ function trocaOMDS(btn){
   document.querySelectorAll('.unidade').forEach(function(s){s.style.display=(s.getAttribute('data-key')===key)?'':'none';});
   if(key==='RANKING'){
     document.documentElement.style.setProperty('--accent','#D99B26');
-    var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='BrasÃ£o Base de Apoio LogÃ­stico';}
-    var t=document.getElementById('uTitulo');if(t)t.textContent='CrÃ©dito DisponÃ­vel â€” Ranking & Comparativo OMDS';
-    var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio LogÃ­stico do ExÃ©rcito';
-    var uu=document.getElementById('uUasg');if(uu)uu.textContent='Consolidado das 6 OrganizaÃ§Ãµes Militares Diretamente Subordinadas';
-    try{document.title='CrÃ©dito DisponÃ­vel â€” Ranking & Comparativo OMDS';}catch(e){}
+    var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='Brasão Base de Apoio Logístico';}
+    var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — Ranking & Comparativo OMDS';
+    var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio Logístico do Exército';
+    var uu=document.getElementById('uUasg');if(uu)uu.textContent='Consolidado das 6 Organizações Militares Diretamente Subordinadas';
+    try{document.title='Crédito Disponível — Ranking & Comparativo OMDS';}catch(e){}
   } else {
     var u=UNIDADES[key];if(!u)return;
     document.documentElement.style.setProperty('--accent',u.accent);
-    var em=document.getElementById('emblema');if(em){em.src='assets/logos/'+u.logo;em.alt='BrasÃ£o '+u.sigla;}
-    var t=document.getElementById('uTitulo');if(t)t.textContent='CrÃ©dito DisponÃ­vel â€” '+u.sigla;
+    var em=document.getElementById('emblema');if(em){em.src='assets/logos/'+u.logo;em.alt='Brasão '+u.sigla;}
+    var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — '+u.sigla;
     var n=document.getElementById('uNome');if(n)n.textContent=u.nome;
     var uu=document.getElementById('uUasg');if(uu)uu.textContent='UASGs '+u.ogu+' (OGU) e '+u.fex+' (FEx)';
-    try{document.title='CrÃ©dito DisponÃ­vel â€” '+u.sigla;}catch(e){}
+    try{document.title='Crédito Disponível — '+u.sigla;}catch(e){}
   }
   try{localStorage.setItem('bcms-omds',key);}catch(e){}
   window.scrollTo({top:0,behavior:'smooth'});
@@ -2671,10 +2671,10 @@ function bcmsNC(row){
   if(!d)return;
   var neg=d.val<0;
   var h='<h3 id="modal-title">NC '+bcmsEsc(d.nc)+'</h3>';
-  h+='<p class="m-sub">'+bcmsEsc((d.u?d.u+' Â· ':'')+'AÃ§Ã£o '+d.acao+' Â· PI '+d.pi+' Â· ND '+d.nd+(d.ndn?' â€” '+d.ndn:''))+'</p>';
-  h+='<div class="m-kpis"><span>Data<b>'+bcmsEsc(d.dia||'â€”')+'</b></span><span>OperaÃ§Ã£o<b class="op">'+bcmsEsc(d.op||'â€”')+'</b></span><span class="'+(neg?'':'ok')+'">Valor<b class="'+(neg?'neg':'')+'">'+bcmsBRL(d.val)+'</b></span></div>';
-  h+='<div class="m-ncs-h">DescriÃ§Ã£o completa do lanÃ§amento</div>';
-  h+='<div class="m-nc"><div class="m-nc-desc">'+bcmsEsc(d.obj||'(sem descriÃ§Ã£o)')+'</div></div>';
+  h+='<p class="m-sub">'+bcmsEsc((d.u?d.u+' · ':'')+'Ação '+d.acao+' · PI '+d.pi+' · ND '+d.nd+(d.ndn?' — '+d.ndn:''))+'</p>';
+  h+='<div class="m-kpis"><span>Data<b>'+bcmsEsc(d.dia||'—')+'</b></span><span>Operação<b class="op">'+bcmsEsc(d.op||'—')+'</b></span><span class="'+(neg?'':'ok')+'">Valor<b class="'+(neg?'neg':'')+'">'+bcmsBRL(d.val)+'</b></span></div>';
+  h+='<div class="m-ncs-h">Descrição completa do lançamento</div>';
+  h+='<div class="m-nc"><div class="m-nc-desc">'+bcmsEsc(d.obj||'(sem descrição)')+'</div></div>';
   document.getElementById('modal-body').innerHTML=h;
   var m=document.getElementById('modal');
   m.classList.add('open');
@@ -2689,7 +2689,7 @@ function bcmsSort(th){
   var dir=th.getAttribute('aria-sort')==='ascending'?'descending':'ascending';
   th.parentNode.querySelectorAll('th').forEach(function(h){h.setAttribute('aria-sort','none');h.querySelector('.sort').textContent='';});
   th.setAttribute('aria-sort',dir);
-  th.querySelector('.sort').textContent=dir==='ascending'?' â–²':' â–¼';
+  th.querySelector('.sort').textContent=dir==='ascending'?' ▲':' ▼';
   var tb=table.querySelector('tbody');
   var rows=Array.prototype.slice.call(tb.querySelectorAll('tr'));
   rows.sort(function(a,b){
@@ -2707,19 +2707,19 @@ function bcmsSort(th){
 
 function bcmsEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function bcmsEscXml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];});}
-function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'âˆ’R$ ':'R$ ')+i+','+s[1];}
+function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−R$ ':'R$ ')+i+','+s[1];}
 
 function bcmsToast(msg){
   var old=document.getElementById('bcms-toast');if(old)old.remove();
   var t=document.createElement('div');t.id='bcms-toast';t.className='toast';
-  t.innerHTML='<span class="toast-ic">âœ¨</span><span>'+bcmsEsc(msg)+'</span>';
+  t.innerHTML='<span class="toast-ic">✨</span><span>'+bcmsEsc(msg)+'</span>';
   document.body.appendChild(t);
   setTimeout(function(){t.classList.add('show');},10);
   setTimeout(function(){t.classList.remove('show');setTimeout(function(){if(t.parentNode)t.remove();},300);},3500);
 }
 
-/* ---- Filtros combinados da lista "em tela" (Fonte + AÃ§Ã£o + ND + Idade + busca).
-   O botÃ£o Exportar Excel usa exatamente o que sobra visÃ­vel aqui. ---- */
+/* ---- Filtros combinados da lista "em tela" (Fonte + Ação + ND + Idade + busca).
+   O botão Exportar Excel usa exatamente o que sobra visível aqui. ---- */
 function bcmsFiltra(sfx){
   var tid='tab-emtela-'+sfx;
   var cont=document.getElementById(tid); if(!cont) return;
@@ -2740,23 +2740,23 @@ function bcmsFiltra(sfx){
   });
   var cnt=document.getElementById('cnt-'+tid);
   if(cnt){var u=cnt.getAttribute('data-unit')||'linha(s)'; cnt.textContent=n+' '+u;}
-  /* rodapÃ© passa a refletir o subconjunto filtrado */
+  /* rodapé passa a refletir o subconjunto filtrado */
   var tf=cont.querySelector('tfoot tr');
   if(tf){
     var tds=tf.querySelectorAll('td');
     var ativo=!!(fFonte||fAcao||fNd||fId||q);
-    if(tds.length){tds[0].textContent=(ativo?'FILTRADO Â· ':'TOTAL Â· ')+n+' Nota(s) de CrÃ©dito em tela';}
+    if(tds.length){tds[0].textContent=(ativo?'FILTRADO · ':'TOTAL · ')+n+' Nota(s) de Crédito em tela';}
     if(tds.length>1){tds[tds.length-2].textContent=bcmsBRL(soma);}
   }
   var res=document.getElementById('flt-res-'+sfx);
   if(res){
     var pk=[];
     if(fFonte)pk.push('Fonte '+fFonte);
-    if(fAcao)pk.push('AÃ§Ã£o '+fAcao);
+    if(fAcao)pk.push('Ação '+fAcao);
     if(fNd)pk.push('ND '+fNd);
-    if(fId)pk.push({v:'â‰¤30d',a:'31â€“60d',r:'>60d'}[fId]||fId);
-    if(q)pk.push('â€œ'+q+'â€');
-    res.textContent=pk.length?(pk.join(' Â· ')+' â€” '+bcmsBRL(soma)):'';
+    if(fId)pk.push({v:'≤30d',a:'31–60d',r:'>60d'}[fId]||fId);
+    if(q)pk.push('“'+q+'”');
+    res.textContent=pk.length?(pk.join(' · ')+' — '+bcmsBRL(soma)):'';
     res.className='flt-resumo'+(pk.length?' on':'');
   }
 }
@@ -2766,18 +2766,18 @@ function bcmsLimpaFiltros(sfx){
   var b=document.getElementById('q-tab-emtela-'+sfx); if(b)b.value='';
   bcmsFiltra(sfx);
 }
-/* Descreve os filtros ativos, p/ registrar no cabeÃ§alho da planilha exportada. */
+/* Descreve os filtros ativos, p/ registrar no cabeçalho da planilha exportada. */
 function bcmsFiltrosAtivos(tid){
   var m=/^tab-emtela-(.+)$/.exec(tid||''); if(!m) return '';
   var sfx=m[1];
   var v=function(id){var e=document.getElementById(id+'-'+sfx); return e?e.value:'';};
   var pk=[];
   if(v('f-fonte'))pk.push('Fonte: '+v('f-fonte'));
-  if(v('f-acao'))pk.push('AÃ§Ã£o: '+v('f-acao'));
+  if(v('f-acao'))pk.push('Ação: '+v('f-acao'));
   if(v('f-nd'))pk.push('ND: '+v('f-nd'));
-  var fi=v('f-idade'); if(fi)pk.push('Idade: '+({v:'atÃ© 30 dias',a:'31 a 60 dias',r:'mais de 60 dias'}[fi]||fi));
+  var fi=v('f-idade'); if(fi)pk.push('Idade: '+({v:'até 30 dias',a:'31 a 60 dias',r:'mais de 60 dias'}[fi]||fi));
   var q=v('q-tab-emtela'); if(q)pk.push('Busca: "'+q+'"');
-  return pk.length?pk.join(' Â· '):'';
+  return pk.length?pk.join(' · '):'';
 }
 
 function bcmsExportTable(btn,tid,filename){
@@ -2786,25 +2786,25 @@ function bcmsExportTable(btn,tid,filename){
   filename=(filename||'creditos_em_tela')+'_'+(new Date().toISOString().slice(0,10));
   var ths=table.querySelectorAll('thead th');var headers=[];var colTypes=[];
   ths.forEach(function(th){
-    var txt=th.textContent.replace('â–²','').replace('â–¼','').trim();
-    if(txt&&txt!=='AÃ§Ã£o'&&txt!=='AÃ‡ÃƒO'){
+    var txt=th.textContent.replace('▲','').replace('▼','').trim();
+    if(txt&&txt!=='Ação'&&txt!=='AÇÃO'){
       headers.push(txt);
       var u=txt.toUpperCase();
       if(u.indexOf('NOTA')>-1||u.indexOf('NC')>-1||u.indexOf('FONTE')>-1||u.indexOf('UASG')>-1||
-         u.indexOf('RECEBIDO EM')>-1||u.indexOf('DATA')>-1||u.indexOf('EMISSÃƒO')>-1||u.indexOf('EMISSAO')>-1||
-         u.indexOf('DESCRIÃ‡ÃƒO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('AÃ‡ÃƒO')>-1||
-         u.indexOf('ACAO')>-1||u.indexOf('ND')>-1||u.indexOf('PI')>-1||u.indexOf('OPERAÃ‡ÃƒO')>-1||
-         u.indexOf('OPERACAO')>-1||u.indexOf('EMITENTE')>-1||u.indexOf('ORGANIZAÃ‡ÃƒO')>-1||u.indexOf('OMDS')>-1||
+         u.indexOf('RECEBIDO EM')>-1||u.indexOf('DATA')>-1||u.indexOf('EMISSÃO')>-1||u.indexOf('EMISSAO')>-1||
+         u.indexOf('DESCRIÇÃO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('AÇÃO')>-1||
+         u.indexOf('ACAO')>-1||u.indexOf('ND')>-1||u.indexOf('PI')>-1||u.indexOf('OPERAÇÃO')>-1||
+         u.indexOf('OPERACAO')>-1||u.indexOf('EMITENTE')>-1||u.indexOf('ORGANIZAÇÃO')>-1||u.indexOf('OMDS')>-1||
          u.indexOf('DIA ANTERIOR')>-1){
         colTypes.push('String');
-      } else if(u.indexOf('DIA')>-1||u.indexOf('IDADE')>-1||u.indexOf('CÃ‰LULA')>-1||u.indexOf('CELULA')>-1||u.indexOf('NÂº')>-1||u.indexOf('POS')>-1||u.indexOf('RANK')>-1){
+      } else if(u.indexOf('DIA')>-1||u.indexOf('IDADE')>-1||u.indexOf('CÉLULA')>-1||u.indexOf('CELULA')>-1||u.indexOf('Nº')>-1||u.indexOf('POS')>-1||u.indexOf('RANK')>-1){
         colTypes.push('Integer');
       } else if(u.indexOf('%')>-1||u.indexOf('TAXA')>-1){
         colTypes.push('Percent');
-      } else if(u.indexOf('R$')>-1||u.indexOf('VALOR')>-1||u.indexOf('CRÃ‰DITO')>-1||u.indexOf('CREDITO')>-1||
+      } else if(u.indexOf('R$')>-1||u.indexOf('VALOR')>-1||u.indexOf('CRÉDITO')>-1||u.indexOf('CREDITO')>-1||
                  u.indexOf('EMPENHADO')>-1||u.indexOf('LIQUIDADO')>-1||u.indexOf('PAGO')>-1||
-                 u.indexOf('PROVISÃƒO')>-1||u.indexOf('PROVISAO')>-1||u.indexOf('SALDO')>-1||
-                 u.indexOf('REDUÃ‡')>-1||u.indexOf('LÃQUIDO')>-1||u.indexOf('LIQUIDO')>-1||
+                 u.indexOf('PROVISÃO')>-1||u.indexOf('PROVISAO')>-1||u.indexOf('SALDO')>-1||
+                 u.indexOf('REDUÇ')>-1||u.indexOf('LÍQUIDO')>-1||u.indexOf('LIQUIDO')>-1||
                  u.indexOf('RECEBIDO')>-1||u.indexOf('DISP')>-1){
         colTypes.push('Currency');
       } else {
@@ -2817,17 +2817,17 @@ function bcmsExportTable(btn,tid,filename){
     var cells=tr.querySelectorAll('td');var rowData=[];
     cells.forEach(function(td,idx){if(idx>=headers.length)return;
       var sortVal=td.getAttribute('data-sort');var exp=colTypes[idx]||'String';
-      /* guarda: conteÃºdo com cara de data (dd/mm/aa) Ã© texto, nunca nÃºmero â€”
-         senÃ£o a coluna "Recebido" (data) era somada como se fosse moeda. */
+      /* guarda: conteúdo com cara de data (dd/mm/aa) é texto, nunca número —
+         senão a coluna "Recebido" (data) era somada como se fosse moeda. */
       var _txtCel=td.textContent.trim();
       if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(_txtCel)) exp='String';
-      var fullText=td.getAttribute('data-full-desc')||td.getAttribute('title')||td.textContent.replace('â€º','').trim();
-      if(!td.getAttribute('data-full-desc')&&!td.getAttribute('title')){fullText=td.textContent.replace('â€º','').trim();}
+      var fullText=td.getAttribute('data-full-desc')||td.getAttribute('title')||td.textContent.replace('›','').trim();
+      if(!td.getAttribute('data-full-desc')&&!td.getAttribute('title')){fullText=td.textContent.replace('›','').trim();}
       if(exp==='String'){
         rowData.push({v:fullText,t:'String',s:'Default'});
       } else if(exp==='Integer'){
         var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseInt(sortVal,10):parseInt(fullText.replace(/\D/g,''),10);
-        if(isNaN(numVal)||numVal<0){rowData.push({v:fullText||'â€”',t:'String',s:'Default'});}
+        if(isNaN(numVal)||numVal<0){rowData.push({v:fullText||'—',t:'String',s:'Default'});}
         else{rowData.push({v:numVal,t:'Number',s:'Integer'});}
       } else if(exp==='Currency'){
         var numVal=sortVal!==null&&!isNaN(parseFloat(sortVal))?parseFloat(sortVal):parseFloat(fullText.replace(/[^\d,-]/g,'').replace(',','.'));
@@ -2856,19 +2856,19 @@ function bcmsExportTable(btn,tid,filename){
    ' <Style ss:ID="Percent"><NumberFormat ss:Format="0.0%"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'+
    ' <Style ss:ID="Bold"><Font ss:FontName="Calibri" ss:Bold="1"/></Style>\n'+
    '</Styles>\n'+
-   '<Worksheet ss:Name="CrÃ©ditos em Tela">\n'+
+   '<Worksheet ss:Name="Créditos em Tela">\n'+
    '<Table ss:DefaultRowHeight="20">\n';
   headers.forEach(function(h){
     var u=h.toUpperCase();var w=120;
-    if(u.indexOf('DESCRIÃ‡ÃƒO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('APLICAÃ‡ÃƒO')>-1){w=380;}
-    else if(u.indexOf('ORGANIZAÃ‡ÃƒO')>-1||u.indexOf('NOME')>-1){w=220;}
+    if(u.indexOf('DESCRIÇÃO')>-1||u.indexOf('DESCRICAO')>-1||u.indexOf('OBJETO')>-1||u.indexOf('APLICAÇÃO')>-1){w=380;}
+    else if(u.indexOf('ORGANIZAÇÃO')>-1||u.indexOf('NOME')>-1){w=220;}
     else if(u.indexOf('NC')>-1||u.indexOf('NOTA')>-1){w=140;}
     else if(u.indexOf('DIA')>-1||u.indexOf('IDADE')>-1){w=100;}
     xml+=' <Column ss:AutoFitWidth="1" ss:Width="'+w+'"/>\n';
   });
-  xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÃSTICO DO EXÃ‰RCITO â€” RELATÃ“RIO DE CRÃ‰DITOS DISPONÃVEIS</Data></Cell></Row>\n';
+  xml+=' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — RELATÓRIO DE CRÉDITOS DISPONÍVEIS</Data></Cell></Row>\n';
   var _flt=(typeof bcmsFiltrosAtivos==='function')?bcmsFiltrosAtivos(tid):'';
-  xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">PosiÃ§Ã£o extraÃ­da do Tesouro Gerencial / SIAFI Â· '+new Date().toLocaleDateString('pt-BR')+' Â· '+rows.length+' registro(s)'+(_flt?' Â· FILTROS APLICADOS â€” '+_flt:' Â· sem filtros (lista completa)')+'</Data></Cell></Row>\n';
+  xml+=' <Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String">Posição extraída do Tesouro Gerencial / SIAFI · '+new Date().toLocaleDateString('pt-BR')+' · '+rows.length+' registro(s)'+(_flt?' · FILTROS APLICADOS — '+_flt:' · sem filtros (lista completa)')+'</Data></Cell></Row>\n';
   xml+=' <Row ss:Height="10"/>\n';
   xml+=' <Row ss:Height="24">\n';
   headers.forEach(function(h){xml+='  <Cell ss:StyleID="Header"><Data ss:Type="String">'+bcmsEscXml(h)+'</Data></Cell>\n';});
@@ -2884,14 +2884,14 @@ function bcmsExportTable(btn,tid,filename){
   var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8;'});
   var link=document.createElement('a');link.href=URL.createObjectURL(blob);
   link.download=filename+'.xls';document.body.appendChild(link);link.click();document.body.removeChild(link);
-  bcmsToast('ðŸ“Š Planilha Excel gerada com sucesso! Download iniciado.');
+  bcmsToast('📊 Planilha Excel gerada com sucesso! Download iniciado.');
 }
 
-/* ---- Detalhamento por NC "em tela", dividido nas ETAPAS do crÃ©dito ----
-   Card principal = SÃ“ o que estÃ¡ realmente disponÃ­vel em tela desta NC.
-   Abas: Em tela | HistÃ³rico do PI | LiquidaÃ§Ã£o | Pagamento.
-   (Antes o clique abria a cÃ©lula inteira, misturando NCs de objetos diferentes
-    que sÃ³ compartilham o mesmo PI.) */
+/* ---- Detalhamento por NC "em tela", dividido nas ETAPAS do crédito ----
+   Card principal = SÓ o que está realmente disponível em tela desta NC.
+   Abas: Em tela | Histórico do PI | Liquidação | Pagamento.
+   (Antes o clique abria a célula inteira, misturando NCs de objetos diferentes
+    que só compartilham o mesmo PI.) */
 var BTELA=null;
 function bcmsTela(row){
   var t=TELADATA[row.getAttribute('data-tela')];
@@ -2905,34 +2905,34 @@ function bcmsTela(row){
 function bcmsTelaAba(aba){
   var t=BTELA;if(!t)return;
   var c=CELDATA[t.cid]||{};
-  var fonte=t.u==='OGU'?'OGU (OrÃ§amento Geral da UniÃ£o)':(t.u==='FEx'?'FEx (Fundo do ExÃ©rcito)':(t.u||'â€”'));
+  var fonte=t.u==='OGU'?'OGU (Orçamento Geral da União)':(t.u==='FEx'?'FEx (Fundo do Exército)':(t.u||'—'));
   var ncCurta=(String(t.nc).match(/NC(\d+)$/)||[])[1];
   var h='<h3 id="modal-title">'+(ncCurta?'NC '+bcmsEsc(ncCurta):bcmsEsc(t.nc))+'</h3>';
-  h+='<p class="m-sub">'+bcmsEsc(t.uasg+' Â· '+fonte+' Â· AÃ§Ã£o '+t.acao+' Â· PI '+t.pi+' Â· ND '+t.nd+(t.ndnome?' â€” '+t.ndnome:''))+'</p>';
+  h+='<p class="m-sub">'+bcmsEsc(t.uasg+' · '+fonte+' · Ação '+t.acao+' · PI '+t.pi+' · ND '+t.nd+(t.ndnome?' — '+t.ndnome:''))+'</p>';
   /* etapas */
-  var abas=[['tela','ðŸŸ¢ Em tela'],['hist','ðŸ“œ HistÃ³rico do PI'],['liq','ðŸ§¾ LiquidaÃ§Ã£o'],['pag','ðŸ’° Pagamento']];
+  var abas=[['tela','🟢 Em tela'],['hist','📜 Histórico do PI'],['liq','🧾 Liquidação'],['pag','💰 Pagamento']];
   h+='<div class="m-etapas" role="tablist">';
   abas.forEach(function(a){
     h+='<button class="m-etapa'+(a[0]===aba?' on':'')+'" role="tab" aria-selected="'+(a[0]===aba)+'" onclick="bcmsTelaAba(\''+a[0]+'\')">'+a[1]+'</button>';
   });
   h+='</div><div class="m-etapa-body">';
   if(aba==='tela'){
-    var idade=(t.dias===null||t.dias===undefined)?'â€”':(t.dias+' dia'+(t.dias===1?'':'s'));
-    h+='<div class="m-tela-card"><span class="m-tela-lbl">DisponÃ­vel em tela nesta NC</span>'
+    var idade=(t.dias===null||t.dias===undefined)?'—':(t.dias+' dia'+(t.dias===1?'':'s'));
+    h+='<div class="m-tela-card"><span class="m-tela-lbl">Disponível em tela nesta NC</span>'
       +'<b class="m-tela-val">'+bcmsBRL(t.v)+'</b>'
-      +'<span class="m-tela-meta">Recebido em '+bcmsEsc(t.dia||'â€”')+' Â· hÃ¡ '+idade+(t.emit?' Â· Emitente '+bcmsEsc(t.emit):'')+'</span></div>';
+      +'<span class="m-tela-meta">Recebido em '+bcmsEsc(t.dia||'—')+' · há '+idade+(t.emit?' · Emitente '+bcmsEsc(t.emit):'')+'</span></div>';
     if(t.org){
-      h+='<div class="m-org"><div class="m-org-h">â†ª CrÃ©dito recebido por <b>mudanÃ§a de ND</b>'
+      h+='<div class="m-org"><div class="m-org-h">↪ Crédito recebido por <b>mudança de ND</b>'
         +(t.nd_de?' (de '+bcmsEsc(t.nd_de)+' para '+bcmsEsc(t.nd)+')':'')+'</div>'
-        +'<div class="m-org-b"><span>Objeto original â€” NC '+bcmsEsc(t.org.nc)
-        +(t.org.dia?' de '+bcmsEsc(t.org.dia):'')+(t.org.emit?' Â· emitente '+bcmsEsc(t.org.emit):'')+'</span>'
-        +'<p>'+bcmsEsc(t.org.obj||'â€”')+'</p></div></div>';
+        +'<div class="m-org-b"><span>Objeto original — NC '+bcmsEsc(t.org.nc)
+        +(t.org.dia?' de '+bcmsEsc(t.org.dia):'')+(t.org.emit?' · emitente '+bcmsEsc(t.org.emit):'')+'</span>'
+        +'<p>'+bcmsEsc(t.org.obj||'—')+'</p></div></div>';
     }
-    h+='<div class="m-ncs-h">DescriÃ§Ã£o desta NC</div><div class="m-nc-desc big">'+bcmsEsc(t.obj||'â€”')+'</div>';
-    if(t.op) h+='<p class="m-formula">OperaÃ§Ã£o: '+bcmsEsc(t.op)+'</p>';
+    h+='<div class="m-ncs-h">Descrição desta NC</div><div class="m-nc-desc big">'+bcmsEsc(t.obj||'—')+'</div>';
+    if(t.op) h+='<p class="m-formula">Operação: '+bcmsEsc(t.op)+'</p>';
   } else if(aba==='hist'){
-    h+='<p class="m-formula">Todas as movimentaÃ§Ãµes da cÃ©lula <b>'+bcmsEsc(t.acao+' Â· PI '+t.pi+' Â· ND '+t.nd)+'</b> â€” recebimentos, detalhamentos, mudanÃ§as de ND e anulaÃ§Ãµes.</p>';
-    h+='<div class="m-kpis"><span>Recebido (lÃ­q)<b>'+bcmsBRL(c.r||0)+'</b></span><span>Empenhado<b>'+bcmsBRL(c.e||0)+'</b></span><span class="ok">DisponÃ­vel<b>'+bcmsBRL(c.d||0)+'</b></span></div>';
+    h+='<p class="m-formula">Todas as movimentações da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — recebimentos, detalhamentos, mudanças de ND e anulações.</p>';
+    h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(c.r||0)+'</b></span><span>Empenhado<b>'+bcmsBRL(c.e||0)+'</b></span><span class="ok">Disponível<b>'+bcmsBRL(c.d||0)+'</b></span></div>';
     var itens='';
     (c.ncs||[]).forEach(function(n){
       if(!n[0])return;var neg=n[2]<0;var meta=[];
@@ -2941,21 +2941,21 @@ function bcmsTelaAba(aba){
       if(n[5])meta.push('em '+bcmsEsc(n[5]));
       var ehEsta=(n[0]===t.nc);
       itens+='<div class="m-nc'+(ehEsta?' m-nc-esta':'')+'"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+(ehEsta?' <i class="m-nc-tag">esta NC</i>':'')+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
-      if(meta.length)itens+='<div class="m-nc-op">'+meta.join(' Â· ')+'</div>';
+      if(meta.length)itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
       if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
       itens+='</div>';
     });
-    h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem movimentaÃ§Ãµes.</p>')+'</div>';
+    h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem movimentações.</p>')+'</div>';
   } else if(aba==='liq'){
     var emp=c.e||0,liq=c.l||0;
     h+='<div class="m-kpis"><span>Empenhado<b>'+bcmsBRL(emp)+'</b></span><span class="ok">Liquidado<b>'+bcmsBRL(liq)+'</b></span><span>A liquidar<b>'+bcmsBRL(Math.max(0,emp-liq))+'</b></span></div>';
     h+=bcmsBarra(liq,emp,'Liquidado sobre o empenhado');
-    h+='<p class="m-formula">LiquidaÃ§Ã£o Ã© a etapa em que a despesa Ã© atestada (bem/serviÃ§o entregue). Valores da cÃ©lula <b>'+bcmsEsc(t.acao+' Â· PI '+t.pi+' Â· ND '+t.nd)+'</b> â€” o SIAFI nÃ£o segrega liquidaÃ§Ã£o por NC individual.</p>';
+    h+='<p class="m-formula">Liquidação é a etapa em que a despesa é atestada (bem/serviço entregue). Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega liquidação por NC individual.</p>';
   } else {
     var liq2=c.l||0,pag=c.p||0;
     h+='<div class="m-kpis"><span>Liquidado<b>'+bcmsBRL(liq2)+'</b></span><span class="ok">Pago<b>'+bcmsBRL(pag)+'</b></span><span>A pagar<b>'+bcmsBRL(Math.max(0,liq2-pag))+'</b></span></div>';
     h+=bcmsBarra(pag,liq2,'Pago sobre o liquidado');
-    h+='<p class="m-formula">Pagamento Ã© a quitaÃ§Ã£o efetiva da despesa liquidada. Valores da cÃ©lula <b>'+bcmsEsc(t.acao+' Â· PI '+t.pi+' Â· ND '+t.nd)+'</b> â€” o SIAFI nÃ£o segrega pagamento por NC individual.</p>';
+    h+='<p class="m-formula">Pagamento é a quitação efetiva da despesa liquidada. Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega pagamento por NC individual.</p>';
   }
   h+='</div>';
   document.getElementById('modal-body').innerHTML=h;
@@ -2969,16 +2969,16 @@ function bcmsBarra(v,total,rot){
 function bcmsCel(row){
   var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
   var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
-  var fonte=d.u==='OGU'?'OGU (OrÃ§amento Geral da UniÃ£o)':(d.u==='FEx'?'FEx (Fundo do ExÃ©rcito)':(d.u||'â€”'));
+  var fonte=d.u==='OGU'?'OGU (Orçamento Geral da União)':(d.u==='FEx'?'FEx (Fundo do Exército)':(d.u||'—'));
   h+='<div class="m-ficha">'
-    +'<span>UASG (Executora)<b>'+bcmsEsc(d.uasg||'â€”')+'</b></span>'
+    +'<span>UASG (Executora)<b>'+bcmsEsc(d.uasg||'—')+'</b></span>'
     +'<span>Fonte<b>'+bcmsEsc(fonte)+'</b></span>'
-    +'<span>AÃ§Ã£o Governo<b>'+bcmsEsc(d.acao||'â€”')+'</b></span>'
-    +'<span class="wide">PI (Plano Interno)<b>'+bcmsEsc(d.pi||'â€”')+(d.pinome?' â€” '+bcmsEsc(d.pinome):'')+'</b></span>'
-    +'<span class="wide">ND (Natureza de Despesa)<b>'+bcmsEsc(d.nd||'â€”')+(d.ndnome?' â€” '+bcmsEsc(d.ndnome):'')+'</b></span>'
+    +'<span>Ação Governo<b>'+bcmsEsc(d.acao||'—')+'</b></span>'
+    +'<span class="wide">PI (Plano Interno)<b>'+bcmsEsc(d.pi||'—')+(d.pinome?' — '+bcmsEsc(d.pinome):'')+'</b></span>'
+    +'<span class="wide">ND (Natureza de Despesa)<b>'+bcmsEsc(d.nd||'—')+(d.ndnome?' — '+bcmsEsc(d.ndnome):'')+'</b></span>'
     +'</div>';
-  h+='<div class="m-kpis"><span>Recebido (lÃ­q)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span>Liquidado<b>'+bcmsBRL(d.l||0)+'</b></span><span>Pago<b>'+bcmsBRL(d.p||0)+'</b></span><span class="ok">CrÃ©dito DisponÃ­vel<b>'+bcmsBRL(d.d)+'</b></span></div>';
-  h+='<p class="m-formula">Recebido (lÃ­q) âˆ’ Empenhado = CrÃ©dito DisponÃ­vel Â· Empenhado â‰¥ Liquidado â‰¥ Pago</p>';
+  h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span>Liquidado<b>'+bcmsBRL(d.l||0)+'</b></span><span>Pago<b>'+bcmsBRL(d.p||0)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
+  h+='<p class="m-formula">Recebido (líq) − Empenhado = Crédito Disponível · Empenhado ≥ Liquidado ≥ Pago</p>';
   var itens='';
   d.ncs.forEach(function(n){
     if(!n[0])return;
@@ -2988,13 +2988,13 @@ function bcmsCel(row){
     if(n[1]) meta.push(bcmsEsc(n[1]));
     if(n[5]) meta.push('em '+bcmsEsc(n[5]));
     itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
-    if(meta.length) itens+='<div class="m-nc-op">'+meta.join(' Â· ')+'</div>';
+    if(meta.length) itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
     if(n[3]) itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
     itens+='</div>';
   });
   var nq=d.ncs.filter(function(n){return n[0];}).length;
-  h+='<div class="m-ncs-h">Notas de crÃ©dito da cÃ©lula ('+nq+')</div>';
-  h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem notas de crÃ©dito para detalhar.</p>')+'</div>';
+  h+='<div class="m-ncs-h">Notas de crédito da célula ('+nq+')</div>';
+  h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
   document.getElementById('modal-body').innerHTML=h;
   var m=document.getElementById('modal');
   m.classList.add('open');
@@ -3005,9 +3005,9 @@ function bcmsCel(row){
 
 function bcmsDay(row){
   var d=DAYDATA[row.getAttribute('data-day')];if(!d)return;
-  var h='<h3 id="modal-title">MovimentaÃ§Ã£o de '+bcmsEsc(d.d)+'</h3>';
-  h+='<div class="m-kpis"><span>NÂº de NC<b>'+d.n+'</b></span><span>Recebido<b class="col-pos">'+bcmsBRL(d.rec)+'</b></span><span>ReduÃ§Ãµes<b class="col-neg">'+bcmsBRL(d.red)+'</b></span><span class="ok">LÃ­quido<b>'+bcmsBRL(d.liq)+'</b></span></div>';
-  h+='<div class="m-ncs-h">Notas de crÃ©dito do dia ('+d.ncs.length+')</div>';
+  var h='<h3 id="modal-title">Movimentação de '+bcmsEsc(d.d)+'</h3>';
+  h+='<div class="m-kpis"><span>Nº de NC<b>'+d.n+'</b></span><span>Recebido<b class="col-pos">'+bcmsBRL(d.rec)+'</b></span><span>Reduções<b class="col-neg">'+bcmsBRL(d.red)+'</b></span><span class="ok">Líquido<b>'+bcmsBRL(d.liq)+'</b></span></div>';
+  h+='<div class="m-ncs-h">Notas de crédito do dia ('+d.ncs.length+')</div>';
   var itens='';
   d.ncs.forEach(function(n){
     var neg=n[3]<0;
@@ -3063,7 +3063,7 @@ def main():
                 try:
                     shutil.copyfile(os.path.join(src_logos, fn), os.path.join(dst_logos, fn))
                 except Exception as e:
-                    print("[AVISO] nÃ£o copiei", fn, ":", e)
+                    print("[AVISO] não copiei", fn, ":", e)
     with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as f:
         f.write(html_out)
     with open(os.path.join(SITE, "data", "history.json"), "w", encoding="utf-8") as f:
