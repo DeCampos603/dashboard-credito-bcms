@@ -32,12 +32,12 @@ import openpyxl
 HDR_ROW, DATA_ROW = 8, 9
 # Manifesto das OMDS da Ba Ap Log — cada OM = par OGU (16xxxx) + FEx (167xxx).
 UNIDADES = [
-    {"sigla": "BCMS",      "nome": "Batalhão Central de Manutenção e Suprimento", "ogu": "160329", "fex": "167329", "logo": "BCMS.png",    "accent": "#CE2B2B", "key": "BCMS"},
-    {"sigla": "Ba Ap Log", "nome": "Base de Apoio Logístico do Exército",          "ogu": "160238", "fex": "167238", "logo": "BAAPLOG.png", "accent": "#D83030", "key": "BAAPLOG"},
-    {"sigla": "D C Mun",   "nome": "Depósito Central de Munição",                  "ogu": "160246", "fex": "167246", "logo": "DCMUN.png",   "accent": "#047CC0", "key": "DCMUN"},
-    {"sigla": "BMSA",      "nome": "BMSA",                                         "ogu": "160304", "fex": "167304", "logo": "BMSA.png",    "accent": "#DB2819", "key": "BMSA"},
-    {"sigla": "1º D Sup",  "nome": "1º Depósito de Suprimento",                    "ogu": "160307", "fex": "167307", "logo": "1DSUP.png",   "accent": "#DE2B30", "key": "DSUP1"},
-    {"sigla": "ECT",       "nome": "ECT",                                          "ogu": "160321", "fex": "167321", "logo": "Ect.png",     "accent": "#B33338", "key": "ECT"},
+    {"sigla": "BCMS",      "nome": "Batalhão Central de Manutenção e Suprimento", "ogu": "160329", "fex": "167329", "logo": "BCMS.png",    "accent": "#DC2626", "key": "BCMS"},
+    {"sigla": "Ba Ap Log", "nome": "Base de Apoio Logístico do Exército",          "ogu": "160238", "fex": "167238", "logo": "BAAPLOG.png", "accent": "#2563EB", "key": "BAAPLOG"},
+    {"sigla": "D C Mun",   "nome": "Depósito Central de Munição",                  "ogu": "160246", "fex": "167246", "logo": "DCMUN.png",   "accent": "#0284C7", "key": "DCMUN"},
+    {"sigla": "BMSA",      "nome": "BMSA",                                         "ogu": "160304", "fex": "167304", "logo": "BMSA.png",    "accent": "#7C3AED", "key": "BMSA"},
+    {"sigla": "1º D Sup",  "nome": "1º Depósito de Suprimento",                    "ogu": "160307", "fex": "167307", "logo": "1DSUP.png",   "accent": "#059669", "key": "DSUP1"},
+    {"sigla": "ECT",       "nome": "ECT",                                          "ogu": "160321", "fex": "167321", "logo": "Ect.png",     "accent": "#D97706", "key": "ECT"},
 ]
 def _par(u):  # par de UASGs (OGU, FEx) de uma unidade, no formato (cod, label)
     return [(u["ogu"], f'{u["sigla"]} · OGU'), (u["fex"], f'{u["sigla"]} · FEx')]
@@ -371,7 +371,8 @@ def esc(s): return html.escape(str(s))
 
 # ---------------- SVG ----------------
 def _r(x, y, w, h, var, extra=""):
-    return f'<rect x="{x:.1f}" y="{y:.1f}" width="{max(0,w):.1f}" height="{h:.1f}" style="fill:var(--{var})" {extra}/>'
+    fallback = "#10B981" if "success" in var else ("#F59E0B" if "warning" in var else ("#EF4444" if "danger" in var else "#2563EB"))
+    return f'<rect x="{x:.1f}" y="{y:.1f}" width="{max(0,w):.1f}" height="{h:.1f}" style="fill:var(--{var}, {fallback})" {extra}/>'
 
 def svg_util(recebido, empenhado, disponivel):
     """Barra empilhada de utilização: Recebido = Empenhado + Disponível."""
@@ -1904,6 +1905,7 @@ CSS = r"""
   /* Cores Semânticas de Estado (WCAG AAA) */
   --success:        #059669;
   --success-strong: #047857;
+  --success-main:   #059669;
   --success-bg:     #ECFDF5;
   --success-border: #A7F3D0;
   --hero-soft:      #F0FDF4;
@@ -2033,6 +2035,7 @@ CSS = r"""
 
   --success:        #34D399;
   --success-strong: #34D399;
+  --success-main:   #10B981;
   --success-bg:     rgba(5, 150, 105, 0.15);
   --success-border: rgba(5, 150, 105, 0.35);
   --hero-soft:      rgba(5, 150, 105, 0.08);
@@ -2671,7 +2674,14 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
   color: var(--ink);
 }
 .det td.num { font-weight: 500; }
-.det td.anchor { font-weight: 700; }
+.det td.anchor, .det th.anchor, .det tfoot td.anchor {
+  font-weight: 700;
+  color: var(--success);
+}
+:root[data-theme="dark"] .det td.anchor,
+:root[data-theme="dark"] .det tfoot td.anchor {
+  color: #34D399;
+}
 .det tbody tr:hover { background: var(--bg-subtle); }
 .det .obj { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-muted); }
 /* [COMPACTA] lista de NC: linhas mais baixas e mais texto útil visível.
