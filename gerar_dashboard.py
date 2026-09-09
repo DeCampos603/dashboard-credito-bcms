@@ -262,9 +262,11 @@ def etl(path):
         nd_nome  = disp(ws.cell(r, CNDD).value)
         nc       = disp(ws.cell(r, CNC).value)
         dia      = disp(ws.cell(r, CDIA).value)
-        emit     = disp(ws.cell(r, CEMIT).value)
-        op       = disp(ws.cell(r, COP).value)
-        obj      = disp(ws.cell(r, COBJ).value)
+        emit      = disp(ws.cell(r, CEMIT).value)
+        emit_nome = disp(ws.cell(r, CEMIT + 1).value)
+        fav_nome  = disp(ws.cell(r, 4).value) or d["nome"]
+        op        = disp(ws.cell(r, COP).value)
+        obj       = disp(ws.cell(r, COBJ).value)
         
         # fallback na busca de descrição caso a coluna 13 esteja vazia
         if not obj:
@@ -276,7 +278,7 @@ def etl(path):
 
         d["linhas"].append(dict(
             acao=acao, pi=pi, pi_nome=pi_nome, nd=nd, nd_desc=nd_nome,
-            nc=nc, dia=dia, emit=emit, op=op, obj=obj,
+            nc=nc, dia=dia, emit=emit, emit_nome=emit_nome, fav_nome=fav_nome, op=op, obj=obj,
             prov=prov, conc=conc, cred=cred, emp=emp, liq=liq, pag=pag))
 
         if acao: d["por_acao"][acao] = d["por_acao"].get(acao, 0.0) + cred
@@ -1241,6 +1243,374 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
 </section>"""
     return frag
 
+UG_NOMES_PADRAO = {
+    "160238": "Base de Apoio Logístico do Exército",
+    "167238": "Base de Apoio Logístico do Exército (FEx)",
+    "160329": "Batalhão Central de Manutenção e Suprimento",
+    "167329": "Batalhão Central de Manutenção e Suprimento (FEx)",
+    "160246": "Depósito Central de Munição",
+    "167246": "Depósito Central de Munição (FEx)",
+    "160304": "BMSA",
+    "167304": "BMSA (FEx)",
+    "160307": "1º Depósito de Suprimento",
+    "167307": "1º Depósito de Suprimento (FEx)",
+    "160321": "ECT",
+    "167321": "ECT (FEx)",
+    "160070": "Comando Logístico (COLOG)",
+    "160069": "D Abst - Diretoria de Abastecimento",
+    "160068": "D Mat - Diretoria de Material",
+    "160035": "Dep Prom / D Abst",
+    "160525": "DCT - Depto de Ciência e Tecnologia",
+    "160065": "EME - Estado-Maior do Exército",
+}
+
+# ---------------- nova aba: Histórico de Notas de Crédito ----------------
+def secao_historico_ncs(res, hist, data_str, periodo):
+    """Gera a aba consolidada 'Histórico de Notas de Crédito' do exercício corrente.
+    
+    Traz todas as NCs emitidas e recebidas pelas OMDS no ano com 4 KPIs analíticos no topo,
+    segmentadores multicritério (Período, Fonte, PTRES, Faixa de Saldo, Busca) e grid interativo
+    ordenável com detalhamento completo via modal flutuante.
+    """
+    posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
+    hoje = datetime.date.today()
+
+    # 1. Agrupa recebimentos por célula orçamentária para atribuir saldo às NCs
+    cel_recs = {}
+    todas_ncs = {}
+
+    for cod, d in res.items():
+        om_sigla = d["nome"].split("·")[0].strip()
+        fonte_tipo = "OGU" if cod.startswith("160") else "FEx"
+        for L in d["linhas"]:
+            nc = L.get("nc")
+            if not nc:
+                continue
+            key = (nc, cod)
+            if key not in todas_ncs:
+                todas_ncs[key] = {
+                    "nc": nc, "uasg": cod, "fav_nome": d["nome"], "om_sigla": om_sigla,
+                    "fonte": fonte_tipo,
+                    "emit": L.get("emit") or "",
+                    "emit_nome": L.get("emit_nome") or "",
+                    "dia": L.get("dia") or "",
+                    "acao": L.get("acao") or "",
+                    "pi": L.get("pi") or "",
+                    "pi_nome": L.get("pi_nome") or "",
+                    "nd": L.get("nd") or "",
+                    "nd_desc": L.get("nd_desc") or "",
+                    "op": L.get("op") or "",
+                    "obj": L.get("obj") or "",
+                    "prov": 0.0, "cred_calc": 0.0, "emp_calc": 0.0,
+                    "liq": 0.0, "pag": 0.0, "conc": 0.0,
+                    "linhas": []
+                }
+            it = todas_ncs[key]
+            it["linhas"].append(L)
+            val = L.get("prov", 0.0) or (L.get("cred", 0.0) if L.get("cred", 0.0) > 0 else 0.0)
+            it["prov"] += val
+            it["liq"]  += L.get("liq", 0.0)
+            it["pag"]  += L.get("pag", 0.0)
+            it["conc"] += L.get("conc", 0.0)
+            if not it["dia"] and L.get("dia"): it["dia"] = L["dia"]
+            if not it["obj"] and L.get("obj"): it["obj"] = L["obj"]
+            if not it["emit"] and L.get("emit"): it["emit"] = L["emit"]
+            if not it["emit_nome"] and L.get("emit_nome"): it["emit_nome"] = L["emit_nome"]
+
+            cel_key = (cod, L.get("acao"), L.get("pi"), L.get("nd"))
+            cel_recs.setdefault(cel_key, []).append((key, val, L.get("dia")))
+
+    # 2. Atribui o saldo restante em tela das células para as NCs (ordem cronológica decrescente)
+    for cod, d in res.items():
+        for (acao, pi, nd), cel in d["celulas"].items():
+            saldo_cel = cel["cred"]
+            cel_key = (cod, acao, pi, nd)
+            recs = cel_recs.get(cel_key, [])
+            recs_sorted = sorted(recs, key=lambda x: _dt_br(x[2]) or datetime.date.min, reverse=True)
+            restante = saldo_cel
+            for nc_key, val_rec, _ in recs_sorted:
+                if restante <= 0.005:
+                    break
+                atribuido = min(val_rec, restante)
+                todas_ncs[nc_key]["cred_calc"] += atribuido
+                restante -= atribuido
+
+    # 3. Formata itens e constrói dicionário HISTDATA
+    hist_list = []
+    histdata = {}
+    ptres_set = set()
+    meses_set = set()
+
+    for idx, ((nc, cod), it) in enumerate(todas_ncs.items(), 1):
+        hid = f"h_{idx}"
+        dt = _dt_br(it["dia"])
+        dt_iso = dt.isoformat() if dt else ""
+        mes = f"{dt.month:02d}/{dt.year}" if dt else ""
+        tri = f"T{(dt.month-1)//3 + 1}" if dt else ""
+        if mes: meses_set.add(mes)
+        if it["acao"]: ptres_set.add(it["acao"])
+
+        dias = (hoje - dt).days if dt else None
+        prov = it["prov"]
+        cred = it["cred_calc"]
+        emp = max(0.0, prov - cred)
+
+        op_up = (it["op"] or "").upper()
+        if "ANULA" in op_up or "CANCEL" in op_up or prov < -0.01:
+            status = "Cancelada / Anulada"
+            status_slug = "canc"
+            faixa_saldo = "canc"
+        elif cred <= 0.01 and emp > 0:
+            status = "Totalmente Executada"
+            status_slug = "exec"
+            faixa_saldo = "zerada"
+        elif emp > 0 and cred > 0.01:
+            status = "Parcialmente Executada"
+            status_slug = "parcial"
+            faixa_saldo = "saldo_pos"
+        elif emp == 0 and cred > 0.01:
+            status = "Disponível"
+            status_slug = "disp"
+            faixa_saldo = "saldo_pos"
+        else:
+            status = "Sem Saldo / Zerada"
+            status_slug = "zerada"
+            faixa_saldo = "zerada"
+
+        emit_cod = it["emit"]
+        emit_nome = it["emit_nome"]
+        if not emit_nome or emit_nome in ("-9", "NAO SE APLICA"):
+            emit_nome = UG_NOMES_PADRAO.get(emit_cod, f"UG {emit_cod}" if emit_cod else "Não informado")
+
+        item_dict = {
+            "hid": hid,
+            "nc": nc,
+            "dia": it["dia"],
+            "dt": dt_iso,
+            "mes": mes,
+            "tri": tri,
+            "dias": dias,
+            "emit_cod": emit_cod,
+            "emit_nome": emit_nome,
+            "fav_cod": cod,
+            "fav_nome": it["fav_nome"],
+            "om_sigla": it["om_sigla"],
+            "ptres": it["acao"],
+            "acao": it["acao"],
+            "acao_desc": f"Ação Governamental {it['acao']}" if it["acao"] else "",
+            "fonte": it["fonte"],
+            "nd": it["nd"],
+            "nd_desc": it["nd_desc"],
+            "pi": it["pi"],
+            "pi_desc": it["pi_nome"],
+            "op": it["op"] or "Descentralização de Crédito",
+            "obj": it["obj"] or "(Sem descrição detalhada)",
+            "prov": round(prov, 2),
+            "bloq": 0.0,
+            "emp": round(emp, 2),
+            "liq": round(it["liq"], 2),
+            "pag": round(it["pag"], 2),
+            "cred": round(cred, 2),
+            "status": status,
+            "status_slug": status_slug,
+            "faixa_saldo": faixa_saldo,
+            "ano": str(dt.year) if dt else "2026",
+            "itens": [{
+                "acao": L.get("acao", ""),
+                "pi": L.get("pi", ""),
+                "nd": L.get("nd", ""),
+                "op": L.get("op", ""),
+                "prov": round(L.get("prov", 0.0), 2),
+                "emp": round(L.get("emp", 0.0), 2),
+                "cred": round(L.get("cred", 0.0), 2),
+            } for L in it["linhas"]] if len(it["linhas"]) > 1 else []
+        }
+        histdata[hid] = item_dict
+        hist_list.append(item_dict)
+
+    # Ordenação padrão: mais recentes primeiro (Data Decrescente)
+    hist_list.sort(key=lambda x: (x["dt"] or "", x["cred"]), reverse=True)
+
+    # Totais dos KPIs
+    tot_distintas = len(set(x["nc"] for x in hist_list))
+    tot_prov = sum(x["prov"] for x in hist_list)
+    tot_emp  = sum(x["emp"]  for x in hist_list)
+    tot_cred = sum(x["cred"] for x in hist_list)
+    p_emp = (tot_emp / tot_prov * 100) if tot_prov else 0.0
+    p_cred = (tot_cred / tot_prov * 100) if tot_prov else 0.0
+
+    # Opções para os filtros
+    opt_ptres = "".join(f'<option value="{esc(p)}">{esc(p)}</option>' for p in sorted(ptres_set))
+    opt_meses = "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in sorted(meses_set, reverse=True))
+
+    kpis_html = f"""<div class="hist-kpis">
+  <div class="hist-kpi kpi-total">
+    <span class="hist-kpi-lbl">Total de NCs no Ano</span>
+    <b class="hist-kpi-val" id="kpi-hist-total">{tot_distintas}</b>
+    <span class="hist-kpi-sub"><span class="kpi-dot dot-indigo"></span> Contagem distinta no exercício</span>
+  </div>
+  <div class="hist-kpi kpi-prov">
+    <span class="hist-kpi-lbl">Total Descentralizado / Recebido</span>
+    <b class="hist-kpi-val col-prov" id="kpi-hist-prov">{esc(brl(tot_prov))}</b>
+    <span class="hist-kpi-sub"><span class="kpi-dot dot-blue"></span> 100% da provisão inicial</span>
+  </div>
+  <div class="hist-kpi kpi-emp">
+    <span class="hist-kpi-lbl">Total Executado (Empenhado)</span>
+    <b class="hist-kpi-val col-emp" id="kpi-hist-emp">{esc(brl(tot_emp))}</b>
+    <span class="hist-kpi-sub" id="kpi-hist-emp-sub"><span class="kpi-dot dot-amber"></span> {p_emp:.1f}% de execução orçamentária</span>
+  </div>
+  <div class="hist-kpi kpi-saldo">
+    <span class="hist-kpi-lbl">Saldo Total Remanescente Disponível</span>
+    <b class="hist-kpi-val col-disp" id="kpi-hist-cred">{esc(brl(tot_cred))}</b>
+    <span class="hist-kpi-sub" id="kpi-hist-cred-sub"><span class="kpi-dot dot-green"></span> {p_cred:.1f}% remanescente em tela</span>
+  </div>
+</div>"""
+
+    filters_html = f"""<div class="hist-filters-card">
+  <div class="hist-filters-grid">
+    <div class="hist-filter-group">
+      <label for="flt-hist-periodo">Período (Mês / Trimestre)</label>
+      <select id="flt-hist-periodo" class="hist-select" onchange="bcmsFiltraHistorico()">
+        <option value="">Todos os Períodos</option>
+        <optgroup label="Trimestres">
+          <option value="T1">1º Trimestre (Jan - Mar)</option>
+          <option value="T2">2º Trimestre (Abr - Jun)</option>
+          <option value="T3">3º Trimestre (Jul - Set)</option>
+          <option value="T4">4º Trimestre (Out - Dez)</option>
+        </optgroup>
+        <optgroup label="Meses">
+          {opt_meses}
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="hist-filter-group">
+      <label for="flt-hist-fonte">Fonte de Recursos</label>
+      <select id="flt-hist-fonte" class="hist-select" onchange="bcmsFiltraHistorico()">
+        <option value="">Todas as Fontes</option>
+        <option value="OGU">OGU (160 - Orçamento Geral da União)</option>
+        <option value="FEx">FEx (167 - Fundo do Exército)</option>
+      </select>
+    </div>
+
+    <div class="hist-filter-group">
+      <label for="flt-hist-ptres">PTRES / Ação de Governo</label>
+      <select id="flt-hist-ptres" class="hist-select" onchange="bcmsFiltraHistorico()">
+        <option value="">Todas as Ações</option>
+        {opt_ptres}
+      </select>
+    </div>
+
+    <div class="hist-filter-group">
+      <label for="flt-hist-faixa">Faixa de Saldo / Status</label>
+      <select id="flt-hist-faixa" class="hist-select" onchange="bcmsFiltraHistorico()">
+        <option value="">Todas as Faixas</option>
+        <option value="saldo_pos">🟢 Com Saldo Disponível (> R$ 0)</option>
+        <option value="parcial">🟡 Parcialmente Executadas</option>
+        <option value="zerada">⚪ Totalmente Executadas / Zeradas</option>
+        <option value="canc">🔴 Canceladas / Anuladas</option>
+      </select>
+    </div>
+
+    <div class="hist-filter-group" style="grid-column: span 2;">
+      <label for="flt-hist-busca">Busca Textual (Nº da NC, Justificativa, UG, PI)</label>
+      <div class="hist-search-box">
+        <input type="search" id="flt-hist-busca" class="hist-input" placeholder="Digite o número da NC, palavras da justificativa, PI ou favorecida..." oninput="bcmsFiltraHistorico()">
+      </div>
+    </div>
+  </div>
+
+  <div class="hist-toolbar-actions">
+    <div class="hist-actions-l">
+      <button type="button" class="btn-clear-flt" onclick="bcmsLimpaFiltrosHistorico()">✕ Limpar Filtros</button>
+      <span class="hist-count-badge" id="cnt-hist-ncs">Exibindo {len(hist_list)} de {len(hist_list)} Notas de Crédito</span>
+    </div>
+    <div class="hist-actions-r">
+      <button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportHistoricoExcel()" title="Baixar todas as linhas filtradas em planilha Excel (.xls formatado)">
+        <span class="btn-excel-ic">📊</span> Exportar Histórico Filtrado (Excel)
+      </button>
+    </div>
+  </div>
+</div>"""
+
+    # Gera as primeiras 50 linhas iniciais estáticas para SEO e carregamento veloz
+    initial_rows = []
+    for item in hist_list[:50]:
+        status_cls = f"status-{item['status_slug']}"
+        initial_rows.append(
+            f'<tr class="cel-row" data-hid="{item["hid"]}" tabindex="0" role="button" onclick="bcmsDetalheNC(\'{item["hid"]}\')" '
+            f'title="Clique para abrir o detalhamento completo da NC {esc(item["nc"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDetalheNC(\'{item["hid"]}\')}}">'
+            f'<td class="mono2" data-sort="{item["dt"]}">{esc(item["dia"] or "—")}</td>'
+            f'<td><b class="nc-tag mono">{esc(item["nc"])}</b></td>'
+            f'<td title="{esc(item["emit_nome"])}"><span class="ug-pill emit">{esc(item["emit_cod"])}</span> <small>{esc(item["emit_nome"][:24])}</small></td>'
+            f'<td title="{esc(item["fav_nome"])}"><span class="ug-pill fav">{esc(item["fav_cod"])}</span> <b>{esc(item["om_sigla"])}</b></td>'
+            f'<td class="mono2">{esc(item["ptres"] or "—")}</td>'
+            f'<td><span class="pill-fonte">{esc(item["fonte"])}</span></td>'
+            f'<td class="num" data-sort="{item["prov"]:.2f}">{esc(brl(item["prov"]))}</td>'
+            f'<td class="num col-disp" data-sort="{item["cred"]:.2f}"><b>{esc(brl(item["cred"]))}</b></td>'
+            f'<td><span class="pill-status {status_cls}">{esc(item["status"])}</span></td>'
+            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'{item["hid"]}\')">Detalhes ↗</button></td>'
+            f'</tr>'
+        )
+
+    table_html = f"""<div class="tbl-scroll" id="scroll-hist-ncs">
+  <table class="det det-hist" id="tbl-historico-ncs">
+    <thead>
+      <tr>
+        <th tabindex="0" role="button" aria-sort="descending" onclick="bcmsSortHistorico('dt', this)" title="Ordenar por Data de Emissão">Data <span class="sort">▼</span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('nc', this)" title="Ordenar por Número da NC">Número da NC <span class="sort"></span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('emit', this)" title="Ordenar por UG Origem">UG Origem (Emitente) <span class="sort"></span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('fav', this)" title="Ordenar por UG Destino">UG Destino (Favorecida) <span class="sort"></span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('ptres', this)" title="Ordenar por PTRES / Ação">PTRES <span class="sort"></span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('fonte', this)" title="Ordenar por Fonte">Fonte <span class="sort"></span></th>
+        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('prov', this)" title="Ordenar por Valor Original">Valor Original <span class="sort"></span></th>
+        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('cred', this)" title="Ordenar por Saldo Atual">Saldo Atual <span class="sort"></span></th>
+        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('status', this)" title="Ordenar por Status">Status <span class="sort"></span></th>
+        <th style="width:90px">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-hist-ncs">
+      {"".join(initial_rows)}
+    </tbody>
+  </table>
+</div>
+<div class="hist-pagination" id="paginacao-hist">
+  <div class="pag-info" id="pag-info-txt">Página 1 de {math.ceil(len(hist_list)/50)} (Exibindo 1–50 de {len(hist_list)})</div>
+  <div class="pag-btns">
+    <button type="button" class="btn-pag" id="btn-pag-ant" onclick="bcmsPaginaHistorico(-1)" disabled>‹ Anterior</button>
+    <button type="button" class="btn-pag" id="btn-pag-prox" onclick="bcmsPaginaHistorico(1)">Próxima ›</button>
+  </div>
+</div>"""
+
+    frag = f"""<section class="unidade unidade-hist" id="secao-HISTORICO" data-key="HISTORICO" style="display:none">
+  <div class="hist-header-card">
+    <div class="rh-tag">EXERCÍCIO FINANCEIRO CORRENTE · PAINEL ANALÍTICO CONSOLIDADO</div>
+    <h2 class="rh-title">📜 Histórico de Notas de Crédito (NC)</h2>
+    <p class="rh-desc">Relação completa de todas as Notas de Crédito emitidas e recebidas pelas Organizações Militares Diretamente Subordinadas (OMDS) da Base de Apoio Logístico do Exército. Monitore o ciclo completo de descentralização, o montante executado em empenhos e o saldo remanescente disponível em tempo real com rastreabilidade integral.</p>
+    {kpis_html}
+  </div>
+
+  <section class="sec">
+    <div class="eyebrow">Filtros Avançados e Consulta do Histórico</div>
+    {filters_html}
+    {table_html}
+  </section>
+</section>"""
+
+    histdata_payload = {
+        "summary": {
+            "total_distintas": tot_distintas,
+            "tot_prov": round(tot_prov, 2),
+            "tot_emp": round(tot_emp, 2),
+            "tot_cred": round(tot_cred, 2),
+            "p_emp": round(p_emp, 1),
+            "p_cred": round(p_cred, 1),
+        },
+        "items": hist_list,
+        "by_id": histdata,
+    }
+    return frag, histdata_payload
+
 # ---------------- shell da página (multi-OMDS) ----------------
 def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
@@ -1254,6 +1624,9 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     
     ranking_frag = secao_comparativo_omds(res, hist, data_str, periodo)
     frags.append(ranking_frag)
+
+    hist_frag, histdata = secao_historico_ncs(res, hist, data_str, periodo)
+    frags.append(hist_frag)
 
     banner = ""
     if alertas:
@@ -1271,6 +1644,12 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
         '<span class="rank-icon" aria-hidden="true">🏆</span>'
         '<span>Ranking & Comparativo</span></button>'
     )
+    omds += (
+        '<button class="omds omds-hist" data-key="HISTORICO" aria-current="false" '
+        'title="Histórico de Notas de Crédito emitidas e recebidas no Exercício" onclick="trocaOMDS(this)">'
+        '<span class="hist-icon" aria-hidden="true">📜</span>'
+        '<span>Histórico de NCs</span></button>'
+    )
     ujs = json.dumps({u["key"]: {"sigla": u["sigla"], "nome": u["nome"], "ogu": u["ogu"], "fex": u["fex"],
                                  "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
     u0 = UNIDADES[0]
@@ -1280,6 +1659,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     ncdata_json = json.dumps(NCD, ensure_ascii=False).replace("</", "<\\/")
     daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
     teladata_json = json.dumps(TELA, ensure_ascii=False).replace("</", "<\\/")
+    histdata_json = json.dumps(histdata, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
@@ -1321,7 +1701,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo líquido não empenhado no Tesouro Gerencial / SIAFI). O detalhe é o saldo real por célula orçamentária (Ação · PI · ND). A soma das células reconcilia com exatidão matemática com o total consolidado de cada OM.</p>
   <p>Fonte: CRÉDITO DISP.xlsx (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};</script>
+<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};var HISTDATA={histdata_json};</script>
 <script>{JS}</script>
 </body></html>"""
 
@@ -2560,7 +2940,326 @@ table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
   .hero-num { font-size: 2.2rem; }
   .kpis { grid-template-columns: 1fr; }
   .det td.mono2, .det th:first-child, .det td:first-child { position: sticky; left: 0; background: var(--bg-surface); }
-  .det th:first-child { background: var(--bg-subtle); }
+/* ==========================================================================
+   ESTILOS PARA A ABA: HISTÓRICO DE NOTAS DE CRÉDITO E MODAL EXPANDIDO
+   ========================================================================== */
+.omds-hist {
+  background: var(--bg-subtle);
+  border-color: var(--primary-600);
+}
+.omds-hist.on {
+  background: linear-gradient(135deg, #1C4A73 0%, #2563EB 100%);
+  color: #fff;
+  border-color: #2563EB;
+}
+.omds-hist.on span { color: #fff; }
+.hist-icon { font-size: 1.25rem; }
+
+.unidade-hist { display: none; }
+.hist-header-card {
+  margin-top: 24px;
+  padding: 26px 30px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--primary-600);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.hist-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+.hist-kpi {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .2s ease, box-shadow .2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 4px solid var(--primary-600);
+}
+.hist-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.hist-kpi.kpi-total { border-left-color: #6366F1; }
+.hist-kpi.kpi-prov  { border-left-color: #2563EB; }
+.hist-kpi.kpi-emp   { border-left-color: #D97706; }
+.hist-kpi.kpi-saldo { border-left-color: #059669; }
+.hist-kpi-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); }
+.hist-kpi-val { font-size: 1.625rem; font-weight: 800; color: var(--ink); font-family: var(--serif); line-height: 1.2; }
+.hist-kpi-sub { font-size: 0.8125rem; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+.kpi-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-indigo { background: #6366F1; }
+.dot-blue   { background: #2563EB; }
+.dot-amber  { background: #D97706; }
+.dot-green  { background: #059669; }
+
+.hist-filters-card {
+  margin-top: 14px;
+  margin-bottom: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.hist-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+.hist-filter-group { display: flex; flex-direction: column; gap: 6px; }
+.hist-filter-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); }
+.hist-select, .hist-input {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.hist-select:focus, .hist-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+.hist-toolbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  justify-content: space-between;
+}
+.hist-actions-l { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hist-actions-r { display: flex; align-items: center; gap: 10px; }
+.btn-clear-flt {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-muted);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.btn-clear-flt:hover {
+  background: var(--bg-surface);
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+.hist-count-badge { font-size: 0.8125rem; font-weight: 600; color: var(--ink-muted); }
+
+/* Tabela e Badges */
+.det-hist .nc-tag { color: var(--primary-600); font-family: var(--mono); letter-spacing: 0.02em; }
+.ug-pill {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.ug-pill.emit { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--ink); }
+.ug-pill.fav  { background: var(--primary-50); border: 1px solid rgba(37,99,235,0.2); color: var(--primary-600); }
+
+.pill-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-disp    { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+.status-parcial { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+.status-exec    { background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; }
+.status-canc    { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.status-zerada  { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; }
+
+:root[data-theme="dark"] .status-disp    { background: #064E3B; color: #A7F3D0; border-color: #047857; }
+:root[data-theme="dark"] .status-parcial { background: #78350F; color: #FDE68A; border-color: #B45309; }
+:root[data-theme="dark"] .status-exec    { background: #1E293B; color: #94A3B8; border-color: #334155; }
+:root[data-theme="dark"] .status-canc    { background: #7F1D1D; color: #FECACA; border-color: #B91C1C; }
+:root[data-theme="dark"] .status-zerada  { background: #0F172A; color: #64748B; border-color: #1E293B; }
+
+/* Paginação */
+.hist-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pag-info { font-size: 0.8125rem; color: var(--ink-muted); }
+.pag-btns { display: flex; gap: 8px; }
+.btn-pag {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all .15s ease;
+}
+.btn-pag:hover:not(:disabled) {
+  background: var(--primary-50);
+  border-color: var(--primary-600);
+  color: var(--primary-600);
+}
+.btn-pag:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Modal Detalhe da NC */
+.m-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.m-tag {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--primary-600);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: block;
+}
+.m-secao { margin-bottom: 18px; }
+.m-secao-h {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.m-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.m-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.m-card-id, .m-card-class {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.m-card-id span.m-lbl, .m-card-class span.m-lbl {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+}
+.m-card-id b, .m-card-class b { font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.m-card-class small { font-size: 0.75rem; color: var(--ink-muted); }
+.m-kpis-fin {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.m-kpi-fin {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.m-kpi-fin.hero-saldo {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+.m-kpi-fin b.col-disp { color: var(--success-strong); font-size: 1.25rem; font-weight: 800; font-family: var(--serif); }
+.m-kpi-fin b.col-prov { color: var(--primary-600); font-size: 1.125rem; font-weight: 700; }
+.m-kpi-fin b.col-emp  { color: var(--warning-ink); font-size: 1.125rem; font-weight: 700; }
+.m-estagios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.m-estagio { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.m-estagio-t { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 6px; }
+.m-estagio-t b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.fill-liq { background: var(--stg2); }
+.fill-pag { background: var(--success); }
+.m-nc-justificativa {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary-600);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.m-footer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  justify-content: flex-end;
+}
+.btn-copy-nc, .btn-goto-hist {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--ink);
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn-copy-nc:hover, .btn-goto-hist:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-600);
+  color: var(--primary-600);
+}
+.btn-goto-hist {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  border-color: rgba(37,99,235,0.3);
 }
 """
 
@@ -2611,7 +3310,17 @@ function trocaOMDS(btn){
   document.querySelectorAll('.omds-nav .omds').forEach(function(b){b.classList.remove('on');b.setAttribute('aria-current','false');});
   btn.classList.add('on');btn.setAttribute('aria-current','true');
   document.querySelectorAll('.unidade').forEach(function(s){s.style.display=(s.getAttribute('data-key')===key)?'':'none';});
-  if(key==='RANKING'){
+  if(key==='HISTORICO'){
+    document.documentElement.style.setProperty('--accent','#1C4A73');
+    var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='Brasão Base de Apoio Logístico';}
+    var t=document.getElementById('uTitulo');if(t)t.textContent='Histórico de Notas de Crédito — Exercício 2026';
+    var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio Logístico do Exército — Registro Geral de NCs';
+    var uu=document.getElementById('uUasg');if(uu)uu.textContent='Consolidado de todas as Notas de Crédito Emitidas e Recebidas no Exercício';
+    try{document.title='Histórico de Notas de Crédito — Exercício 2026';}catch(e){}
+    if(!HIST_INITIALIZED){
+      bcmsInitHistorico();
+    }
+  } else if(key==='RANKING'){
     document.documentElement.style.setProperty('--accent','#D99B26');
     var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='Brasão Base de Apoio Logístico';}
     var t=document.getElementById('uTitulo');if(t)t.textContent='Crédito Disponível — Ranking & Comparativo OMDS';
@@ -2644,6 +3353,11 @@ function trocaOMDSPorKey(key){
       if(b&&!b.classList.contains('on')) b.click();
     }
   }catch(e){}
+  setTimeout(function(){
+    if(typeof HISTDATA !== 'undefined' && HISTDATA && HISTDATA.items && !HIST_INITIALIZED){
+      bcmsInitHistorico();
+    }
+  }, 100);
 })();
 
 function bcmsSearch(inp,tid){
@@ -2667,8 +3381,17 @@ function bcmsSearch(inp,tid){
 }
 
 function bcmsNC(row){
-  var d=NCDATA[row.getAttribute('data-nc')];
+  var ncKey=row.getAttribute('data-nc');
+  var d=NCDATA[ncKey];
   if(!d)return;
+  if(typeof HISTDATA !== 'undefined' && HISTDATA && HISTDATA.items){
+    for(var i=0; i<HISTDATA.items.length; i++){
+      if(HISTDATA.items[i].nc === d.nc || HISTDATA.items[i].hid === ncKey){
+        bcmsDetalheNC(HISTDATA.items[i].hid);
+        return;
+      }
+    }
+  }
   var neg=d.val<0;
   var h='<h3 id="modal-title">NC '+bcmsEsc(d.nc)+'</h3>';
   h+='<p class="m-sub">'+bcmsEsc((d.u?d.u+' · ':'')+'Ação '+d.acao+' · PI '+d.pi+' · ND '+d.nd+(d.ndn?' — '+d.ndn:''))+'</p>';
@@ -3033,6 +3756,500 @@ function bcmsCelClose(){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') bcmsCelClose();
 });
+
+/* ==========================================================================
+   HISTÓRICO CONSOLIDADO DE NOTAS DE CRÉDITO & DRILL-DOWN MODAL
+   ========================================================================== */
+var HIST_PAGE = 1;
+var HIST_PAGE_SIZE = 50;
+var HIST_FILTERED = [];
+var HIST_SORT_COL = 'dt';
+var HIST_SORT_DIR = 'desc';
+var HIST_INITIALIZED = false;
+
+function bcmsGetHistItems(){
+  if(typeof HISTDATA === 'undefined' || !HISTDATA) return [];
+  if(Array.isArray(HISTDATA.items)) return HISTDATA.items;
+  if(Array.isArray(HISTDATA)) return HISTDATA;
+  if(HISTDATA.by_id) return Object.values(HISTDATA.by_id);
+  return Object.values(HISTDATA);
+}
+
+function bcmsInitHistorico(){
+  var raw = bcmsGetHistItems();
+  if(!raw || !raw.length) return;
+  HIST_FILTERED = raw.slice();
+  bcmsSortFilteredArray();
+  bcmsAtualizaKPIs(HIST_FILTERED);
+  bcmsRenderHistorico(1);
+  HIST_INITIALIZED = true;
+}
+
+function bcmsSortFilteredArray(){
+  var col = HIST_SORT_COL;
+  var dir = HIST_SORT_DIR;
+  HIST_FILTERED.sort(function(a, b){
+    var va = a[col], vb = b[col];
+    if(col === 'prov' || col === 'cred' || col === 'emp' || col === 'liq' || col === 'pag'){
+      va = parseFloat(va) || 0;
+      vb = parseFloat(vb) || 0;
+    } else {
+      va = String(va || '').toLowerCase();
+      vb = String(vb || '').toLowerCase();
+    }
+    if(va < vb) return dir === 'asc' ? -1 : 1;
+    if(va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function bcmsSortHistorico(col, th){
+  if(HIST_SORT_COL === col){
+    HIST_SORT_DIR = (HIST_SORT_DIR === 'asc') ? 'desc' : 'asc';
+  } else {
+    HIST_SORT_COL = col;
+    HIST_SORT_DIR = (col === 'dt' || col === 'prov' || col === 'cred') ? 'desc' : 'asc';
+  }
+  var thead = th.closest('thead');
+  if(thead){
+    thead.querySelectorAll('th').forEach(function(h){
+      h.setAttribute('aria-sort', 'none');
+      var s = h.querySelector('.sort');
+      if(s) s.textContent = '';
+    });
+    th.setAttribute('aria-sort', HIST_SORT_DIR === 'asc' ? 'ascending' : 'descending');
+    var s = th.querySelector('.sort');
+    if(s) s.textContent = HIST_SORT_DIR === 'asc' ? ' ▲' : ' ▼';
+  }
+  bcmsSortFilteredArray();
+  bcmsRenderHistorico(HIST_PAGE);
+}
+
+function bcmsFiltraHistorico(){
+  var raw = bcmsGetHistItems();
+  if(!raw || !raw.length) return;
+  var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var fPer = v('flt-hist-periodo');
+  var fFonte = v('flt-hist-fonte');
+  var fPtres = v('flt-hist-ptres');
+  var fFaixa = v('flt-hist-faixa');
+  var q = (v('flt-hist-busca') || '').toLowerCase();
+
+  HIST_FILTERED = raw.filter(function(it){
+    if(fPer){
+      if(fPer.startsWith('T')){
+        if(it.tri !== fPer) return false;
+      } else {
+        if(it.mes !== fPer) return false;
+      }
+    }
+    if(fFonte && it.fonte !== fFonte) return false;
+    if(fPtres && it.ptres !== fPtres && it.acao !== fPtres) return false;
+    if(fFaixa){
+      if(fFaixa === 'saldo_pos' && it.cred <= 0.01) return false;
+      if(fFaixa === 'parcial' && (it.status_slug !== 'parcial')) return false;
+      if(fFaixa === 'zerada' && (it.cred > 0.01 || it.status_slug === 'canc')) return false;
+      if(fFaixa === 'canc' && it.status_slug !== 'canc') return false;
+    }
+    if(q){
+      var match = (it.nc && it.nc.toLowerCase().indexOf(q) > -1) ||
+                  (it.obj && it.obj.toLowerCase().indexOf(q) > -1) ||
+                  (it.pi && it.pi.toLowerCase().indexOf(q) > -1) ||
+                  (it.pi_desc && it.pi_desc.toLowerCase().indexOf(q) > -1) ||
+                  (it.fav_nome && it.fav_nome.toLowerCase().indexOf(q) > -1) ||
+                  (it.emit_nome && it.emit_nome.toLowerCase().indexOf(q) > -1) ||
+                  (it.emit_cod && String(it.emit_cod).indexOf(q) > -1) ||
+                  (it.fav_cod && String(it.fav_cod).indexOf(q) > -1) ||
+                  (it.ptres && it.ptres.toLowerCase().indexOf(q) > -1) ||
+                  (it.nd && it.nd.toLowerCase().indexOf(q) > -1);
+      if(!match) return false;
+    }
+    return true;
+  });
+
+  bcmsSortFilteredArray();
+  bcmsAtualizaKPIs(HIST_FILTERED);
+  bcmsRenderHistorico(1);
+}
+
+function bcmsAtualizaKPIs(list){
+  var total = list.length;
+  var distinctSet = {};
+  var totProv = 0, totEmp = 0, totCred = 0;
+  for(var i = 0; i < list.length; i++){
+    var it = list[i];
+    distinctSet[it.nc] = true;
+    totProv += it.prov;
+    totEmp += it.emp;
+    totCred += it.cred;
+  }
+  var distinctCount = Object.keys(distinctSet).length;
+  var pEmp = totProv > 0 ? (totEmp / totProv * 100) : 0;
+  var pCred = totProv > 0 ? (totCred / totProv * 100) : 0;
+
+  var k1 = document.getElementById('kpi-hist-total');
+  if(k1) k1.textContent = distinctCount.toLocaleString('pt-BR');
+  var k1s = document.getElementById('kpi-hist-total-sub');
+  if(k1s) k1s.innerHTML = '<span class="kpi-dot dot-blue"></span> ' + total + ' registro(s) no escopo';
+
+  var k2 = document.getElementById('kpi-hist-prov');
+  if(k2) k2.textContent = bcmsBRL(totProv);
+
+  var k3 = document.getElementById('kpi-hist-emp');
+  if(k3) k3.textContent = bcmsBRL(totEmp);
+  var k3s = document.getElementById('kpi-hist-emp-sub');
+  if(k3s) k3s.innerHTML = '<span class="kpi-dot dot-amber"></span> ' + pEmp.toFixed(1) + '% de execução orçamentária';
+
+  var k4 = document.getElementById('kpi-hist-cred');
+  if(k4) k4.textContent = bcmsBRL(totCred);
+  var k4s = document.getElementById('kpi-hist-cred-sub');
+  if(k4s) k4s.innerHTML = '<span class="kpi-dot dot-green"></span> ' + pCred.toFixed(1) + '% remanescente em tela';
+
+  var badge = document.getElementById('cnt-hist-ncs');
+  if(badge){
+    var totalGlobal = (HISTDATA && HISTDATA.items) ? HISTDATA.items.length : total;
+    badge.textContent = 'Exibindo ' + total + ' de ' + totalGlobal + ' Notas de Crédito (' + distinctCount + ' distintas)';
+  }
+}
+
+function bcmsLimpaFiltrosHistorico(){
+  ['flt-hist-periodo','flt-hist-fonte','flt-hist-ptres','flt-hist-faixa','flt-hist-busca'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  bcmsFiltraHistorico();
+  bcmsToast('Filtros do histórico redefinidos.');
+}
+
+function bcmsRenderHistorico(page){
+  HIST_PAGE = page;
+  var total = HIST_FILTERED.length;
+  var totalPages = Math.max(1, Math.ceil(total / HIST_PAGE_SIZE));
+  if(HIST_PAGE > totalPages) HIST_PAGE = totalPages;
+  if(HIST_PAGE < 1) HIST_PAGE = 1;
+
+  var start = (HIST_PAGE - 1) * HIST_PAGE_SIZE;
+  var end = Math.min(start + HIST_PAGE_SIZE, total);
+  var pageItems = HIST_FILTERED.slice(start, end);
+
+  var tbody = document.getElementById('tbody-hist-ncs');
+  if(!tbody) return;
+
+  if(pageItems.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:48px 16px;color:var(--muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="btn-clear-flt" style="margin-top:12px;" onclick="bcmsLimpaFiltrosHistorico()">Limpar Filtros</button></td></tr>';
+  } else {
+    var rowsHtml = '';
+    for(var i = 0; i < pageItems.length; i++){
+      var item = pageItems[i];
+      var statusCls = 'status-' + item.status_slug;
+      var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 24) ? item.emit_nome.substring(0, 24) + '…' : (item.emit_nome || '—');
+      rowsHtml += '<tr class="cel-row" data-hid="' + bcmsEsc(item.hid) + '" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')" '
+        + 'title="Clique para abrir o detalhamento completo da NC ' + bcmsEsc(item.nc) + '" '
+        + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')}">'
+        + '<td class="mono2" data-sort="' + bcmsEsc(item.dt) + '">' + bcmsEsc(item.dia || '—') + '</td>'
+        + '<td><b class="nc-tag mono">' + bcmsEsc(item.nc) + '</b></td>'
+        + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
+        + '<td title="' + bcmsEsc(item.fav_nome) + '"><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> <b>' + bcmsEsc(item.om_sigla) + '</b></td>'
+        + '<td class="mono2">' + bcmsEsc(item.ptres || '—') + '</td>'
+        + '<td><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></td>'
+        + '<td class="num" data-sort="' + item.prov.toFixed(2) + '">' + bcmsBRL(item.prov) + '</td>'
+        + '<td class="num col-disp" data-sort="' + item.cred.toFixed(2) + '"><b>' + bcmsBRL(item.cred) + '</b></td>'
+        + '<td><span class="pill-status ' + statusCls + '">' + bcmsEsc(item.status) + '</span></td>'
+        + '<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')">Detalhes ↗</button></td>'
+        + '</tr>';
+    }
+    tbody.innerHTML = rowsHtml;
+  }
+
+  var pagInfo = document.getElementById('pag-info-txt');
+  if(pagInfo){
+    if(total === 0){
+      pagInfo.textContent = 'Página 0 de 0 (0 registros)';
+    } else {
+      pagInfo.textContent = 'Página ' + HIST_PAGE + ' de ' + totalPages + ' (Exibindo ' + (start + 1) + '–' + end + ' de ' + total + ')';
+    }
+  }
+
+  var btnAnt = document.getElementById('btn-pag-ant');
+  if(btnAnt) btnAnt.disabled = (HIST_PAGE <= 1);
+  var btnProx = document.getElementById('btn-pag-prox');
+  if(btnProx) btnProx.disabled = (HIST_PAGE >= totalPages);
+}
+
+function bcmsPaginaHistorico(delta){
+  var novaPagina = HIST_PAGE + delta;
+  bcmsRenderHistorico(novaPagina);
+  var scrollCont = document.getElementById('scroll-hist-ncs');
+  if(scrollCont) scrollCont.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function bcmsDetalheNC(hid){
+  var item = null;
+  if(typeof HISTDATA !== 'undefined' && HISTDATA){
+    if(HISTDATA.by_id && HISTDATA.by_id[hid]){
+      item = HISTDATA.by_id[hid];
+    } else if(HISTDATA[hid]){
+      item = HISTDATA[hid];
+    } else {
+      var all = bcmsGetHistItems();
+      for(var i = 0; i < all.length; i++){
+        if(all[i].hid === hid || all[i].nc === hid){
+          item = all[i];
+          break;
+        }
+      }
+    }
+  }
+  if(!item) return;
+
+  var prov = item.prov || 0;
+  var bloq = item.bloq || 0;
+  var emp = item.emp || 0;
+  var liq = item.liq || 0;
+  var pag = item.pag || 0;
+  var cred = item.cred || 0;
+
+  var pEmp = prov > 0 ? (emp / prov * 100) : 0;
+  var pCred = prov > 0 ? (cred / prov * 100) : 0;
+  var pLiq = emp > 0 ? (liq / emp * 100) : 0;
+  var pPag = liq > 0 ? (pag / liq * 100) : 0;
+  var statusCls = 'status-' + item.status_slug;
+
+  var fonteExtenso = item.fonte === 'OGU' ? '160 - Orçamento Geral da União (OGU)' : (item.fonte === 'FEx' ? '167 - Fundo do Exército (FEx)' : item.fonte);
+
+  var h = '';
+  /* Header do Modal */
+  h += '<div class="m-header">';
+  h += '  <div>';
+  h += '    <span class="m-tag">DETALHAMENTO INTEGRAL · EXERCÍCIO 2026</span>';
+  h += '    <h3 id="modal-title" style="margin:4px 0 6px 0;">Nota de Crédito ' + bcmsEsc(item.nc) + '</h3>';
+  h += '    <p class="m-sub" style="margin:0;">' + bcmsEsc(item.op) + ' · Emitida em <b>' + bcmsEsc(item.dia || '—') + '</b>' + (item.dias !== null ? ' (' + item.dias + ' dias)' : '') + '</p>';
+  h += '  </div>';
+  h += '  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">';
+  h += '    <span class="pill-status ' + statusCls + '" style="font-size:0.875rem;padding:6px 14px;">' + bcmsEsc(item.status) + '</span>';
+  h += '    <button type="button" class="btn-copy-nc" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\')" title="Copiar número da NC">📋 Copiar NC</button>';
+  h += '  </div>';
+  h += '</div>';
+
+  /* Bloco 1: Identificação */
+  h += '<div class="m-secao">';
+  h += '  <div class="m-secao-h"><span>🏢</span> 1. Identificação da Nota e Unidades Gestoras</div>';
+  h += '  <div class="m-grid-2">';
+  h += '    <div class="m-card-id">';
+  h += '      <span class="m-lbl">UG Emitente (Origem)</span>';
+  h += '      <b><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> ' + bcmsEsc(item.emit_nome) + '</b>';
+  h += '    </div>';
+  h += '    <div class="m-card-id">';
+  h += '      <span class="m-lbl">UG Favorecida (Destino)</span>';
+  h += '      <b><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> ' + bcmsEsc(item.fav_nome) + ' (' + bcmsEsc(item.om_sigla) + ')</b>';
+  h += '    </div>';
+  h += '  </div>';
+  h += '</div>';
+
+  /* Bloco 2: Classificação Orçamentária */
+  h += '<div class="m-secao">';
+  h += '  <div class="m-secao-h"><span>🎯</span> 2. Classificação Orçamentária</div>';
+  h += '  <div class="m-grid-4">';
+  h += '    <div class="m-card-class">';
+  h += '      <span class="m-lbl">PTRES / Ação</span>';
+  h += '      <b class="mono">' + bcmsEsc(item.ptres || '—') + '</b>';
+  h += '      <small>' + bcmsEsc(item.acao_desc || 'Ação orçamentária') + '</small>';
+  h += '    </div>';
+  h += '    <div class="m-card-class">';
+  h += '      <span class="m-lbl">Fonte de Recursos</span>';
+  h += '      <b><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></b>';
+  h += '      <small>' + bcmsEsc(fonteExtenso) + '</small>';
+  h += '    </div>';
+  h += '    <div class="m-card-class">';
+  h += '      <span class="m-lbl">Natureza de Despesa (ND)</span>';
+  h += '      <b class="mono">' + bcmsEsc(item.nd || '—') + '</b>';
+  h += '      <small>' + bcmsEsc(item.nd_desc || 'Elemento de despesa') + '</small>';
+  h += '    </div>';
+  h += '    <div class="m-card-class">';
+  h += '      <span class="m-lbl">Plano Interno (PI)</span>';
+  h += '      <b class="mono">' + bcmsEsc(item.pi || '—') + '</b>';
+  h += '      <small>' + bcmsEsc(item.pi_desc || 'Plano interno') + '</small>';
+  h += '    </div>';
+  h += '  </div>';
+  h += '</div>';
+
+  /* Bloco 3: Balanço e Posição Financeira */
+  h += '<div class="m-secao">';
+  h += '  <div class="m-secao-h"><span>💰</span> 3. Balanço e Valores em Tempo Real</div>';
+  h += '  <div class="m-kpis-fin">';
+  h += '    <div class="m-kpi-fin">';
+  h += '      <span class="m-lbl">Valor Original (Recebido)</span>';
+  h += '      <b class="col-prov">' + bcmsBRL(prov) + '</b>';
+  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">Total descentralizado</small>';
+  h += '    </div>';
+  h += '    <div class="m-kpi-fin">';
+  h += '      <span class="m-lbl">Bloqueado / Pré-empenho</span>';
+  h += '      <b>' + bcmsBRL(bloq) + '</b>';
+  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">Reserva de crédito</small>';
+  h += '    </div>';
+  h += '    <div class="m-kpi-fin">';
+  h += '      <span class="m-lbl">Executado (Empenhado)</span>';
+  h += '      <b class="col-emp">' + bcmsBRL(emp) + '</b>';
+  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">' + pEmp.toFixed(1) + '% consumido</small>';
+  h += '    </div>';
+  h += '    <div class="m-kpi-fin hero-saldo">';
+  h += '      <span class="m-lbl">Saldo Disponível em Tela</span>';
+  h += '      <b class="col-disp">' + bcmsBRL(cred) + '</b>';
+  h += '      <small style="color:var(--success-strong);font-size:0.75rem;font-weight:700;">' + pCred.toFixed(1) + '% remanescente</small>';
+  h += '    </div>';
+  h += '  </div>';
+
+  /* Estágios da despesa na célula */
+  h += '  <div class="m-estagios-grid">';
+  h += '    <div class="m-estagio">';
+  h += '      <div class="m-estagio-t"><span>Liquidação sobre Empenho</span><b>' + bcmsBRL(liq) + ' (' + pLiq.toFixed(1) + '%)</b></div>';
+  h += '      <div class="m-barra-track"><div class="m-barra-fill fill-liq" style="width:' + Math.min(100, pLiq).toFixed(1) + '%"></div></div>';
+  h += '    </div>';
+  h += '    <div class="m-estagio">';
+  h += '      <div class="m-estagio-t"><span>Pagamento sobre Liquidação</span><b>' + bcmsBRL(pag) + ' (' + pPag.toFixed(1) + '%)</b></div>';
+  h += '      <div class="m-barra-track"><div class="m-barra-fill fill-pag" style="width:' + Math.min(100, pPag).toFixed(1) + '%"></div></div>';
+  h += '    </div>';
+  h += '  </div>';
+  h += '</div>';
+
+  /* Bloco 4: Observação / Finalidade */
+  h += '<div class="m-secao">';
+  h += '  <div class="m-secao-h"><span>📝</span> 4. Observação / Finalidade Cadastrada na Nota</div>';
+  h += '  <div class="m-nc-justificativa">' + bcmsEsc(item.obj || '(Sem texto de observação cadastrado no SIAFI)') + '</div>';
+  h += '</div>';
+
+  /* Subtabela de desdobramentos se houver mais de 1 lançamento */
+  if(item.itens && item.itens.length > 1){
+    h += '<div class="m-secao">';
+    h += '  <div class="m-secao-h"><span>📑</span> Desdobramentos da Nota (' + item.itens.length + ' lançamentos)</div>';
+    h += '  <div class="tbl-scroll"><table class="det det-itens"><thead><tr><th>Ação</th><th>PI</th><th>ND</th><th class="num">Valor</th></tr></thead><tbody>';
+    for(var j = 0; j < item.itens.length; j++){
+      var sub = item.itens[j];
+      h += '<tr><td class="mono2">' + bcmsEsc(sub.acao || '—') + '</td><td class="mono2">' + bcmsEsc(sub.pi || '—') + '</td><td class="mono2">' + bcmsEsc(sub.nd || '—') + '</td><td class="num">' + bcmsBRL(sub.val || 0) + '</td></tr>';
+    }
+    h += '</tbody></table></div>';
+    h += '</div>';
+  }
+
+  /* Rodapé de Ações */
+  h += '<div class="m-footer-actions">';
+  h += '  <button type="button" class="btn-goto-hist" onclick="bcmsVerNoHistorico(\'' + bcmsEsc(item.nc) + '\')">🔍 Localizar no Histórico Geral</button>';
+  h += '  <button type="button" class="btn-copy-nc" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\')">📋 Copiar Nº da NC</button>';
+  h += '  <button type="button" class="btn-pag" onclick="bcmsCelClose()">Fechar ✕</button>';
+  h += '</div>';
+
+  document.getElementById('modal-body').innerHTML = h;
+  var m = document.getElementById('modal');
+  m.classList.add('open');
+  m.setAttribute('aria-hidden', 'false');
+  var x = document.querySelector('.modal-x');
+  if(x) x.focus();
+}
+
+function bcmsCopiarNC(ncNumero){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ncNumero).then(function(){
+      bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada com sucesso!');
+    }).catch(function(){
+      bcmsToast('NC: ' + ncNumero);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = ncNumero;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada!'); } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+function bcmsVerNoHistorico(ncNumero){
+  bcmsCelClose();
+  trocaOMDSPorKey('HISTORICO');
+  var inp = document.getElementById('flt-hist-busca');
+  if(inp){
+    inp.value = ncNumero;
+    bcmsFiltraHistorico();
+  }
+}
+
+function bcmsExportHistoricoExcel(){
+  var list = (HIST_FILTERED && HIST_FILTERED.length) ? HIST_FILTERED : ((HISTDATA && HISTDATA.items) ? HISTDATA.items : []);
+  if(!list.length){
+    bcmsToast('⚠️ Não há registros no histórico para exportar.');
+    return;
+  }
+  var filename = 'historico_notas_credito_2026_' + (new Date().toISOString().slice(0, 10));
+  var headers = ['Data', 'Número da NC', 'UG Emitente (Cód)', 'UG Emitente (Nome)', 'UG Favorecida (Cód)', 'UG Favorecida (OM)', 'PTRES / Ação', 'Fonte', 'PI', 'ND', 'Valor Original (R$)', 'Valor Executado (R$)', 'Saldo Atual (R$)', 'Status', 'Justificativa / Objeto'];
+
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<?mso-application progid="Excel.Sheet"?>\n' +
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n' +
+    ' xmlns:o="urn:schemas-microsoft-com:office:office"\n' +
+    ' xmlns:x="urn:schemas-microsoft-com:office:excel"\n' +
+    ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n' +
+    '<Styles>\n' +
+    ' <Style ss:ID="Default" ss:Name="Normal"><Font ss:FontName="Calibri" ss:Size="11" ss:Color="#000000"/><Alignment ss:Vertical="Center"/></Style>\n' +
+    ' <Style ss:ID="Header"><Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C4A73" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n' +
+    ' <Style ss:ID="Title"><Font ss:FontName="Calibri" ss:Size="14" ss:Bold="1" ss:Color="#1C4A73"/><Alignment ss:Vertical="Center"/></Style>\n' +
+    ' <Style ss:ID="Currency"><NumberFormat ss:Format="&quot;R$&quot; #,##0.00"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n' +
+    ' <Style ss:ID="Center"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n' +
+    '</Styles>\n' +
+    '<Worksheet ss:Name="Histórico de NCs">\n' +
+    '<Table ss:DefaultRowHeight="20">\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="80"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="110"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="90"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="200"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="90"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="110"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="80"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="70"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="110"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="90"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="130"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="130"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="130"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="120"/>\n' +
+    ' <Column ss:AutoFitWidth="1" ss:Width="380"/>\n';
+
+  xml += ' <Row ss:Height="26"><Cell ss:StyleID="Title" ss:MergeAcross="' + (headers.length - 1) + '"><Data ss:Type="String">BASE DE APOIO LOGÍSTICO DO EXÉRCITO — HISTÓRICO GERAL DE NOTAS DE CRÉDITO</Data></Cell></Row>\n';
+  xml += ' <Row ss:Height="18"><Cell ss:MergeAcross="' + (headers.length - 1) + '"><Data ss:Type="String">Exercício Financeiro Corrente · ' + list.length + ' registro(s) exportado(s) · Posição SIAFI / Tesouro Gerencial · ' + new Date().toLocaleDateString('pt-BR') + '</Data></Cell></Row>\n';
+  xml += ' <Row ss:Height="10"/>\n';
+  xml += ' <Row ss:Height="24">\n';
+  headers.forEach(function(h){ xml += '  <Cell ss:StyleID="Header"><Data ss:Type="String">' + bcmsEscXml(h) + '</Data></Cell>\n'; });
+  xml += ' </Row>\n';
+
+  list.forEach(function(item){
+    xml += ' <Row ss:Height="20">\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.dia || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.nc || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.emit_cod || '') + '</Data></Cell>\n';
+    xml += '  <Cell><Data ss:Type="String">' + bcmsEscXml(item.emit_nome || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.fav_cod || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.om_sigla || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.ptres || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.fonte || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.pi || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.nd || '') + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Currency"><Data ss:Type="Number">' + (item.prov || 0).toFixed(2) + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Currency"><Data ss:Type="Number">' + (item.emp || 0).toFixed(2) + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Currency"><Data ss:Type="Number">' + (item.cred || 0).toFixed(2) + '</Data></Cell>\n';
+    xml += '  <Cell ss:StyleID="Center"><Data ss:Type="String">' + bcmsEscXml(item.status || '') + '</Data></Cell>\n';
+    xml += '  <Cell><Data ss:Type="String">' + bcmsEscXml(item.obj || '') + '</Data></Cell>\n';
+    xml += ' </Row>\n';
+  });
+
+  xml += '</Table></Worksheet></Workbook>';
+  var blob = new Blob([xml], {type: 'application/vnd.ms-excel;charset=utf-8;'});
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename + '.xls';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  bcmsToast('📊 Planilha do Histórico exportada com sucesso (' + list.length + ' linhas)!');
+}
 """
 
 # ---------------- main ----------------

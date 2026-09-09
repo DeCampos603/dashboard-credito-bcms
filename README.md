@@ -3,7 +3,9 @@
 Painel web (HTML estático) do **Crédito Disponível** das Organizações Militares Diretamente Subordinadas (OMDS) da **Base de Apoio Logístico do Exército** — **BCMS** (160329/167329), **Ba Ap Log** (160238/167238), **D C Mun** (160246/167246), **BMSA** (160304/167304), **1º D Sup** (160307/167307) e **ECT** (160321/167321) — gerado a partir do export do Tesouro Gerencial `CRÉDITO DISP.xlsx` publicado no Google Drive e **atualizado automaticamente todos os dias** via **GitHub Actions**, hospedado no **GitHub Pages**.
 
 - **URL pública**: `https://DeCampos603.github.io/dashboard-credito-bcms/`
-- **Exportação em Excel (.xls formatado)**: Download instantâneo com tipos numéricos, formatação de moeda e cabeçalhos estilizados.
+- **Nova Aba "Histórico de Notas de Crédito"**: Visão consolidada de todas as NCs emitidas e recebidas no exercício corrente (2026), com 4 KPIs analíticos, filtros multifatoriais (período, fonte, PTRES, faixa de saldo), busca textual instantânea e paginação fluida a 60fps.
+- **Drill-down / Modal Completo de NC**: Ao clicar em qualquer Nota de Crédito no painel ou no histórico, abre detalhamento integral com Identificação (UG Emitente/Favorecida), Classificação Orçamentária (PTRES, Fonte, ND, PI), Posição Financeira em tempo real (Original, Bloqueado, Empenhado, Liquidado, Pago e Saldo Disponível) e Justificativa/Observação integral.
+- **Exportação em Excel (.xls formatado)**: Download instantâneo de planilhas formatadas com tipos numéricos, formatação de moeda e cabeçalhos estilizados (para a visualização em tela e para o Histórico consolidado).
 - **Aba de Ranking & Comparativo OMDS**: Pódio gamificado (🥇, 🥈, 🥉), indicadores globais do Comando e gráficos comparativos de execução orçamentária.
 - **Histórico e Tendência**: Acumula snapshots para acompanhamento da evolução do saldo.
 
