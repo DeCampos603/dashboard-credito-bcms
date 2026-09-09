@@ -527,10 +527,11 @@ def svg_tendencia(hist):
     return f'<div class="card chart wide"><div class="eyebrow">Tendência Histórica · Crédito Disponível Consolidado</div>{svg}{nota}</div>'
 
 # ---------------- componentes HTML ----------------
-def kpi_tile(label, valor, chip, cls):
+def kpi_tile(label, valor, chip, cls, id_v=""):
     chip_html = f'<span class="chip">{esc(chip)}</span>' if chip else ""
+    id_attr = f' id="{esc(id_v)}"' if id_v else ""
     return (f'<div class="kpi kpi-{cls}"><div class="kpi-l">{esc(label)}</div>'
-            f'<div class="kpi-v num">{esc(valor)}</div>{chip_html}</div>')
+            f'<div class="kpi-v num"{id_attr}>{esc(valor)}</div>{chip_html}</div>')
 
 def uasg_card(cod, d):
     barp = pct(d["emp"], d["prov"])
@@ -963,164 +964,148 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
     tot_u_prov = sum(x["prov"] for x in u_hist_items)
     tot_u_emp  = sum(x["emp"]  for x in u_hist_items)
     tot_u_cred = sum(x["cred"] for x in u_hist_items)
-    p_u_emp = (tot_u_emp / tot_u_prov * 100) if tot_u_prov else 0.0
-    p_u_cred = (tot_u_cred / tot_u_prov * 100) if tot_u_prov else 0.0
 
     u_ptres_set = set(x["ptres"] for x in u_hist_items if x.get("ptres"))
     u_meses_set = set(x["mes"] for x in u_hist_items if x.get("mes"))
-    opt_u_ptres = "".join(f'<option value="{esc(p)}">{esc(p)}</option>' for p in sorted(u_ptres_set))
-    opt_u_meses = "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in sorted(u_meses_set, reverse=True))
+    opt_u_ptres = '<option value="">Ação: todas</option>' + "".join(
+        f'<option value="{esc(p)}">{esc(p)}</option>' for p in sorted(u_ptres_set)
+    )
+    opt_u_meses = (
+        '<option value="">Período: todos</option>'
+        '<optgroup label="Trimestres">'
+        '<option value="T1">1º Trimestre (Jan–Mar)</option>'
+        '<option value="T2">2º Trimestre (Abr–Jun)</option>'
+        '<option value="T3">3º Trimestre (Jul–Set)</option>'
+        '<option value="T4">4º Trimestre (Out–Dez)</option>'
+        '</optgroup>'
+        '<optgroup label="Meses">'
+        + "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in sorted(u_meses_set, reverse=True))
+        + '</optgroup>'
+    )
 
-    u_kpis_html = f"""<div class="hist-kpis">
-  <div class="hist-kpi kpi-total">
-    <span class="hist-kpi-lbl">Total de NCs no Ano</span>
-    <b class="hist-kpi-val" id="kpi-uhist-total-{sfx}">{tot_u_ncs}</b>
-    <span class="hist-kpi-sub" id="kpi-uhist-total-sub-{sfx}"><span class="kpi-dot dot-indigo"></span> {len(u_hist_items)} lançamentos para {esc(u['sigla'])}</span>
-  </div>
-  <div class="hist-kpi kpi-prov">
-    <span class="hist-kpi-lbl">Total Descentralizado / Recebido</span>
-    <b class="hist-kpi-val col-prov" id="kpi-uhist-prov-{sfx}">{esc(brl(tot_u_prov))}</b>
-    <span class="hist-kpi-sub"><span class="kpi-dot dot-blue"></span> 100% da provisão recebida</span>
-  </div>
-  <div class="hist-kpi kpi-emp">
-    <span class="hist-kpi-lbl">Total Executado (Empenhado)</span>
-    <b class="hist-kpi-val col-emp" id="kpi-uhist-emp-{sfx}">{esc(brl(tot_u_emp))}</b>
-    <span class="hist-kpi-sub" id="kpi-uhist-emp-sub-{sfx}"><span class="kpi-dot dot-amber"></span> {p_u_emp:.1f}% de execução orçamentária</span>
-  </div>
-  <div class="hist-kpi kpi-saldo">
-    <span class="hist-kpi-lbl">Saldo Remanescente Disponível</span>
-    <b class="hist-kpi-val col-disp" id="kpi-uhist-cred-{sfx}">{esc(brl(tot_u_cred))}</b>
-    <span class="hist-kpi-sub" id="kpi-uhist-cred-sub-{sfx}"><span class="kpi-dot dot-green"></span> {p_u_cred:.1f}% remanescente em tela</span>
-  </div>
-</div>"""
+    u_sigla = esc(u['sigla'])
+    u_nome = esc(u['nome'])
+    u_ogu = esc(str(u['ogu']))
+    u_fex = esc(str(u['fex']))
 
-    u_filters_html = f"""<div class="hist-filters-card">
-  <div class="hist-filters-grid">
-    <div class="hist-filter-group">
-      <label for="flt-uhist-periodo-{sfx}">Período (Mês / Trimestre)</label>
-      <select id="flt-uhist-periodo-{sfx}" class="hist-select" onchange="bcmsFiltraUHist('{sfx}')">
-        <option value="">Todos os Períodos</option>
-        <optgroup label="Trimestres">
-          <option value="T1">1º Trimestre (Jan - Mar)</option>
-          <option value="T2">2º Trimestre (Abr - Jun)</option>
-          <option value="T3">3º Trimestre (Jul - Set)</option>
-          <option value="T4">4º Trimestre (Out - Dez)</option>
-        </optgroup>
-        <optgroup label="Meses">
-          {opt_u_meses}
-        </optgroup>
-      </select>
-    </div>
+    u_head_html = (
+        f'<div class="et-head">'
+        f'<div class="et-kpi et-hero"><span>Saldo Disponível</span><b class="num" id="kpi-uhist-cred-{sfx}">{esc(brl(tot_u_cred))}</b></div>'
+        f'<div class="et-kpi"><span>Notas de Crédito</span><b class="num" id="kpi-uhist-total-{sfx}">{tot_u_ncs}</b></div>'
+        f'<div class="et-kpi"><span>Provisão Recebida</span><b class="num" id="kpi-uhist-prov-{sfx}">{esc(brl(tot_u_prov))}</b></div>'
+        f'<div class="et-kpi"><span>Total Empenhado</span><b class="num" id="kpi-uhist-emp-{sfx}">{esc(brl(tot_u_emp))}</b></div>'
+        f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportUHistExcel(\'{sfx}\',\'{u_sigla}\')" title="Baixar histórico completo de {u_sigla} em planilha Excel"><span class="btn-excel-ic">📥</span> Baixar Histórico em Excel</button></div>'
+        f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div>'
+        f'</div>'
+    )
 
-    <div class="hist-filter-group">
-      <label for="flt-uhist-fonte-{sfx}">Fonte de Recursos</label>
-      <select id="flt-uhist-fonte-{sfx}" class="hist-select" onchange="bcmsFiltraUHist('{sfx}')">
-        <option value="">Todas as Fontes</option>
-        <option value="OGU">OGU (160 - Orçamento Geral da União)</option>
-        <option value="FEx">FEx (167 - Fundo do Exército)</option>
-      </select>
-    </div>
-
-    <div class="hist-filter-group">
-      <label for="flt-uhist-ptres-{sfx}">PTRES / Ação de Governo</label>
-      <select id="flt-uhist-ptres-{sfx}" class="hist-select" onchange="bcmsFiltraUHist('{sfx}')">
-        <option value="">Todas as Ações</option>
-        {opt_u_ptres}
-      </select>
-    </div>
-
-    <div class="hist-filter-group">
-      <label for="flt-uhist-faixa-{sfx}">Faixa de Saldo / Status</label>
-      <select id="flt-uhist-faixa-{sfx}" class="hist-select" onchange="bcmsFiltraUHist('{sfx}')">
-        <option value="">Todas as Faixas</option>
-        <option value="saldo_pos">🟢 Com Saldo Disponível (&gt; R$ 0)</option>
-        <option value="parcial">🟡 Parcialmente Executadas</option>
-        <option value="zerada">⚪ Totalmente Executadas / Zeradas</option>
-        <option value="canc">🔴 Canceladas / Anuladas</option>
-      </select>
-    </div>
-
-    <div class="hist-filter-group" style="grid-column: span 2;">
-      <label for="flt-uhist-busca-{sfx}">Busca Textual (Nº da NC, Justificativa, PI, ND)</label>
-      <div class="hist-search-box">
-        <input type="search" id="flt-uhist-busca-{sfx}" class="hist-input" placeholder="Digite o número da NC, palavras da justificativa, PI ou emitente..." oninput="bcmsFiltraUHist('{sfx}')">
-      </div>
-    </div>
-  </div>
-
-  <div class="hist-toolbar-actions">
-    <div class="hist-actions-l">
-      <button type="button" class="btn-clear-flt" onclick="bcmsLimpaFiltrosUHist('{sfx}')">✕ Limpar Filtros</button>
-      <span class="hist-count-badge" id="cnt-uhist-ncs-{sfx}">Exibindo {len(u_hist_items)} de {len(u_hist_items)} Notas de Crédito ({tot_u_ncs} distintas)</span>
-    </div>
-    <div class="hist-actions-r">
-      <button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportUHistExcel('{sfx}', '{esc(u['sigla'])}')" title="Baixar histórico completo de {esc(u['sigla'])} em planilha Excel (.xls formatado)">
-        <span class="btn-excel-ic">📊</span> Exportar Histórico {esc(u['sigla'])} (Excel)
-      </button>
-    </div>
-  </div>
-</div>"""
+    u_tools_html = (
+        f'<div class="tbl-tools">'
+        f'<label class="visually-hidden" for="flt-uhist-busca-{sfx}">Buscar</label>'
+        f'<input type="search" id="flt-uhist-busca-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND, PI ou palavras na descrição completa…" oninput="bcmsFiltraUHist(\'{sfx}\')">'
+        f'<button type="button" class="btn-excel" onclick="bcmsExportUHistExcel(\'{sfx}\',\'{u_sigla}\')" title="Exportar exatamente as linhas visíveis do histórico, conforme os filtros aplicados"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
+        f'<span class="tbl-count" id="cnt-uhist-ncs-{sfx}" data-unit="NC(s) no histórico" aria-live="polite">{len(u_hist_items)} NC(s) no histórico</span>'
+        f'</div>'
+        f'<div class="tbl-filtros" id="flt-uhist-{sfx}" role="group" aria-label="Filtros do histórico de {u_sigla}">'
+        f'<span class="flt-lbl">Filtrar:</span>'
+        f'<select class="flt" id="flt-uhist-fonte-{sfx}" aria-label="Filtrar por fonte" onchange="bcmsFiltraUHist(\'{sfx}\')">'
+        f'<option value="">Fonte: todas</option>'
+        f'<option value="OGU">OGU (160 - Orçamento Geral da União)</option>'
+        f'<option value="FEx">FEx (167 - Fundo do Exército)</option>'
+        f'</select>'
+        f'<select class="flt" id="flt-uhist-ptres-{sfx}" aria-label="Filtrar por ação de governo" onchange="bcmsFiltraUHist(\'{sfx}\')">{opt_u_ptres}</select>'
+        f'<select class="flt" id="flt-uhist-periodo-{sfx}" aria-label="Filtrar por período" onchange="bcmsFiltraUHist(\'{sfx}\')">{opt_u_meses}</select>'
+        f'<select class="flt" id="flt-uhist-faixa-{sfx}" aria-label="Filtrar por status do saldo" onchange="bcmsFiltraUHist(\'{sfx}\')">'
+        f'<option value="">Status: todos</option>'
+        f'<option value="saldo_pos">🟢 Com Saldo (&gt; R$ 0)</option>'
+        f'<option value="parcial">🟡 Parcialmente Executadas</option>'
+        f'<option value="zerada">⚪ Executadas / Zeradas</option>'
+        f'<option value="canc">🔴 Anuladas / Canceladas</option>'
+        f'</select>'
+        f'<button type="button" class="flt-limpa" onclick="bcmsLimpaFiltrosUHist(\'{sfx}\')" title="Limpar todos os filtros">✕ Limpar</button>'
+        f'<span class="flt-resumo" id="flt-uhist-res-{sfx}" aria-live="polite"></span>'
+        f'</div>'
+    )
 
     u_initial_rows = []
     for item in u_hist_items[:50]:
         status_cls = f"status-{item['status_slug']}"
-        emit_nome_curto = (item["emit_nome"][:24] + "…") if len(item["emit_nome"]) > 24 else item["emit_nome"]
+        emit_nome_curto = (item["emit_nome"][:22] + "…") if len(item["emit_nome"]) > 22 else item["emit_nome"]
+        desc_completa = item.get("obj", "")
+        desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
+        nc_full = str(item["nc"] or "")
+        m_nc = re.search(r"NC(\d+)$", nc_full)
+        if m_nc:
+            nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">· {esc(nc_full[:6])}</span>'
+        else:
+            nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
+        acao_nd = f'{item["ptres"]} · {item["nd"]}' if item.get("ptres") and item.get("nd") else (item.get("ptres") or item.get("nd") or "—")
+
         u_initial_rows.append(
             f'<tr class="cel-row" data-hid="{item["hid"]}" tabindex="0" role="button" onclick="bcmsDetalheNC(\'{item["hid"]}\')" '
-            f'title="Clique para abrir o detalhamento completo da NC {esc(item["nc"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDetalheNC(\'{item["hid"]}\')}}">'
-            f'<td class="mono2" data-sort="{item["dt"]}">{esc(item["dia"] or "—")}</td>'
-            f'<td><b class="nc-tag mono">{esc(item["nc"])}</b></td>'
-            f'<td title="{esc(item["emit_nome"])}"><span class="ug-pill emit">{esc(item["emit_cod"])}</span> <small>{esc(emit_nome_curto)}</small></td>'
-            f'<td class="mono2">{esc(item["ptres"] or "—")}</td>'
+            f'title="Clique para abrir o detalhamento completo da NC {esc(nc_full)}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDetalheNC(\'{item["hid"]}\')}}">'
             f'<td><span class="pill-fonte">{esc(item["fonte"])}</span></td>'
+            f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
+            f'<td class="mono2">{esc(acao_nd)}</td>'
+            f'<td class="obj" title="{esc(desc_completa)}" data-full-desc="{esc(desc_completa)}">{esc(desc_resumo)}</td>'
+            f'<td title="{esc(item["emit_nome"])}"><span class="ug-pill emit">{esc(item["emit_cod"])}</span> <small>{esc(emit_nome_curto)}</small></td>'
+            f'<td class="mono2">{esc(item["dia"] or "—")}</td>'
             f'<td class="num" data-sort="{item["prov"]:.2f}">{esc(brl(item["prov"]))}</td>'
-            f'<td class="num col-disp" data-sort="{item["cred"]:.2f}"><b>{esc(brl(item["cred"]))}</b></td>'
-            f'<td><span class="pill-status {status_cls}">{esc(item["status"])}</span></td>'
-            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'{item["hid"]}\')">Detalhes ↗</button></td>'
+            f'<td class="num anchor" data-sort="{item["cred"]:.2f}">{esc(brl(item["cred"]))}</td>'
+            f'<td class="num"><span class="pill-status {status_cls}">{esc(item["status"])}</span><i class="chev" aria-hidden="true">›</i></td>'
             f'</tr>'
         )
 
     u_pages = math.ceil(len(u_hist_items) / 50) if u_hist_items else 1
-    u_table_html = f"""<div class="tbl-scroll" id="scroll-uhist-ncs-{sfx}">
-  <table class="det det-hist" id="tbl-uhist-ncs-{sfx}">
-    <thead>
-      <tr>
-        <th tabindex="0" role="button" aria-sort="descending" onclick="bcmsSortUHist('dt', this, '{sfx}')" title="Ordenar por Data de Emissão">Data <span class="sort">▼</span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('nc', this, '{sfx}')" title="Ordenar por Número da NC">Número da NC <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('emit', this, '{sfx}')" title="Ordenar por UG Origem">UG Origem (Emitente) <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('ptres', this, '{sfx}')" title="Ordenar por PTRES / Ação">PTRES <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('fonte', this, '{sfx}')" title="Ordenar por Fonte">Fonte <span class="sort"></span></th>
-        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('prov', this, '{sfx}')" title="Ordenar por Valor Original">Valor Original <span class="sort"></span></th>
-        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('cred', this, '{sfx}')" title="Ordenar por Saldo Atual">Saldo Atual <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist('status', this, '{sfx}')" title="Ordenar por Status">Status <span class="sort"></span></th>
-        <th style="width:90px">Ações</th>
-      </tr>
-    </thead>
-    <tbody id="tbody-uhist-ncs-{sfx}">
-      {"".join(u_initial_rows)}
-    </tbody>
-  </table>
-</div>
-<div class="hist-pagination" id="paginacao-uhist-{sfx}">
-  <div class="pag-info" id="pag-info-uhist-{sfx}">Página 1 de {u_pages} (Exibindo 1–{min(50, len(u_hist_items))} de {len(u_hist_items)})</div>
-  <div class="pag-btns">
-    <button type="button" class="btn-pag" id="btn-pag-uhist-ant-{sfx}" onclick="bcmsPaginaUHist(-1, '{sfx}')" disabled>‹ Anterior</button>
-    <button type="button" class="btn-pag" id="btn-pag-uhist-prox-{sfx}" onclick="bcmsPaginaUHist(1, '{sfx}')"{' disabled' if u_pages <= 1 else ''}>Próxima ›</button>
-  </div>
-</div>"""
+    u_table_html = (
+        f'<div class="tbl-scroll" id="scroll-uhist-ncs-{sfx}">'
+        f'<table class="det det-compact" id="tbl-uhist-ncs-{sfx}">'
+        f'<thead>'
+        f'<tr>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'fonte\', this, \'{sfx}\')" title="Ordenar por Fonte">Fonte <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'nc\', this, \'{sfx}\')" title="Ordenar por Número da NC">NC <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'ptres\', this, \'{sfx}\')" title="Ordenar por PTRES / Ação">Ação · ND <span class="sort"></span></th>'
+        f'<th>Descrição do objeto da NC</th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'emit\', this, \'{sfx}\')" title="Ordenar por UG Emitente">UG Emitente <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="descending" onclick="bcmsSortUHist(\'dt\', this, \'{sfx}\')" title="Ordenar por Data">Recebido em <span class="sort">▼</span></th>'
+        f'<th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'prov\', this, \'{sfx}\')" title="Ordenar por Provisão Recebida">Provisão <span class="sort"></span></th>'
+        f'<th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'cred\', this, \'{sfx}\')" title="Ordenar por Saldo Disponível">Crédito Disp. <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortUHist(\'status\', this, \'{sfx}\')" title="Ordenar por Status">Status <span class="sort"></span></th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody id="tbody-uhist-ncs-{sfx}">'
+        f'{"".join(u_initial_rows)}'
+        f'</tbody>'
+        f'<tfoot>'
+        f'<tr>'
+        f'<td colspan="6" id="tf-uhist-label-{sfx}">TOTAL · {len(u_hist_items)} Nota(s) de Crédito no histórico</td>'
+        f'<td class="num" id="tf-uhist-prov-{sfx}">{esc(brl(tot_u_prov))}</td>'
+        f'<td class="num anchor" id="tf-uhist-cred-{sfx}">{esc(brl(tot_u_cred))}</td>'
+        f'<td>—</td>'
+        f'</tr>'
+        f'</tfoot>'
+        f'</table>'
+        f'</div>'
+        f'<div class="tbl-tools" style="margin-top:10px;justify-content:space-between;" id="paginacao-uhist-{sfx}">'
+        f'<span class="pag-info" id="pag-info-uhist-{sfx}" style="font-size:0.8125rem;color:var(--ink-muted);font-weight:600;">'
+        f'Página 1 de {u_pages} (Exibindo 1–{min(50, len(u_hist_items))} de {len(u_hist_items)} NCs)'
+        f'</span>'
+        f'<div style="display:flex;gap:8px;align-items:center;">'
+        f'<button type="button" class="flt-limpa" id="btn-pag-uhist-ant-{sfx}" onclick="bcmsPaginaUHist(-1, \'{sfx}\')" disabled>‹ Anterior</button>'
+        f'<button type="button" class="flt-limpa" id="btn-pag-uhist-prox-{sfx}" onclick="bcmsPaginaUHist(1, \'{sfx}\')"' + (' disabled' if u_pages <= 1 else '') + '>Próxima ›</button>'
+        f'</div>'
+        f'</div>'
+    )
 
-    historico_unidade_html = f"""<div class="hist-header-card">
-  <div class="rh-tag">REGISTRO GERAL DE NOTAS DE CRÉDITO · {esc(u['sigla'])}</div>
-  <h2 class="rh-title">📜 Histórico Completo de Notas de Crédito — {esc(u['sigla'])}</h2>
-  <p class="rh-desc">Relação completa de todas as Notas de Crédito recebidas pela unidade <b>{esc(u['nome'])} ({esc(u['sigla'])})</b> no exercício corrente. Monitore o ciclo completo de descentralização orçamentária (OGU UASG {u['ogu']} e FEx UASG {u['fex']}), o montante executado em empenhos e o saldo remanescente em tempo real com rastreabilidade detalhada.</p>
-  {u_kpis_html}
-</div>
-
-<section class="sec">
-  <div class="eyebrow">Filtros e Consulta de Notas de Crédito de {esc(u['sigla'])}</div>
-  {u_filters_html}
-  {u_table_html}
-</section>"""
+    historico_unidade_html = (
+        f'<section class="sec">'
+        f'<div class="eyebrow">Histórico Completo de Notas de Crédito — {u_sigla}</div>'
+        f'{u_head_html}'
+        f'<p class="sec-nota">Relação completa de todas as <b>Notas de Crédito (NC) recebidas</b> pela unidade <b>{u_nome} ({u_sigla})</b> no exercício corrente (UASGs {u_ogu} · OGU e {u_fex} · FEx). <b>Clique em uma linha</b> para abrir a ficha cadastral completa no modal de detalhamento.</p>'
+        f'{u_tools_html}'
+        f'{u_table_html}'
+        f'</section>'
+    )
 
     disp = "" if (u is UNIDADES[0]) else ' style="display:none"'
     frag = f"""<section class="unidade" data-key="{sfx}" data-sigla="{esc(u['sigla'])}"{disp}>
@@ -1613,157 +1598,151 @@ def secao_historico_ncs(res, hist, data_str, periodo):
     opt_ptres = "".join(f'<option value="{esc(p)}">{esc(p)}</option>' for p in sorted(ptres_set))
     opt_meses = "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in sorted(meses_set, reverse=True))
 
-    kpis_html = f"""<div class="hist-kpis">
-  <div class="hist-kpi kpi-total">
-    <span class="hist-kpi-lbl">Total de NCs no Ano</span>
-    <b class="hist-kpi-val" id="kpi-hist-total">{tot_distintas}</b>
-    <span class="hist-kpi-sub"><span class="kpi-dot dot-indigo"></span> Contagem distinta no exercício</span>
-  </div>
-  <div class="hist-kpi kpi-prov">
-    <span class="hist-kpi-lbl">Total Descentralizado / Recebido</span>
-    <b class="hist-kpi-val col-prov" id="kpi-hist-prov">{esc(brl(tot_prov))}</b>
-    <span class="hist-kpi-sub"><span class="kpi-dot dot-blue"></span> 100% da provisão inicial</span>
-  </div>
-  <div class="hist-kpi kpi-emp">
-    <span class="hist-kpi-lbl">Total Executado (Empenhado)</span>
-    <b class="hist-kpi-val col-emp" id="kpi-hist-emp">{esc(brl(tot_emp))}</b>
-    <span class="hist-kpi-sub" id="kpi-hist-emp-sub"><span class="kpi-dot dot-amber"></span> {p_emp:.1f}% de execução orçamentária</span>
-  </div>
-  <div class="hist-kpi kpi-saldo">
-    <span class="hist-kpi-lbl">Saldo Total Remanescente Disponível</span>
-    <b class="hist-kpi-val col-disp" id="kpi-hist-cred">{esc(brl(tot_cred))}</b>
-    <span class="hist-kpi-sub" id="kpi-hist-cred-sub"><span class="kpi-dot dot-green"></span> {p_cred:.1f}% remanescente em tela</span>
-  </div>
-</div>"""
+    kpis_html = (
+        kpi_tile("Total de NCs Distintas", str(tot_distintas), f"{len(hist_list)} lançamentos no ano", "total", id_v="kpi-hist-total") +
+        kpi_tile("Total Descentralizado", brl(tot_prov), "100% da provisão recebida", "prov", id_v="kpi-hist-prov") +
+        kpi_tile("Total Empenhado", brl(tot_emp), f"{p_emp:.1f}% executado", "emp", id_v="kpi-hist-emp") +
+        kpi_tile("Saldo Disponível", brl(tot_cred), f"{p_cred:.1f}% remanescente", "pag", id_v="kpi-hist-cred")
+    )
 
-    filters_html = f"""<div class="hist-filters-card">
-  <div class="hist-filters-grid">
-    <div class="hist-filter-group">
-      <label for="flt-hist-periodo">Período (Mês / Trimestre)</label>
-      <select id="flt-hist-periodo" class="hist-select" onchange="bcmsFiltraHistorico()">
-        <option value="">Todos os Períodos</option>
-        <optgroup label="Trimestres">
-          <option value="T1">1º Trimestre (Jan - Mar)</option>
-          <option value="T2">2º Trimestre (Abr - Jun)</option>
-          <option value="T3">3º Trimestre (Jul - Set)</option>
-          <option value="T4">4º Trimestre (Out - Dez)</option>
-        </optgroup>
-        <optgroup label="Meses">
-          {opt_meses}
-        </optgroup>
-      </select>
-    </div>
+    opt_ptres = '<option value="">Ação: todas</option>' + "".join(f'<option value="{esc(p)}">{esc(p)}</option>' for p in sorted(ptres_set))
+    opt_meses = (
+        '<option value="">Período: todos</option>'
+        '<optgroup label="Trimestres">'
+        '<option value="T1">1º Trimestre (Jan–Mar)</option>'
+        '<option value="T2">2º Trimestre (Abr–Jun)</option>'
+        '<option value="T3">3º Trimestre (Jul–Set)</option>'
+        '<option value="T4">4º Trimestre (Out–Dez)</option>'
+        '</optgroup>'
+        '<optgroup label="Meses">'
+        + "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in sorted(meses_set, reverse=True))
+        + '</optgroup>'
+    )
 
-    <div class="hist-filter-group">
-      <label for="flt-hist-fonte">Fonte de Recursos</label>
-      <select id="flt-hist-fonte" class="hist-select" onchange="bcmsFiltraHistorico()">
-        <option value="">Todas as Fontes</option>
-        <option value="OGU">OGU (160 - Orçamento Geral da União)</option>
-        <option value="FEx">FEx (167 - Fundo do Exército)</option>
-      </select>
-    </div>
+    tools_hist_html = (
+        f'<div class="tbl-tools">'
+        f'<label class="visually-hidden" for="flt-hist-busca">Buscar</label>'
+        f'<input type="search" id="flt-hist-busca" class="tbl-search" placeholder="Buscar por NC, Justificativa, UG, PTRES, ND ou PI…" oninput="bcmsFiltraHistorico()">'
+        f'<button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportHistoricoExcel()" title="Baixar histórico consolidado das OMDS em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Histórico Completo (Excel)</button>'
+        f'<span class="tbl-count" id="cnt-hist-ncs" data-unit="Notas de Crédito" aria-live="polite">Exibindo {len(hist_list)} de {len(hist_list)} Notas de Crédito ({tot_distintas} distintas)</span>'
+        f'</div>'
+        f'<div class="tbl-filtros" id="flt-hist" role="group" aria-label="Filtros do histórico consolidado">'
+        f'<span class="flt-lbl">Filtrar:</span>'
+        f'<select class="flt" id="flt-hist-om" aria-label="Filtrar por organização militar" onchange="bcmsFiltraHistorico()">'
+        f'<option value="">Unidade: todas</option>'
+        f'<option value="BCMS">BCMS</option>'
+        f'<option value="Ba Ap Log Ex">Ba Ap Log Ex</option>'
+        f'<option value="D C Mun">D C Mun</option>'
+        f'<option value="BMSA">BMSA</option>'
+        f'<option value="1º D Sup">1º D Sup</option>'
+        f'<option value="ECT">ECT</option>'
+        f'</select>'
+        f'<select class="flt" id="flt-hist-fonte" aria-label="Filtrar por fonte" onchange="bcmsFiltraHistorico()">'
+        f'<option value="">Fonte: todas</option>'
+        f'<option value="OGU">OGU (160)</option>'
+        f'<option value="FEx">FEx (167)</option>'
+        f'</select>'
+        f'<select class="flt" id="flt-hist-ptres" aria-label="Filtrar por ação de governo" onchange="bcmsFiltraHistorico()">{opt_ptres}</select>'
+        f'<select class="flt" id="flt-hist-periodo" aria-label="Filtrar por período" onchange="bcmsFiltraHistorico()">{opt_meses}</select>'
+        f'<select class="flt" id="flt-hist-faixa" aria-label="Filtrar por status do saldo" onchange="bcmsFiltraHistorico()">'
+        f'<option value="">Status: todos</option>'
+        f'<option value="saldo_pos">🟢 Com Saldo (&gt; R$ 0)</option>'
+        f'<option value="parcial">🟡 Parcialmente Executadas</option>'
+        f'<option value="zerada">⚪ Executadas / Zeradas</option>'
+        f'<option value="canc">🔴 Anuladas / Canceladas</option>'
+        f'</select>'
+        f'<button type="button" class="flt-limpa" onclick="bcmsLimpaFiltrosHistorico()" title="Limpar todos os filtros">✕ Limpar</button>'
+        f'<span class="flt-resumo" id="flt-hist-res" aria-live="polite"></span>'
+        f'</div>'
+    )
 
-    <div class="hist-filter-group">
-      <label for="flt-hist-ptres">PTRES / Ação de Governo</label>
-      <select id="flt-hist-ptres" class="hist-select" onchange="bcmsFiltraHistorico()">
-        <option value="">Todas as Ações</option>
-        {opt_ptres}
-      </select>
-    </div>
-
-    <div class="hist-filter-group">
-      <label for="flt-hist-faixa">Faixa de Saldo / Status</label>
-      <select id="flt-hist-faixa" class="hist-select" onchange="bcmsFiltraHistorico()">
-        <option value="">Todas as Faixas</option>
-        <option value="saldo_pos">🟢 Com Saldo Disponível (> R$ 0)</option>
-        <option value="parcial">🟡 Parcialmente Executadas</option>
-        <option value="zerada">⚪ Totalmente Executadas / Zeradas</option>
-        <option value="canc">🔴 Canceladas / Anuladas</option>
-      </select>
-    </div>
-
-    <div class="hist-filter-group" style="grid-column: span 2;">
-      <label for="flt-hist-busca">Busca Textual (Nº da NC, Justificativa, UG, PI)</label>
-      <div class="hist-search-box">
-        <input type="search" id="flt-hist-busca" class="hist-input" placeholder="Digite o número da NC, palavras da justificativa, PI ou favorecida..." oninput="bcmsFiltraHistorico()">
-      </div>
-    </div>
-  </div>
-
-  <div class="hist-toolbar-actions">
-    <div class="hist-actions-l">
-      <button type="button" class="btn-clear-flt" onclick="bcmsLimpaFiltrosHistorico()">✕ Limpar Filtros</button>
-      <span class="hist-count-badge" id="cnt-hist-ncs">Exibindo {len(hist_list)} de {len(hist_list)} Notas de Crédito</span>
-    </div>
-    <div class="hist-actions-r">
-      <button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportHistoricoExcel()" title="Baixar todas as linhas filtradas em planilha Excel (.xls formatado)">
-        <span class="btn-excel-ic">📊</span> Exportar Histórico Filtrado (Excel)
-      </button>
-    </div>
-  </div>
-</div>"""
-
-    # Gera as primeiras 50 linhas iniciais estáticas para SEO e carregamento veloz
     initial_rows = []
     for item in hist_list[:50]:
         status_cls = f"status-{item['status_slug']}"
+        emit_nome_curto = (item["emit_nome"][:22] + "…") if len(item["emit_nome"]) > 22 else item["emit_nome"]
+        desc_completa = item.get("obj", "")
+        desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
+        nc_full = str(item["nc"] or "")
+        m_nc = re.search(r"NC(\d+)$", nc_full)
+        if m_nc:
+            nc_lbl = f'<span class="nc-num">NC {esc(m_nc.group(1))}</span> <span class="nc-ug">· {esc(nc_full[:6])}</span>'
+        else:
+            nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
+        acao_nd = f'{item["ptres"]} · {item["nd"]}' if item.get("ptres") and item.get("nd") else (item.get("ptres") or item.get("nd") or "—")
+
         initial_rows.append(
             f'<tr class="cel-row" data-hid="{item["hid"]}" tabindex="0" role="button" onclick="bcmsDetalheNC(\'{item["hid"]}\')" '
-            f'title="Clique para abrir o detalhamento completo da NC {esc(item["nc"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDetalheNC(\'{item["hid"]}\')}}">'
-            f'<td class="mono2" data-sort="{item["dt"]}">{esc(item["dia"] or "—")}</td>'
-            f'<td><b class="nc-tag mono">{esc(item["nc"])}</b></td>'
-            f'<td title="{esc(item["emit_nome"])}"><span class="ug-pill emit">{esc(item["emit_cod"])}</span> <small>{esc(item["emit_nome"][:24])}</small></td>'
-            f'<td title="{esc(item["fav_nome"])}"><span class="ug-pill fav">{esc(item["fav_cod"])}</span> <b>{esc(item["om_sigla"])}</b></td>'
-            f'<td class="mono2">{esc(item["ptres"] or "—")}</td>'
+            f'title="Clique para abrir o detalhamento completo da NC {esc(nc_full)}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsDetalheNC(\'{item["hid"]}\')}}">'
             f'<td><span class="pill-fonte">{esc(item["fonte"])}</span></td>'
+            f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
+            f'<td title="{esc(item["fav_nome"])}"><span class="ug-pill fav">{esc(item["fav_cod"])}</span> <b>{esc(item["om_sigla"])}</b></td>'
+            f'<td class="mono2">{esc(acao_nd)}</td>'
+            f'<td class="obj" title="{esc(desc_completa)}" data-full-desc="{esc(desc_completa)}">{esc(desc_resumo)}</td>'
+            f'<td title="{esc(item["emit_nome"])}"><span class="ug-pill emit">{esc(item["emit_cod"])}</span> <small>{esc(emit_nome_curto)}</small></td>'
+            f'<td class="mono2">{esc(item["dia"] or "—")}</td>'
             f'<td class="num" data-sort="{item["prov"]:.2f}">{esc(brl(item["prov"]))}</td>'
-            f'<td class="num col-disp" data-sort="{item["cred"]:.2f}"><b>{esc(brl(item["cred"]))}</b></td>'
-            f'<td><span class="pill-status {status_cls}">{esc(item["status"])}</span></td>'
-            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'{item["hid"]}\')">Detalhes ↗</button></td>'
+            f'<td class="num anchor" data-sort="{item["cred"]:.2f}">{esc(brl(item["cred"]))}</td>'
+            f'<td class="num"><span class="pill-status {status_cls}">{esc(item["status"])}</span><i class="chev" aria-hidden="true">›</i></td>'
             f'</tr>'
         )
 
-    table_html = f"""<div class="tbl-scroll" id="scroll-hist-ncs">
-  <table class="det det-hist" id="tbl-historico-ncs">
-    <thead>
-      <tr>
-        <th tabindex="0" role="button" aria-sort="descending" onclick="bcmsSortHistorico('dt', this)" title="Ordenar por Data de Emissão">Data <span class="sort">▼</span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('nc', this)" title="Ordenar por Número da NC">Número da NC <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('emit', this)" title="Ordenar por UG Origem">UG Origem (Emitente) <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('fav', this)" title="Ordenar por UG Destino">UG Destino (Favorecida) <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('ptres', this)" title="Ordenar por PTRES / Ação">PTRES <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('fonte', this)" title="Ordenar por Fonte">Fonte <span class="sort"></span></th>
-        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('prov', this)" title="Ordenar por Valor Original">Valor Original <span class="sort"></span></th>
-        <th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('cred', this)" title="Ordenar por Saldo Atual">Saldo Atual <span class="sort"></span></th>
-        <th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico('status', this)" title="Ordenar por Status">Status <span class="sort"></span></th>
-        <th style="width:90px">Ações</th>
-      </tr>
-    </thead>
-    <tbody id="tbody-hist-ncs">
-      {"".join(initial_rows)}
-    </tbody>
-  </table>
-</div>
-<div class="hist-pagination" id="paginacao-hist">
-  <div class="pag-info" id="pag-info-txt">Página 1 de {math.ceil(len(hist_list)/50)} (Exibindo 1–50 de {len(hist_list)})</div>
-  <div class="pag-btns">
-    <button type="button" class="btn-pag" id="btn-pag-ant" onclick="bcmsPaginaHistorico(-1)" disabled>‹ Anterior</button>
-    <button type="button" class="btn-pag" id="btn-pag-prox" onclick="bcmsPaginaHistorico(1)">Próxima ›</button>
-  </div>
-</div>"""
+    tot_pages = math.ceil(len(hist_list)/50) if hist_list else 1
+    table_hist_html = (
+        f'<div class="tbl-scroll" id="scroll-hist-ncs">'
+        f'<table class="det det-compact" id="tbl-historico-ncs">'
+        f'<thead>'
+        f'<tr>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'fonte\', this)" title="Ordenar por Fonte">Fonte <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'nc\', this)" title="Ordenar por Número da NC">NC <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'fav\', this)" title="Ordenar por Unidade">Unidade (OMDS) <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'ptres\', this)" title="Ordenar por PTRES / Ação">Ação · ND <span class="sort"></span></th>'
+        f'<th>Descrição do objeto da NC</th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'emit\', this)" title="Ordenar por UG Emitente">UG Emitente <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="descending" onclick="bcmsSortHistorico(\'dt\', this)" title="Ordenar por Data">Recebido em <span class="sort">▼</span></th>'
+        f'<th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'prov\', this)" title="Ordenar por Valor Original">Provisão <span class="sort"></span></th>'
+        f'<th class="num" tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'cred\', this)" title="Ordenar por Saldo Disponível">Crédito Disp. <span class="sort"></span></th>'
+        f'<th tabindex="0" role="button" aria-sort="none" onclick="bcmsSortHistorico(\'status\', this)" title="Ordenar por Status">Status <span class="sort"></span></th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody id="tbody-hist-ncs">'
+        f'{"".join(initial_rows)}'
+        f'</tbody>'
+        f'<tfoot>'
+        f'<tr>'
+        f'<td colspan="7" id="tf-hist-label">TOTAL · {len(hist_list)} Nota(s) de Crédito no histórico</td>'
+        f'<td class="num" id="tf-hist-prov">{esc(brl(tot_prov))}</td>'
+        f'<td class="num anchor" id="tf-hist-cred">{esc(brl(tot_cred))}</td>'
+        f'<td>—</td>'
+        f'</tr>'
+        f'</tfoot>'
+        f'</table>'
+        f'</div>'
+        f'<div class="tbl-tools" style="margin-top:10px;justify-content:space-between;" id="paginacao-hist">'
+        f'<span class="pag-info" id="pag-info-txt" style="font-size:0.8125rem;color:var(--ink-muted);font-weight:600;">Página 1 de {tot_pages} (Exibindo 1–{min(50, len(hist_list))} de {len(hist_list)})</span>'
+        f'<div style="display:flex;gap:8px;align-items:center;">'
+        f'<button type="button" class="flt-limpa" id="btn-pag-ant" onclick="bcmsPaginaHistorico(-1)" disabled>‹ Anterior</button>'
+        f'<button type="button" class="flt-limpa" id="btn-pag-prox" onclick="bcmsPaginaHistorico(1)"' + (' disabled' if tot_pages <= 1 else '') + '>Próxima ›</button>'
+        f'</div>'
+        f'</div>'
+    )
 
     frag = f"""<section class="unidade unidade-hist" id="secao-HISTORICO" data-key="HISTORICO" style="display:none">
-  <div class="hist-header-card">
-    <div class="rh-tag">EXERCÍCIO FINANCEIRO CORRENTE · PAINEL ANALÍTICO CONSOLIDADO</div>
-    <h2 class="rh-title">📜 Histórico de Notas de Crédito (NC)</h2>
-    <p class="rh-desc">Relação completa de todas as Notas de Crédito emitidas e recebidas pelas Organizações Militares Diretamente Subordinadas (OMDS) da Base de Apoio Logístico do Exército. Monitore o ciclo completo de descentralização, o montante executado em empenhos e o saldo remanescente disponível em tempo real com rastreabilidade integral.</p>
-    {kpis_html}
+  <div class="ranking-header-card" style="border-top-color:var(--primary-600);">
+    <div class="rh-tag" style="color:var(--primary);">EXERCÍCIO FINANCEIRO CORRENTE · PAINEL ANALÍTICO CONSOLIDADO</div>
+    <h2 class="rh-title">📜 Histórico Consolidado de Notas de Crédito (NC)</h2>
+    <p class="rh-desc">Repositório completo e rastreável de todas as Notas de Crédito recebidas no exercício pelas 6 OMDS da Base de Apoio Logístico do Exército. Pesquise por termos da justificativa, combine filtros por unidade, fonte e período, ou clique em qualquer linha para inspecionar o detalhamento cadastral e financeiro completo no modal.</p>
   </div>
 
   <section class="sec">
-    <div class="eyebrow">Filtros Avançados e Consulta do Histórico</div>
-    {filters_html}
-    {table_html}
+    <div class="eyebrow">Indicadores Globais de Notas de Crédito no Exercício</div>
+    <div class="kpis">{kpis_html}</div>
+  </section>
+
+  <section class="sec">
+    <div class="eyebrow">Base Completa de Notas de Crédito do Comando</div>
+    <p class="sec-nota">Relação consolidada de <b>todas as Notas de Crédito</b> das 6 OMDS (12 UASGs de OGU e FEx). Utilize a busca rápida e os filtros seletivos para auditar lançamentos. <b>Clique em uma linha</b> para abrir a ficha completa.</p>
+    {tools_hist_html}
+    {table_hist_html}
   </section>
 </section>"""
 
@@ -2508,6 +2487,7 @@ h1 {
 }
 .kpi:hover { transform: translateY(-2px); }
 .kpi:hover::after { opacity: 1; }
+.kpi-total { border-left-color: #6366F1; }
 .kpi-prov { border-left-color: var(--primary-600); }
 .kpi-emp  { border-left-color: var(--warning-main); }
 .kpi-liq  { border-left-color: var(--stg2); }
@@ -2781,6 +2761,7 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   padding: 6px 10px; cursor: pointer;
 }
 .flt-limpa:hover { color: var(--danger); border-color: var(--danger); }
+.flt-limpa:disabled, .btn-pag:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 .flt-resumo { font-size: 0.8125rem; color: var(--ink-muted); font-weight: 600; }
 .flt-resumo.on { color: var(--primary); }
 @media (max-width: 640px) { .flt { flex: 1 1 100%; max-width: none; } }
@@ -4032,6 +4013,15 @@ function bcmsSortFilteredArray(){
     if(col === 'prov' || col === 'cred' || col === 'emp' || col === 'liq' || col === 'pag'){
       va = parseFloat(va) || 0;
       vb = parseFloat(vb) || 0;
+    } else if(col === 'fav'){
+      va = a.om_sigla || a.fav_nome || '';
+      vb = b.om_sigla || b.fav_nome || '';
+    } else if(col === 'emit'){
+      va = a.emit_nome || a.emit_cod || '';
+      vb = b.emit_nome || b.emit_cod || '';
+    } else if(col === 'ptres'){
+      va = (a.ptres || '') + ' ' + (a.nd || '');
+      vb = (b.ptres || '') + ' ' + (b.nd || '');
     } else {
       va = String(va || '').toLowerCase();
       vb = String(vb || '').toLowerCase();
@@ -4068,6 +4058,7 @@ function bcmsFiltraHistorico(){
   var raw = bcmsGetHistItems();
   if(!raw || !raw.length) return;
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var fOm = v('flt-hist-om');
   var fPer = v('flt-hist-periodo');
   var fFonte = v('flt-hist-fonte');
   var fPtres = v('flt-hist-ptres');
@@ -4075,6 +4066,7 @@ function bcmsFiltraHistorico(){
   var q = (v('flt-hist-busca') || '').toLowerCase();
 
   HIST_FILTERED = raw.filter(function(it){
+    if(fOm && it.om_sigla !== fOm) return false;
     if(fPer){
       if(fPer.startsWith('T')){
         if(it.tri !== fPer) return false;
@@ -4096,6 +4088,7 @@ function bcmsFiltraHistorico(){
                   (it.pi && it.pi.toLowerCase().indexOf(q) > -1) ||
                   (it.pi_desc && it.pi_desc.toLowerCase().indexOf(q) > -1) ||
                   (it.fav_nome && it.fav_nome.toLowerCase().indexOf(q) > -1) ||
+                  (it.om_sigla && it.om_sigla.toLowerCase().indexOf(q) > -1) ||
                   (it.emit_nome && it.emit_nome.toLowerCase().indexOf(q) > -1) ||
                   (it.emit_cod && String(it.emit_cod).indexOf(q) > -1) ||
                   (it.fav_cod && String(it.fav_cod).indexOf(q) > -1) ||
@@ -4123,39 +4116,64 @@ function bcmsAtualizaKPIs(list){
     totCred += it.cred;
   }
   var distinctCount = Object.keys(distinctSet).length;
-  var pEmp = totProv > 0 ? (totEmp / totProv * 100) : 0;
-  var pCred = totProv > 0 ? (totCred / totProv * 100) : 0;
 
   var k1 = document.getElementById('kpi-hist-total');
   if(k1) k1.textContent = distinctCount.toLocaleString('pt-BR');
-  var k1s = document.getElementById('kpi-hist-total-sub');
-  if(k1s) k1s.innerHTML = '<span class="kpi-dot dot-blue"></span> ' + total + ' registro(s) no escopo';
 
   var k2 = document.getElementById('kpi-hist-prov');
   if(k2) k2.textContent = bcmsBRL(totProv);
 
   var k3 = document.getElementById('kpi-hist-emp');
   if(k3) k3.textContent = bcmsBRL(totEmp);
-  var k3s = document.getElementById('kpi-hist-emp-sub');
-  if(k3s) k3s.innerHTML = '<span class="kpi-dot dot-amber"></span> ' + pEmp.toFixed(1) + '% de execução orçamentária';
 
   var k4 = document.getElementById('kpi-hist-cred');
   if(k4) k4.textContent = bcmsBRL(totCred);
-  var k4s = document.getElementById('kpi-hist-cred-sub');
-  if(k4s) k4s.innerHTML = '<span class="kpi-dot dot-green"></span> ' + pCred.toFixed(1) + '% remanescente em tela';
 
   var badge = document.getElementById('cnt-hist-ncs');
   if(badge){
     var totalGlobal = (HISTDATA && HISTDATA.items) ? HISTDATA.items.length : total;
-    badge.textContent = 'Exibindo ' + total + ' de ' + totalGlobal + ' Notas de Crédito (' + distinctCount + ' distintas)';
+    var ativo = (total !== totalGlobal);
+    badge.textContent = (ativo ? 'Filtrado: ' : 'Exibindo ') + total + ' de ' + totalGlobal + ' Notas de Crédito (' + distinctCount + ' distintas)';
+  }
+
+  /* tfoot */
+  var tfLabel = document.getElementById('tf-hist-label');
+  if(tfLabel) tfLabel.textContent = (total !== (HISTDATA && HISTDATA.items ? HISTDATA.items.length : total) ? 'FILTRADO · ' : 'TOTAL · ') + total + ' Nota(s) de Crédito no histórico';
+  var tfProv = document.getElementById('tf-hist-prov');
+  if(tfProv) tfProv.textContent = bcmsBRL(totProv);
+  var tfCred = document.getElementById('tf-hist-cred');
+  if(tfCred) tfCred.textContent = bcmsBRL(totCred);
+
+  /* chip de resumo dos filtros */
+  var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var fOm = v('flt-hist-om');
+  var fPer = v('flt-hist-periodo');
+  var fFonte = v('flt-hist-fonte');
+  var fPtres = v('flt-hist-ptres');
+  var fFaixa = v('flt-hist-faixa');
+  var q = v('flt-hist-busca');
+
+  var res = document.getElementById('flt-hist-res');
+  if(res){
+    var pk = [];
+    if(fOm) pk.push(fOm);
+    if(fFonte) pk.push('Fonte ' + fFonte);
+    if(fPtres) pk.push('Ação ' + fPtres);
+    if(fPer) pk.push(fPer);
+    if(fFaixa) pk.push({saldo_pos:'Com Saldo',parcial:'Parcial',zerada:'Zerada',canc:'Cancelada'}[fFaixa] || fFaixa);
+    if(q) pk.push('“' + q + '”');
+    res.textContent = pk.length ? (pk.join(' · ') + ' — ' + bcmsBRL(totCred)) : '';
+    res.className = 'flt-resumo' + (pk.length ? ' on' : '');
   }
 }
 
 function bcmsLimpaFiltrosHistorico(){
-  ['flt-hist-periodo','flt-hist-fonte','flt-hist-ptres','flt-hist-faixa','flt-hist-busca'].forEach(function(id){
+  ['flt-hist-om','flt-hist-periodo','flt-hist-fonte','flt-hist-ptres','flt-hist-faixa'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.value = '';
   });
+  var b = document.getElementById('flt-hist-busca');
+  if(b) b.value = '';
   bcmsFiltraHistorico();
   bcmsToast('Filtros do histórico redefinidos.');
 }
@@ -4175,26 +4193,33 @@ function bcmsRenderHistorico(page){
   if(!tbody) return;
 
   if(pageItems.length === 0){
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:48px 16px;color:var(--muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="btn-clear-flt" style="margin-top:12px;" onclick="bcmsLimpaFiltrosHistorico()">Limpar Filtros</button></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:48px 16px;color:var(--ink-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="flt-limpa" style="margin-top:12px;" onclick="bcmsLimpaFiltrosHistorico()">✕ Limpar Filtros</button></td></tr>';
   } else {
     var rowsHtml = '';
     for(var i = 0; i < pageItems.length; i++){
       var item = pageItems[i];
       var statusCls = 'status-' + item.status_slug;
-      var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 24) ? item.emit_nome.substring(0, 24) + '…' : (item.emit_nome || '—');
+      var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 22) ? item.emit_nome.substring(0, 22) + '…' : (item.emit_nome || '—');
+      var descCompleta = item.obj || '';
+      var descResumo = descCompleta.length > 118 ? (descCompleta.substring(0, 118) + '…') : descCompleta;
+      var ncFull = String(item.nc || '');
+      var mNc = ncFull.match(/NC(\d+)$/);
+      var ncLbl = mNc ? ('<span class="nc-num">NC ' + mNc[1] + '</span> <span class="nc-ug">· ' + bcmsEsc(ncFull.substring(0,6)) + '</span>') : ('<span class="nc-num">' + bcmsEsc(ncFull) + '</span>');
+      var acaoNd = (item.ptres && item.nd) ? (item.ptres + ' · ' + item.nd) : (item.ptres || item.nd || '—');
+
       rowsHtml += '<tr class="cel-row" data-hid="' + bcmsEsc(item.hid) + '" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')" '
-        + 'title="Clique para abrir o detalhamento completo da NC ' + bcmsEsc(item.nc) + '" '
+        + 'title="Clique para abrir o detalhamento completo da NC ' + bcmsEsc(ncFull) + '" '
         + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')}">'
-        + '<td class="mono2" data-sort="' + bcmsEsc(item.dt) + '">' + bcmsEsc(item.dia || '—') + '</td>'
-        + '<td><b class="nc-tag mono">' + bcmsEsc(item.nc) + '</b></td>'
-        + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
-        + '<td title="' + bcmsEsc(item.fav_nome) + '"><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> <b>' + bcmsEsc(item.om_sigla) + '</b></td>'
-        + '<td class="mono2">' + bcmsEsc(item.ptres || '—') + '</td>'
         + '<td><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></td>'
+        + '<td class="mono2" title="' + bcmsEsc(ncFull) + '">' + ncLbl + '</td>'
+        + '<td title="' + bcmsEsc(item.fav_nome) + '"><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> <b>' + bcmsEsc(item.om_sigla) + '</b></td>'
+        + '<td class="mono2">' + bcmsEsc(acaoNd) + '</td>'
+        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + bcmsEsc(descResumo) + '</td>'
+        + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
+        + '<td class="mono2">' + bcmsEsc(item.dia || '—') + '</td>'
         + '<td class="num" data-sort="' + item.prov.toFixed(2) + '">' + bcmsBRL(item.prov) + '</td>'
-        + '<td class="num col-disp" data-sort="' + item.cred.toFixed(2) + '"><b>' + bcmsBRL(item.cred) + '</b></td>'
-        + '<td><span class="pill-status ' + statusCls + '">' + bcmsEsc(item.status) + '</span></td>'
-        + '<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')">Detalhes ↗</button></td>'
+        + '<td class="num anchor" data-sort="' + item.cred.toFixed(2) + '">' + bcmsBRL(item.cred) + '</td>'
+        + '<td class="num"><span class="pill-status ' + statusCls + '">' + bcmsEsc(item.status) + '</span><i class="chev" aria-hidden="true">›</i></td>'
         + '</tr>';
     }
     tbody.innerHTML = rowsHtml;
@@ -4583,6 +4608,9 @@ function bcmsSortUHistFiltered(sfx){
     } else if(col === 'emit'){
       va = a.emit_nome || a.emit_cod || '';
       vb = b.emit_nome || b.emit_cod || '';
+    } else if(col === 'ptres'){
+      va = (a.ptres || '') + ' ' + (a.nd || '');
+      vb = (b.ptres || '') + ' ' + (b.nd || '');
     } else if(col === 'status'){
       va = a.status || '';
       vb = b.status || '';
@@ -4633,31 +4661,52 @@ function bcmsAtualizaUHistKPIs(sfx){
     totCred += it.cred;
   }
   var distinctCount = Object.keys(distinctSet).length;
-  var pEmp = totProv > 0 ? (totEmp / totProv * 100) : 0;
-  var pCred = totProv > 0 ? (totCred / totProv * 100) : 0;
 
   var k1 = document.getElementById('kpi-uhist-total-' + sfx);
   if(k1) k1.textContent = distinctCount.toLocaleString('pt-BR');
-  var k1s = document.getElementById('kpi-uhist-total-sub-' + sfx);
-  if(k1s) k1s.innerHTML = '<span class="kpi-dot dot-blue"></span> ' + total + ' registro(s) no escopo';
 
   var k2 = document.getElementById('kpi-uhist-prov-' + sfx);
   if(k2) k2.textContent = bcmsBRL(totProv);
 
   var k3 = document.getElementById('kpi-uhist-emp-' + sfx);
   if(k3) k3.textContent = bcmsBRL(totEmp);
-  var k3s = document.getElementById('kpi-uhist-emp-sub-' + sfx);
-  if(k3s) k3s.innerHTML = '<span class="kpi-dot dot-amber"></span> ' + pEmp.toFixed(1) + '% de execução orçamentária';
 
   var k4 = document.getElementById('kpi-uhist-cred-' + sfx);
   if(k4) k4.textContent = bcmsBRL(totCred);
-  var k4s = document.getElementById('kpi-uhist-cred-sub-' + sfx);
-  if(k4s) k4s.innerHTML = '<span class="kpi-dot dot-green"></span> ' + pCred.toFixed(1) + '% remanescente em tela';
 
   var badge = document.getElementById('cnt-uhist-ncs-' + sfx);
   if(badge){
     var totalUnit = st.items.length;
-    badge.textContent = 'Exibindo ' + total + ' de ' + totalUnit + ' Notas de Crédito (' + distinctCount + ' distintas)';
+    var ativo = (total !== totalUnit);
+    badge.textContent = (ativo ? 'Filtrado: ' : 'Exibindo ') + total + ' de ' + totalUnit + ' NC(s) no histórico (' + distinctCount + ' distintas)';
+  }
+
+  /* tfoot */
+  var tfLabel = document.getElementById('tf-uhist-label-' + sfx);
+  if(tfLabel) tfLabel.textContent = (total !== st.items.length ? 'FILTRADO · ' : 'TOTAL · ') + total + ' Nota(s) de Crédito no histórico';
+  var tfProv = document.getElementById('tf-uhist-prov-' + sfx);
+  if(tfProv) tfProv.textContent = bcmsBRL(totProv);
+  var tfCred = document.getElementById('tf-uhist-cred-' + sfx);
+  if(tfCred) tfCred.textContent = bcmsBRL(totCred);
+
+  /* chip de resumo dos filtros */
+  var v = function(id){ var e = document.getElementById(id + '-' + sfx); return e ? e.value.trim() : ''; };
+  var fPer = v('flt-uhist-periodo');
+  var fFonte = v('flt-uhist-fonte');
+  var fPtres = v('flt-uhist-ptres');
+  var fFaixa = v('flt-uhist-faixa');
+  var q = v('flt-uhist-busca');
+
+  var res = document.getElementById('flt-uhist-res-' + sfx);
+  if(res){
+    var pk = [];
+    if(fFonte) pk.push('Fonte ' + fFonte);
+    if(fPtres) pk.push('Ação ' + fPtres);
+    if(fPer) pk.push(fPer);
+    if(fFaixa) pk.push({saldo_pos:'Com Saldo',parcial:'Parcial',zerada:'Zerada',canc:'Cancelada'}[fFaixa] || fFaixa);
+    if(q) pk.push('“' + q + '”');
+    res.textContent = pk.length ? (pk.join(' · ') + ' — ' + bcmsBRL(totCred)) : '';
+    res.className = 'flt-resumo' + (pk.length ? ' on' : '');
   }
 }
 
@@ -4688,25 +4737,32 @@ function bcmsRenderUHist(sfx, page){
   if(!tbody) return;
 
   if(pageItems.length === 0){
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:48px 16px;color:var(--muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="btn-clear-flt" style="margin-top:12px;" onclick="bcmsLimpaFiltrosUHist(\'' + sfx + '\')">Limpar Filtros</button></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:48px 16px;color:var(--ink-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="flt-limpa" style="margin-top:12px;" onclick="bcmsLimpaFiltrosUHist(\'' + sfx + '\')">✕ Limpar Filtros</button></td></tr>';
   } else {
     var rowsHtml = '';
     for(var i = 0; i < pageItems.length; i++){
       var item = pageItems[i];
       var statusCls = 'status-' + item.status_slug;
-      var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 24) ? item.emit_nome.substring(0, 24) + '…' : (item.emit_nome || '—');
+      var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 22) ? item.emit_nome.substring(0, 22) + '…' : (item.emit_nome || '—');
+      var descCompleta = item.obj || '';
+      var descResumo = descCompleta.length > 118 ? (descCompleta.substring(0, 118) + '…') : descCompleta;
+      var ncFull = String(item.nc || '');
+      var mNc = ncFull.match(/NC(\d+)$/);
+      var ncLbl = mNc ? ('<span class="nc-num">NC ' + mNc[1] + '</span> <span class="nc-ug">· ' + bcmsEsc(ncFull.substring(0,6)) + '</span>') : ('<span class="nc-num">' + bcmsEsc(ncFull) + '</span>');
+      var acaoNd = (item.ptres && item.nd) ? (item.ptres + ' · ' + item.nd) : (item.ptres || item.nd || '—');
+
       rowsHtml += '<tr class="cel-row" data-hid="' + bcmsEsc(item.hid) + '" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')" '
-        + 'title="Clique para abrir o detalhamento completo da NC ' + bcmsEsc(item.nc) + '" '
+        + 'title="Clique para abrir o detalhamento completo da NC ' + bcmsEsc(ncFull) + '" '
         + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')}">'
-        + '<td class="mono2" data-sort="' + bcmsEsc(item.dt) + '">' + bcmsEsc(item.dia || '—') + '</td>'
-        + '<td><b class="nc-tag mono">' + bcmsEsc(item.nc) + '</b></td>'
-        + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
-        + '<td class="mono2">' + bcmsEsc(item.ptres || '—') + '</td>'
         + '<td><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></td>'
+        + '<td class="mono2" title="' + bcmsEsc(ncFull) + '">' + ncLbl + '</td>'
+        + '<td class="mono2">' + bcmsEsc(acaoNd) + '</td>'
+        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + bcmsEsc(descResumo) + '</td>'
+        + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
+        + '<td class="mono2">' + bcmsEsc(item.dia || '—') + '</td>'
         + '<td class="num" data-sort="' + item.prov.toFixed(2) + '">' + bcmsBRL(item.prov) + '</td>'
-        + '<td class="num col-disp" data-sort="' + item.cred.toFixed(2) + '"><b>' + bcmsBRL(item.cred) + '</b></td>'
-        + '<td><span class="pill-status ' + statusCls + '">' + bcmsEsc(item.status) + '</span></td>'
-        + '<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(item.hid) + '\')">Detalhes ↗</button></td>'
+        + '<td class="num anchor" data-sort="' + item.cred.toFixed(2) + '">' + bcmsBRL(item.cred) + '</td>'
+        + '<td class="num"><span class="pill-status ' + statusCls + '">' + bcmsEsc(item.status) + '</span><i class="chev" aria-hidden="true">›</i></td>'
         + '</tr>';
     }
     tbody.innerHTML = rowsHtml;
@@ -4717,7 +4773,7 @@ function bcmsRenderUHist(sfx, page){
     if(total === 0){
       pagInfo.textContent = 'Página 0 de 0 (0 registros)';
     } else {
-      pagInfo.textContent = 'Página ' + st.page + ' de ' + totalPages + ' (Exibindo ' + (start + 1) + '–' + end + ' de ' + total + ')';
+      pagInfo.textContent = 'Página ' + st.page + ' de ' + totalPages + ' (Exibindo ' + (start + 1) + '–' + end + ' de ' + total + ' NCs)';
     }
   }
 
