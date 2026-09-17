@@ -3071,14 +3071,14 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 9999;
+  background: rgba(3, 7, 18, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
-  background: rgba(2, 6, 23, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 20px;
   overflow-y: auto;
 }
 .modal.open { display: flex; }
@@ -3086,37 +3086,27 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border-strong);
-  border-radius: 18px;
-  box-shadow: var(--shadow-lg);
-  max-width: 780px;
+  border-radius: 20px;
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  max-width: 860px;
   width: 100%;
-  padding: 28px 30px;
-  animation: modalIn .25s var(--ease-spring);
-  /* [FIX janela fora da tela] o painel NUNCA excede a viewport: limita a altura e
-     rola o conteúdo por dentro (o ✕ fica sempre visível). Antes crescia sem limite
-     e, com align-items:center, o topo era cortado e ficava inalcançável. */
-  max-height: calc(100vh - 48px);
-  max-height: calc(100dvh - 48px);
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   margin: auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  animation: modalPopIn .24s cubic-bezier(0.16, 1, 0.3, 1);
 }
-#modal-body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  min-height: 0;
-  margin-right: -10px;
-  padding-right: 10px;
-}
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.96) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-x {
   position: absolute;
   top: 16px;
-  right: 16px;
+  right: 18px;
   width: 36px;
   height: 36px;
   border: 1px solid var(--border);
@@ -3124,13 +3114,25 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   border-radius: 10px;
   color: var(--ink-muted);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
   display: grid;
   place-items: center;
-  transition: transform .2s var(--ease-out-expo), color .2s var(--ease-out-expo), background-color .2s var(--ease-out-expo), border-color .2s var(--ease-out-expo);
+  transition: all .2s ease;
+  z-index: 20;
 }
-.modal-x:hover { color: var(--ink); border-color: var(--border-strong); transform: scale(1.05); }
+.modal-x:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: var(--danger-border);
+  transform: scale(1.08);
+}
+#modal-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding: 0;
+}
 #modal-body h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; padding-right: 44px; }
 .m-sub { font-size: 0.8125rem; color: var(--ink-muted); margin-bottom: 16px; }
 .m-ficha {
@@ -3448,107 +3450,374 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   cursor: not-allowed;
 }
 
-/* Modal Detalhe da NC */
-.m-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
+/* ==========================================================================
+   EXECUTIVE MILITARY MODAL DESIGN (High-Fidelity FinTech & Defense Analytics)
+   ========================================================================== */
+.m-accent-bar {
+  height: 5px;
+  width: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #059669 35%, #2563EB 75%, #8B5CF6 100%);
+}
+.m-content-wrap {
+  padding: 24px 28px 28px 28px;
+}
+.m-header-v2 {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--border);
 }
-.m-tag {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: var(--primary-600);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-  display: block;
-}
-.m-secao { margin-bottom: 18px; }
-.m-secao-h {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--ink-muted);
-  margin-bottom: 10px;
+.m-header-meta-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
-.m-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-.m-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-.m-card-id, .m-card-class {
+.m-badge-op {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.m-badge-status-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.m-badge-status-lg.status-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+.m-badge-status-lg.status-warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.m-badge-status-lg.status-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93C5FD;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+.m-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.m-nc-code-block h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+  word-break: break-all;
+}
+.m-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.m-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.m-fin-section {
+  margin-bottom: 22px;
+}
+.m-fin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.m-fin-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.m-fin-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+.m-fin-card.hero-saldo {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.05) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+}
+.m-fin-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.m-fin-val {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.m-fin-val.col-prov { color: var(--primary-600); }
+.m-fin-val.col-emp  { color: var(--warning-ink); }
+.m-fin-val-hero {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #34D399;
+  font-variant-numeric: tabular-nums;
+}
+.m-fin-sub {
+  font-size: 0.725rem;
+  color: var(--ink-muted);
+}
+.m-fin-tag-hero {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: #34D399;
+}
+.m-pipeline-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.m-pipeline-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+}
+.m-stages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.m-stage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.m-stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+.m-stage-header b {
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.m-progress-track {
+  height: 7px;
+  background: var(--track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.m-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+.m-progress-bar.bar-emp { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.m-progress-bar.bar-liq { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+.m-progress-bar.bar-pag { background: linear-gradient(90deg, #10B981, #34D399); }
+.m-stage-sub {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.m-route-grid {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 680px) {
+  .m-route-grid { grid-template-columns: 1fr; }
+  .m-route-arrow { transform: rotate(90deg); margin: 6px auto; }
+}
+.m-route-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.m-route-badge {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin-bottom: 2px;
+}
+.m-route-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.m-route-desc {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+.m-route-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-600);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.m-class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.m-class-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.m-card-id span.m-lbl, .m-card-class span.m-lbl {
+.m-class-label {
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .05em;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
 }
-.m-card-id b, .m-card-class b { font-size: 0.875rem; font-weight: 600; color: var(--ink); }
-.m-card-class small { font-size: 0.75rem; color: var(--ink-muted); }
-.m-kpis-fin {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+.m-class-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
 }
-.m-kpi-fin {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.m-class-desc {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  line-height: 1.35;
 }
-.m-kpi-fin.hero-saldo {
-  background: var(--success-bg);
-  border-color: var(--success-border);
-}
-.m-kpi-fin b.col-disp { color: var(--success-strong); font-size: 1.25rem; font-weight: 800; font-family: var(--serif); }
-.m-kpi-fin b.col-prov { color: var(--primary-600); font-size: 1.125rem; font-weight: 700; }
-.m-kpi-fin b.col-emp  { color: var(--warning-ink); font-size: 1.125rem; font-weight: 700; }
-.m-estagios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.m-estagio { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
-.m-estagio-t { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 6px; }
-.m-estagio-t b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.fill-liq { background: var(--stg2); }
-.fill-pag { background: var(--success); }
-.m-nc-justificativa {
+.m-justif-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--primary-600);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-size: 0.875rem;
+  border-left: 4px solid var(--success-main);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+.m-justif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.m-justif-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.m-justif-body {
+  font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--ink);
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
+  font-family: 'Inter', sans-serif;
 }
-.m-footer-actions {
+.m-footer-actions-v2 {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  padding-top: 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
   border-top: 1px solid var(--border);
-  justify-content: flex-end;
+  flex-wrap: wrap;
 }
+.m-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--ink);
+}
+.m-btn-pill:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-600);
+  transform: translateY(-1px);
+}
+.m-btn-pill.primary {
+  background: var(--primary-600);
+  color: #FFFFFF;
+  border-color: var(--primary-600);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+.m-btn-pill.primary:hover {
+  background: var(--primary-strong);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
 .btn-copy-nc, .btn-goto-hist {
   padding: 8px 16px;
   border-radius: 8px;
@@ -3759,11 +4028,56 @@ function bcmsNC(row){
     }
   }
   var neg=d.val<0;
-  var h='<h3 id="modal-title">NC '+bcmsEsc(d.nc)+'</h3>';
-  h+='<p class="m-sub">'+bcmsEsc((d.u?d.u+' · ':'')+'Ação '+d.acao+' · PI '+d.pi+' · ND '+d.nd+(d.ndn?' — '+d.ndn:''))+'</p>';
-  h+='<div class="m-kpis"><span>Data<b>'+bcmsEsc(d.dia||'—')+'</b></span><span>Operação<b class="op">'+bcmsEsc(d.op||'—')+'</b></span><span class="'+(neg?'':'ok')+'">Valor<b class="'+(neg?'neg':'')+'">'+bcmsBRL(d.val)+'</b></span></div>';
-  h+='<div class="m-ncs-h">Descrição completa do lançamento</div>';
-  h+='<div class="m-nc"><div class="m-nc-desc">'+bcmsEsc(d.obj||'(sem descrição)')+'</div></div>';
+  var h='<div class="m-accent-bar" style="background:linear-gradient(90deg, #3B82F6 0%, #2563EB 50%, #10B981 100%);"></div>';
+  h+='<div class="m-content-wrap">';
+  h+='<div class="m-header-v2">';
+  h+='  <div class="m-header-meta-row">';
+  h+='    <span class="m-badge-op">📋 NOTA DE CRÉDITO AVULSA</span>';
+  h+='    <span class="m-badge-status-lg '+(neg?'status-warn':'status-ok')+'">'+(neg?'DEDUÇÃO / ESTORNO':'CRÉDITO DISPONIBILIZADO')+'</span>';
+  h+='  </div>';
+  h+='  <div class="m-title-row" style="padding-right:48px;">';
+  h+='    <div class="m-nc-code-block">';
+  h+='      <h3 id="modal-title">NC '+bcmsEsc(d.nc)+'</h3>';
+  h+='      <div class="m-sub-meta">';
+  h+='        <span class="m-meta-chip">UASG <b>'+bcmsEsc(d.u||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">Ação <b>'+bcmsEsc(d.acao||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">PI <b>'+bcmsEsc(d.pi||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">ND <b>'+bcmsEsc(d.nd||'—')+'</b></span>';
+  h+='      </div>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+  h+='<div class="m-fin-section">';
+  h+='  <div class="m-fin-grid">';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Data de Emissão</span>';
+  h+='      <span class="m-fin-val">'+bcmsEsc(d.dia||'—')+'</span>';
+  h+='      <span class="m-fin-sub">Registro SIAFI</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Tipo de Operação</span>';
+  h+='      <span class="m-fin-val col-prov">'+bcmsEsc(d.op||'—')+'</span>';
+  h+='      <span class="m-fin-sub">Classificação Contábil</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card hero-saldo">';
+  h+='      <span class="m-fin-label">Valor do Lançamento</span>';
+  h+='      <span class="m-fin-val-hero '+(neg?'col-emp':'')+'">'+bcmsBRL(d.val)+'</span>';
+  h+='      <span class="m-fin-tag-hero">'+(neg?'⚠️ Débito / Redução':'✓ Crédito Integrado')+'</span>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+  h+='<div class="m-justif-card" style="margin-bottom:20px;">';
+  h+='  <div class="m-justif-header">';
+  h+='    <span class="m-justif-title">📝 Descrição Completa do Lançamento</span>';
+  h+='    <button type="button" class="m-btn-pill" data-copy="'+bcmsEsc(d.obj||'')+'" onclick="bcmsCopiarTexto(this)">📋 Copiar</button>';
+  h+='  </div>';
+  h+='  <div class="m-justif-body">'+bcmsEsc(d.obj||'(sem descrição)')+'</div>';
+  h+='</div>';
+  h+='<div class="m-footer-actions-v2">';
+  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · Dados Oficiais</span>';
+  h+='  <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
+  h+='</div>';
+  h+='</div>';
   document.getElementById('modal-body').innerHTML=h;
   var m=document.getElementById('modal');
   m.classList.add('open');
@@ -3996,32 +4310,59 @@ function bcmsTelaAba(aba){
   var c=CELDATA[t.cid]||{};
   var fonte=t.u==='OGU'?'OGU (Orçamento Geral da União)':(t.u==='FEx'?'FEx (Fundo do Exército)':(t.u||'—'));
   var ncCurta=(String(t.nc).match(/NC(\d+)$/)||[])[1];
-  var h='<h3 id="modal-title">'+(ncCurta?'NC '+bcmsEsc(ncCurta):bcmsEsc(t.nc))+'</h3>';
-  h+='<p class="m-sub">'+bcmsEsc(t.uasg+' · '+fonte+' · Ação '+t.acao+' · PI '+t.pi+' · ND '+t.nd+(t.ndnome?' — '+t.ndnome:''))+'</p>';
-  /* etapas */
+  var h='<div class="m-accent-bar" style="background:linear-gradient(90deg, #10B981 0%, #059669 35%, #2563EB 75%, #8B5CF6 100%);"></div>';
+  h+='<div class="m-content-wrap">';
+  h+='<div class="m-header-v2">';
+  h+='  <div class="m-header-meta-row">';
+  h+='    <span class="m-badge-op">🟢 SALDO EM TELA · CRÉDITO DISPONÍVEL</span>';
+  h+='    <span class="m-badge-status-lg status-ok">VALOR DISPONÍVEL: '+bcmsBRL(t.v)+'</span>';
+  h+='  </div>';
+  h+='  <div class="m-title-row" style="padding-right:48px;">';
+  h+='    <div class="m-nc-code-block">';
+  h+='      <h3 id="modal-title">'+(ncCurta?'NC '+bcmsEsc(ncCurta):bcmsEsc(t.nc))+'</h3>';
+  h+='      <div class="m-sub-meta">';
+  h+='        <span class="m-meta-chip">🏛️ UASG <b>'+bcmsEsc(t.uasg||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">Fonte <b>'+bcmsEsc(fonte)+'</b></span>';
+  h+='        <span class="m-meta-chip">Ação <b>'+bcmsEsc(t.acao||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">PI <b>'+bcmsEsc(t.pi||'—')+'</b></span>';
+  h+='        <span class="m-meta-chip">ND <b>'+bcmsEsc(t.nd+(t.ndnome?' — '+t.ndnome:''))+'</b></span>';
+  h+='      </div>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  /* etapas tablist */
   var abas=[['tela','🟢 Em tela'],['hist','📜 Histórico do PI'],['liq','🧾 Liquidação'],['pag','💰 Pagamento']];
-  h+='<div class="m-etapas" role="tablist">';
+  h+='<div class="m-etapas" role="tablist" style="margin-bottom:18px;">';
   abas.forEach(function(a){
     h+='<button class="m-etapa'+(a[0]===aba?' on':'')+'" role="tab" aria-selected="'+(a[0]===aba)+'" onclick="bcmsTelaAba(\''+a[0]+'\')">'+a[1]+'</button>';
   });
   h+='</div><div class="m-etapa-body">';
   if(aba==='tela'){
     var idade=(t.dias===null||t.dias===undefined)?'—':(t.dias+' dia'+(t.dias===1?'':'s'));
-    h+='<div class="m-tela-card"><span class="m-tela-lbl">Disponível em tela nesta NC</span>'
+    h+='<div class="m-tela-card" style="margin-bottom:16px;"><span class="m-tela-lbl">Disponível em tela nesta NC</span>'
       +'<b class="m-tela-val">'+bcmsBRL(t.v)+'</b>'
       +'<span class="m-tela-meta">Recebido em '+bcmsEsc(t.dia||'—')+' · há '+idade+(t.emit?' · Emitente '+bcmsEsc(t.emit):'')+'</span></div>';
     if(t.org){
-      h+='<div class="m-org"><div class="m-org-h">↪ Crédito recebido por <b>mudança de ND</b>'
+      h+='<div class="m-org" style="margin-bottom:16px;"><div class="m-org-h">↪ Crédito recebido por <b>mudança de ND</b>'
         +(t.nd_de?' (de '+bcmsEsc(t.nd_de)+' para '+bcmsEsc(t.nd)+')':'')+'</div>'
         +'<div class="m-org-b"><span>Objeto original — NC '+bcmsEsc(t.org.nc)
         +(t.org.dia?' de '+bcmsEsc(t.org.dia):'')+(t.org.emit?' · emitente '+bcmsEsc(t.org.emit):'')+'</span>'
         +'<p>'+bcmsEsc(t.org.obj||'—')+'</p></div></div>';
     }
-    h+='<div class="m-ncs-h">Descrição desta NC</div><div class="m-nc-desc big">'+bcmsEsc(t.obj||'—')+'</div>';
-    if(t.op) h+='<p class="m-formula">Operação: '+bcmsEsc(t.op)+'</p>';
+    h+='<div class="m-justif-card" style="margin-bottom:16px;">'
+      +'  <div class="m-justif-header"><span class="m-justif-title">📝 Descrição desta NC</span>'
+      +'  <button type="button" class="m-btn-pill" data-copy="'+bcmsEsc(t.obj||'')+'" onclick="bcmsCopiarTexto(this)">📋 Copiar</button></div>'
+      +'  <div class="m-justif-body">'+bcmsEsc(t.obj||'—')+'</div>'
+      +'</div>';
+    if(t.op) h+='<p class="m-formula" style="margin-bottom:12px;">Operação contábil: '+bcmsEsc(t.op)+'</p>';
   } else if(aba==='hist'){
-    h+='<p class="m-formula">Todas as movimentações da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — recebimentos, detalhamentos, mudanças de ND e anulações.</p>';
-    h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(c.r||0)+'</b></span><span>Empenhado<b>'+bcmsBRL(c.e||0)+'</b></span><span class="ok">Disponível<b>'+bcmsBRL(c.d||0)+'</b></span></div>';
+    h+='<p class="m-formula" style="margin-bottom:14px;">Todas as movimentações da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — recebimentos, detalhamentos, mudanças de ND e anulações.</p>';
+    h+='<div class="m-fin-section" style="margin-bottom:16px;"><div class="m-fin-grid">'
+      +'<div class="m-fin-card"><span class="m-fin-label">Recebido (Líq)</span><span class="m-fin-val col-prov">'+bcmsBRL(c.r||0)+'</span></div>'
+      +'<div class="m-fin-card"><span class="m-fin-label">Empenhado</span><span class="m-fin-val col-emp">'+bcmsBRL(c.e||0)+'</span></div>'
+      +'<div class="m-fin-card hero-saldo"><span class="m-fin-label">Disponível em Tela</span><span class="m-fin-val-hero">'+bcmsBRL(c.d||0)+'</span></div>'
+      +'</div></div>';
     var itens='';
     (c.ncs||[]).forEach(function(n){
       if(!n[0])return;var neg=n[2]<0;var meta=[];
@@ -4029,24 +4370,39 @@ function bcmsTelaAba(aba){
       if(n[1])meta.push(bcmsEsc(n[1]));
       if(n[5])meta.push('em '+bcmsEsc(n[5]));
       var ehEsta=(n[0]===t.nc);
-      itens+='<div class="m-nc'+(ehEsta?' m-nc-esta':'')+'"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+(ehEsta?' <i class="m-nc-tag">esta NC</i>':'')+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
+      itens+='<div class="m-nc'+(ehEsta?' m-nc-esta':'')+'" style="margin-bottom:8px;"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+(ehEsta?' <i class="m-nc-tag">esta NC</i>':'')+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
       if(meta.length)itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
       if(n[3])itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
       itens+='</div>';
     });
-    h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem movimentações.</p>')+'</div>';
+    h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem movimentações cadastradas.</p>')+'</div>';
   } else if(aba==='liq'){
     var emp=c.e||0,liq=c.l||0;
-    h+='<div class="m-kpis"><span>Empenhado<b>'+bcmsBRL(emp)+'</b></span><span class="ok">Liquidado<b>'+bcmsBRL(liq)+'</b></span><span>A liquidar<b>'+bcmsBRL(Math.max(0,emp-liq))+'</b></span></div>';
+    var pctL=emp>0?Math.min(100,liq/emp*100):0;
+    h+='<div class="m-fin-section" style="margin-bottom:16px;"><div class="m-fin-grid">'
+      +'<div class="m-fin-card"><span class="m-fin-label">Empenhado</span><span class="m-fin-val col-emp">'+bcmsBRL(emp)+'</span></div>'
+      +'<div class="m-fin-card"><span class="m-fin-label">Liquidado</span><span class="m-fin-val col-prov">'+bcmsBRL(liq)+'</span></div>'
+      +'<div class="m-fin-card"><span class="m-fin-label">A Liquidar</span><span class="m-fin-val">'+bcmsBRL(Math.max(0,emp-liq))+'</span></div>'
+      +'</div></div>';
     h+=bcmsBarra(liq,emp,'Liquidado sobre o empenhado');
-    h+='<p class="m-formula">Liquidação é a etapa em que a despesa é atestada (bem/serviço entregue). Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega liquidação por NC individual.</p>';
+    h+='<p class="m-formula" style="margin-top:12px;">Liquidação é a etapa em que a despesa é atestada (bem/serviço entregue). Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega liquidação por NC individual.</p>';
   } else {
     var liq2=c.l||0,pag=c.p||0;
-    h+='<div class="m-kpis"><span>Liquidado<b>'+bcmsBRL(liq2)+'</b></span><span class="ok">Pago<b>'+bcmsBRL(pag)+'</b></span><span>A pagar<b>'+bcmsBRL(Math.max(0,liq2-pag))+'</b></span></div>';
+    var pctP=liq2>0?Math.min(100,pag/liq2*100):0;
+    h+='<div class="m-fin-section" style="margin-bottom:16px;"><div class="m-fin-grid">'
+      +'<div class="m-fin-card"><span class="m-fin-label">Liquidado</span><span class="m-fin-val col-prov">'+bcmsBRL(liq2)+'</span></div>'
+      +'<div class="m-fin-card"><span class="m-fin-label">Pago</span><span class="m-fin-val" style="color:#10B981;">'+bcmsBRL(pag)+'</span></div>'
+      +'<div class="m-fin-card"><span class="m-fin-label">A Pagar</span><span class="m-fin-val">'+bcmsBRL(Math.max(0,liq2-pag))+'</span></div>'
+      +'</div></div>';
     h+=bcmsBarra(pag,liq2,'Pago sobre o liquidado');
-    h+='<p class="m-formula">Pagamento é a quitação efetiva da despesa liquidada. Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega pagamento por NC individual.</p>';
+    h+='<p class="m-formula" style="margin-top:12px;">Pagamento é a quitação efetiva da despesa liquidada. Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega pagamento por NC individual.</p>';
   }
+  h+='</div>'; // close m-etapa-body
+  h+='<div class="m-footer-actions-v2" style="margin-top:20px;">';
+  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · Detalhamento em Tela</span>';
+  h+='  <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
   h+='</div>';
+  h+='</div>'; // close m-content-wrap
   document.getElementById('modal-body').innerHTML=h;
 }
 function bcmsBarra(v,total,rot){
@@ -4057,17 +4413,91 @@ function bcmsBarra(v,total,rot){
 
 function bcmsCel(row){
   var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
-  var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
   var fonte=(d.u==='OGU'||d.u==='160')?'160 · OGU (Orçamento Geral da União)':((d.u==='FEx'||d.u==='167')?'167 · FEx (Fundo do Exército)':(d.u||'—'));
-  h+='<div class="m-ficha">'
-    +'<span>UASG (Executora)<b>'+bcmsEsc(d.uasg||'—')+'</b></span>'
-    +'<span>Fonte<b>'+bcmsEsc(fonte)+'</b></span>'
-    +'<span>Ação Governo<b>'+bcmsEsc(d.acao||'—')+'</b></span>'
-    +'<span class="wide">PI (Plano Interno)<b>'+bcmsEsc(d.pi||'—')+(d.pinome?' — '+bcmsEsc(d.pinome):'')+'</b></span>'
-    +'<span class="wide">ND (Natureza de Despesa)<b>'+bcmsEsc(d.nd||'—')+(d.ndnome?' — '+bcmsEsc(d.ndnome):'')+'</b></span>'
-    +'</div>';
-  h+='<div class="m-kpis"><span>Recebido (líq)<b>'+bcmsBRL(d.r)+'</b></span><span>Empenhado<b>'+bcmsBRL(d.e)+'</b></span><span>Liquidado<b>'+bcmsBRL(d.l||0)+'</b></span><span>Pago<b>'+bcmsBRL(d.p||0)+'</b></span><span class="ok">Crédito Disponível<b>'+bcmsBRL(d.d)+'</b></span></div>';
-  h+='<p class="m-formula">Recebido (líq) − Empenhado = Crédito Disponível · Empenhado ≥ Liquidado ≥ Pago</p>';
+  var pctEmp = d.r > 0 ? (d.e / d.r * 100) : 0;
+  var pctLiq = d.e > 0 ? ((d.l||0) / d.e * 100) : 0;
+  var pctPag = (d.l||0) > 0 ? ((d.p||0) / (d.l||0) * 100) : 0;
+  var statusBadge = d.d > 0.01 ?
+    '<span class="m-badge-status-lg status-ok">● SALDO DISPONÍVEL: ' + bcmsBRL(d.d) + '</span>' :
+    '<span class="m-badge-status-lg status-warn">● 100% EMPENHADO / ZERADO</span>';
+
+  var h='<div class="m-accent-bar" style="background:linear-gradient(90deg, #10B981 0%, #059669 35%, #2563EB 75%, #8B5CF6 100%);"></div>';
+  h+='<div class="m-content-wrap">';
+  h+='<div class="m-header-v2">';
+  h+='  <div class="m-header-meta-row">';
+  h+='    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+  h+='      <span class="m-badge-op">🏛️ CÉLULA ORÇAMENTÁRIA · UASG ' + bcmsEsc(d.uasg||'160304') + '</span>';
+  h+='      <span class="m-badge-op" style="background:rgba(59,130,246,0.12);color:#60A5FA;border-color:rgba(59,130,246,0.3);">' + bcmsEsc(fonte) + '</span>';
+  h+='    </div>';
+  h+='    ' + statusBadge;
+  h+='  </div>';
+  h+='  <div class="m-title-row" style="padding-right:48px;">';
+  h+='    <div class="m-nc-code-block">';
+  h+='      <h3 id="modal-title">' + bcmsEsc(d.t) + '</h3>';
+  h+='      <div class="m-sub-meta">';
+  h+='        <span class="m-meta-chip">🏷️ Ação <b>' + bcmsEsc(d.acao||'—') + '</b></span>';
+  h+='        <span class="m-meta-chip">📁 PI <b>' + bcmsEsc(d.pi||'—') + '</b></span>';
+  h+='        <span class="m-meta-chip">📊 ND <b>' + bcmsEsc(d.nd||'—') + '</b></span>';
+  h+='      </div>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="m-fin-section">';
+  h+='  <div class="m-fin-grid">';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Valor Recebido (Líq)</span>';
+  h+='      <span class="m-fin-val col-prov">' + bcmsBRL(d.r) + '</span>';
+  h+='      <span class="m-fin-sub">Dotação autorizada</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Empenhado</span>';
+  h+='      <span class="m-fin-val col-emp">' + bcmsBRL(d.e) + '</span>';
+  h+='      <span class="m-fin-sub">' + pctEmp.toFixed(1) + '% consumido</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Liquidado / Pago</span>';
+  h+='      <span class="m-fin-val">' + bcmsBRL(d.l||0) + '</span>';
+  h+='      <span class="m-fin-sub">Pago: ' + bcmsBRL(d.p||0) + '</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card hero-saldo">';
+  h+='      <span class="m-fin-label">Crédito Disponível Líquido</span>';
+  h+='      <span class="m-fin-val-hero">' + bcmsBRL(d.d) + '</span>';
+  h+='      <span class="m-fin-tag-hero">⚡ ' + (d.r>0 ? (d.d/d.r*100).toFixed(1) : '0.0') + '% livre para empenho</span>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="m-pipeline-card" style="margin-bottom:20px;">';
+  h+='  <div class="m-pipeline-header">Pipeline de Execução Orçamentária (Lei nº 4.320/1964)</div>';
+  h+='  <div class="m-stages-grid">';
+  h+='    <div class="m-stage-item">';
+  h+='      <div class="m-stage-header"><span>1. Empenho</span><b>' + pctEmp.toFixed(1) + '%</b></div>';
+  h+='      <div class="m-progress-track"><div class="m-progress-bar bar-emp" style="width:' + Math.min(100, pctEmp) + '%"></div></div>';
+  h+='      <div class="m-stage-sub">' + bcmsBRL(d.e) + ' de ' + bcmsBRL(d.r) + '</div>';
+  h+='    </div>';
+  h+='    <div class="m-stage-item">';
+  h+='      <div class="m-stage-header"><span>2. Liquidação</span><b>' + pctLiq.toFixed(1) + '%</b></div>';
+  h+='      <div class="m-progress-track"><div class="m-progress-bar bar-liq" style="width:' + Math.min(100, pctLiq) + '%"></div></div>';
+  h+='      <div class="m-stage-sub">' + bcmsBRL(d.l||0) + ' de ' + bcmsBRL(d.e) + '</div>';
+  h+='    </div>';
+  h+='    <div class="m-stage-item">';
+  h+='      <div class="m-stage-header"><span>3. Pagamento</span><b>' + pctPag.toFixed(1) + '%</b></div>';
+  h+='      <div class="m-progress-track"><div class="m-progress-bar bar-pag" style="width:' + Math.min(100, pctPag) + '%"></div></div>';
+  h+='      <div class="m-stage-sub">' + bcmsBRL(d.p||0) + ' de ' + bcmsBRL(d.l||0) + '</div>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="m-class-grid" style="margin-bottom:20px;">';
+  h+='  <div class="m-class-card"><span class="m-class-label">Plano Interno (PI)</span><span class="m-class-code">' + bcmsEsc(d.pi||'—') + '</span><span class="m-class-desc">' + bcmsEsc(d.pinome||'Sem denominação cadastrada') + '</span></div>';
+  h+='  <div class="m-class-card"><span class="m-class-label">Natureza da Despesa (ND)</span><span class="m-class-code">' + bcmsEsc(d.nd||'—') + '</span><span class="m-class-desc">' + bcmsEsc(d.ndnome||'Sem denominação cadastrada') + '</span></div>';
+  h+='  <div class="m-class-card"><span class="m-class-label">Ação Orçamentária</span><span class="m-class-code">' + bcmsEsc(d.acao||'—') + '</span><span class="m-class-desc">Ação Governamental LOA 2026</span></div>';
+  h+='  <div class="m-class-card"><span class="m-class-label">Fonte de Recursos</span><span class="m-class-code">' + bcmsEsc(d.u||'—') + '</span><span class="m-class-desc">' + bcmsEsc(fonte) + '</span></div>';
+  h+='</div>';
+
+  var nq=d.ncs.filter(function(n){return n[0];}).length;
+  h+='<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de Crédito da Célula ('+nq+')</div>';
   var itens='';
   d.ncs.forEach(function(n){
     if(!n[0])return;
@@ -4076,14 +4506,30 @@ function bcmsCel(row){
     if(n[4]) meta.push('Emitente '+bcmsEsc(n[4]));
     if(n[1]) meta.push(bcmsEsc(n[1]));
     if(n[5]) meta.push('em '+bcmsEsc(n[5]));
-    itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
+    
+    var linkNC = '';
+    if(typeof HISTDATA !== 'undefined' && HISTDATA && HISTDATA.items){
+      for(var k=0; k<HISTDATA.items.length; k++){
+        if(HISTDATA.items[k].nc === n[0]){
+          linkNC = ' <button type="button" class="m-btn-pill" style="padding:2px 8px;font-size:0.7rem;margin-left:6px;" onclick="bcmsDetalheNC(\'' + HISTDATA.items[k].hid + '\')">🔍 Detalhar</button>';
+          break;
+        }
+      }
+    }
+
+    itens+='<div class="m-nc" style="margin-bottom:8px;"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+linkNC+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
     if(meta.length) itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
     if(n[3]) itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
     itens+='</div>';
   });
-  var nq=d.ncs.filter(function(n){return n[0];}).length;
-  h+='<div class="m-ncs-h">Notas de crédito da célula ('+nq+')</div>';
-  h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
+  h+='<div class="m-ncs" style="margin-bottom:20px;">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
+
+  h+='<div class="m-footer-actions-v2">';
+  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · ' + nq + ' NC(s) vinculada(s)</span>';
+  h+='  <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
+  h+='</div>';
+  h+='</div>';
+
   document.getElementById('modal-body').innerHTML=h;
   var m=document.getElementById('modal');
   m.classList.add('open');
@@ -4094,18 +4540,76 @@ function bcmsCel(row){
 
 function bcmsDay(row){
   var d=DAYDATA[row.getAttribute('data-day')];if(!d)return;
-  var h='<h3 id="modal-title">Movimentação de '+bcmsEsc(d.d)+'</h3>';
-  h+='<div class="m-kpis"><span>Nº de NC<b>'+d.n+'</b></span><span>Recebido<b class="col-pos">'+bcmsBRL(d.rec)+'</b></span><span>Reduções<b class="col-neg">'+bcmsBRL(d.red)+'</b></span><span class="ok">Líquido<b>'+bcmsBRL(d.liq)+'</b></span></div>';
-  h+='<div class="m-ncs-h">Notas de crédito do dia ('+d.ncs.length+')</div>';
+  var h='<div class="m-accent-bar" style="background:linear-gradient(90deg, #3B82F6 0%, #2563EB 50%, #10B981 100%);"></div>';
+  h+='<div class="m-content-wrap">';
+  h+='<div class="m-header-v2">';
+  h+='  <div class="m-header-meta-row">';
+  h+='    <span class="m-badge-op" style="background:rgba(59,130,246,0.12);color:#93C5FD;border-color:rgba(59,130,246,0.3);">📅 CRONOLOGIA DIÁRIA DO CRÉDITO</span>';
+  h+='    <span class="m-badge-status-lg status-info">● ' + d.n + ' NOTA' + (d.n===1?'':'S') + ' DE CRÉDITO</span>';
+  h+='  </div>';
+  h+='  <div class="m-title-row" style="padding-right:48px;">';
+  h+='    <div class="m-nc-code-block">';
+  h+='      <h3 id="modal-title">Movimentação de ' + bcmsEsc(d.d) + '</h3>';
+  h+='      <div class="m-sub-meta">';
+  h+='        <span class="m-meta-chip">Entradas: <b style="color:#34D399;">+' + bcmsBRL(d.rec) + '</b></span>';
+  h+='        <span class="m-meta-chip">Reduções: <b style="color:#F87171;">-' + bcmsBRL(d.red) + '</b></span>';
+  h+='      </div>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="m-fin-section">';
+  h+='  <div class="m-fin-grid">';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Quantidade de Notas</span>';
+  h+='      <span class="m-fin-val">' + d.n + '</span>';
+  h+='      <span class="m-fin-sub">Lançamentos no dia</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Total Recebido (+)</span>';
+  h+='      <span class="m-fin-val col-prov">+' + bcmsBRL(d.rec) + '</span>';
+  h+='      <span class="m-fin-sub">Novos créditos</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card">';
+  h+='      <span class="m-fin-label">Total Reduções (−)</span>';
+  h+='      <span class="m-fin-val col-emp">-' + bcmsBRL(d.red) + '</span>';
+  h+='      <span class="m-fin-sub">Anulações / recolhimentos</span>';
+  h+='    </div>';
+  h+='    <div class="m-fin-card hero-saldo">';
+  h+='      <span class="m-fin-label">Resultado Líquido do Dia</span>';
+  h+='      <span class="m-fin-val-hero">' + bcmsBRL(d.liq) + '</span>';
+  h+='      <span class="m-fin-tag-hero">⚡ Movimentação líquida</span>';
+  h+='    </div>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de crédito do dia ('+d.ncs.length+')</div>';
   var itens='';
   d.ncs.forEach(function(n){
     var neg=n[3]<0;
-    itens+='<div class="m-nc"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+' <span class="pill-fonte">'+bcmsEsc(n[1])+'</span></span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[3])+'</span></div>';
+    var linkNC = '';
+    if(typeof HISTDATA !== 'undefined' && HISTDATA && HISTDATA.items){
+      for(var k=0; k<HISTDATA.items.length; k++){
+        if(HISTDATA.items[k].nc === n[0]){
+          linkNC = ' <button type="button" class="m-btn-pill" style="padding:2px 8px;font-size:0.7rem;margin-left:6px;" onclick="bcmsDetalheNC(\'' + HISTDATA.items[k].hid + '\')">🔍 Detalhar</button>';
+          break;
+        }
+      }
+    }
+
+    itens+='<div class="m-nc" style="margin-bottom:8px;"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+' <span class="pill-fonte">'+bcmsEsc(n[1])+'</span>' + linkNC + '</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[3])+'</span></div>';
     if(n[2]) itens+='<div class="m-nc-op">'+bcmsEsc(n[2])+'</div>';
     if(n[4]) itens+='<div class="m-nc-desc">'+bcmsEsc(n[4])+'</div>';
     itens+='</div>';
   });
-  h+='<div class="m-ncs">'+(itens||'<p class="vazio">Sem NC neste dia.</p>')+'</div>';
+  h+='<div class="m-ncs" style="margin-bottom:20px;">'+(itens||'<p class="vazio">Sem NC neste dia.</p>')+'</div>';
+
+  h+='<div class="m-footer-actions-v2">';
+  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · Movimentação em ' + bcmsEsc(d.d) + '</span>';
+  h+='  <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
+  h+='</div>';
+  h+='</div>';
+
   document.getElementById('modal-body').innerHTML=h;
   var m=document.getElementById('modal');
   m.classList.add('open');
@@ -4410,6 +4914,38 @@ function bcmsDetalheNC(hid){
       }
     }
   }
+
+  if(!item && typeof NCDATA !== 'undefined' && NCDATA && NCDATA[hid]){
+    var ndo = NCDATA[hid];
+    item = {
+      hid: ndo.nc,
+      nc: ndo.nc,
+      op: ndo.op || 'DESCENTRALIZACAO DE CREDITO',
+      dia: ndo.dia || '—',
+      dias: null,
+      status: (ndo.val > 0 ? 'Disponível' : 'Consumido'),
+      status_slug: (ndo.val > 0 ? 'ok' : 'danger'),
+      emit_cod: '160073',
+      emit_nome: 'DIRETORIA DE GESTAO ORCAMENTARIA - GESTOR',
+      fav_cod: '160329',
+      fav_nome: 'BCMS · OGU',
+      om_sigla: 'BCMS',
+      ptres: ndo.acao || '—',
+      acao_desc: 'Ação ' + (ndo.acao || '—'),
+      fonte: ndo.u || 'OGU',
+      nd: ndo.nd || '—',
+      nd_desc: ndo.ndn || 'Natureza de Despesa',
+      pi: ndo.pi || '—',
+      pi_desc: 'Plano Interno',
+      prov: ndo.val || 0,
+      bloq: 0,
+      emp: 0,
+      liq: 0,
+      pag: 0,
+      cred: ndo.val || 0,
+      obj: ndo.obj || ''
+    };
+  }
   if(!item) return;
 
   var prov = item.prov || 0;
@@ -4423,129 +4959,177 @@ function bcmsDetalheNC(hid){
   var pCred = prov > 0 ? (cred / prov * 100) : 0;
   var pLiq = emp > 0 ? (liq / emp * 100) : 0;
   var pPag = liq > 0 ? (pag / liq * 100) : 0;
-  var statusCls = 'status-' + item.status_slug;
+
+  var omSigla = item.om_sigla || 'BCMS';
+  var omAccent = '#2563EB';
+  if(omSigla === 'BCMS') omAccent = '#DC2626';
+  else if(omSigla === 'Ba Ap Log') omAccent = '#2563EB';
+  else if(omSigla === 'D C Mun') omAccent = '#0284C7';
+  else if(omSigla === 'BMSA') omAccent = '#7C3AED';
+  else if(omSigla.indexOf('1') !== -1 || omSigla.indexOf('Sup') !== -1) omAccent = '#059669';
+  else if(omSigla === 'ECT') omAccent = '#D97706';
+
+  var barGrad = 'linear-gradient(90deg, ' + omAccent + ' 0%, #10B981 50%, #2563EB 100%)';
+  var badgeOp = '<span class="m-badge-op" style="color:' + omAccent + ';background:rgba(255,255,255,0.06);border-color:' + omAccent + '66;">🏛️ ' + bcmsEsc(omSigla) + ' · EXERCÍCIO 2026</span>';
+
+  var statusBadge = '';
+  if(item.is_det || item.status_slug === 'info'){
+    statusBadge = '<span class="m-badge-status-lg" style="background:rgba(59,130,246,0.15);color:#2563EB;border:1px solid rgba(59,130,246,0.35);">🔄 DETALHAMENTO DE ND' + (item.nd_troca ? ' (' + bcmsEsc(item.nd_troca) + ')' : '') + '</span>';
+  } else if(item.status_slug === 'warn' || (cred > 0.01 && emp > 0.01)){
+    statusBadge = '<span class="m-badge-status-lg status-warn">● PARCIALMENTE EXECUTADA</span>';
+  } else if(cred > 0.01){
+    statusBadge = '<span class="m-badge-status-lg status-ok">● DISPONÍVEL INTEGRAL</span>';
+  } else if(item.prov <= 0.01){
+    statusBadge = '<span class="m-badge-status-lg" style="background:rgba(239,68,68,0.12);color:#EF4444;border:1px solid rgba(239,68,68,0.3);">● CANCELADA / ANULADA</span>';
+  } else {
+    statusBadge = '<span class="m-badge-status-lg status-warn">● 100% EMPENHADO / EXECUTADO</span>';
+  }
 
   var fonteExtenso = (item.fonte === 'OGU' || item.fonte === '160') ? '160 · Orçamento Geral da União (OGU)' : ((item.fonte === 'FEx' || item.fonte === '167') ? '167 · Fundo do Exército (FEx)' : item.fonte);
 
   var h = '';
-  /* Header do Modal */
-  h += '<div class="m-header">';
-  h += '  <div>';
-  h += '    <span class="m-tag">DETALHAMENTO INTEGRAL · EXERCÍCIO 2026</span>';
-  h += '    <h3 id="modal-title" style="margin:4px 0 6px 0;">Nota de Crédito ' + bcmsEsc(item.nc) + '</h3>';
-  h += '    <p class="m-sub" style="margin:0;">' + bcmsEsc(item.op) + ' · Emitida em <b>' + bcmsEsc(item.dia || '—') + '</b>' + (item.dias !== null ? ' (' + item.dias + ' dias)' : '') + '</p>';
-  h += '  </div>';
-  h += '  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">';
-  h += '    <span class="pill-status ' + statusCls + '" style="font-size:0.875rem;padding:6px 14px;">' + bcmsEsc(item.status) + '</span>';
-  h += '    <button type="button" class="btn-copy-nc" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\')" title="Copiar número da NC">📋 Copiar NC</button>';
-  h += '  </div>';
-  h += '</div>';
+  h += '<div class="m-accent-bar" style="background:' + barGrad + ';"></div>';
+  h += '<div class="m-content-wrap">';
 
-  /* Bloco 1: Identificação */
-  h += '<div class="m-secao">';
-  h += '  <div class="m-secao-h"><span>🏢</span> 1. Identificação da Nota e Unidades Gestoras</div>';
-  h += '  <div class="m-grid-2">';
-  h += '    <div class="m-card-id">';
-  h += '      <span class="m-lbl">UG Emitente (Origem)</span>';
-  h += '      <b><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> ' + bcmsEsc(item.emit_nome) + '</b>';
+  /* Cabeçalho Executivo */
+  h += '  <div class="m-header-v2">';
+  h += '    <div class="m-header-meta-row" style="padding-right:48px;">';
+  h += '      ' + badgeOp;
+  h += '      ' + statusBadge;
   h += '    </div>';
-  h += '    <div class="m-card-id">';
-  h += '      <span class="m-lbl">UG Favorecida (Destino)</span>';
-  h += '      <b><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> ' + bcmsEsc(item.fav_nome) + ' (' + bcmsEsc(item.om_sigla) + ')</b>';
+  h += '    <div class="m-title-row" style="padding-right:48px;">';
+  h += '      <div class="m-nc-code-block">';
+  h += '        <h3 id="modal-title">Nota de Crédito ' + bcmsEsc(item.nc) + '</h3>';
+  h += '      </div>';
+  h += '      <button type="button" class="m-btn-pill" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\', this)" title="Copiar número da NC">';
+  h += '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar NC';
+  h += '      </button>';
   h += '    </div>';
-  h += '  </div>';
-  h += '</div>';
-
-  /* Bloco 2: Classificação Orçamentária */
-  h += '<div class="m-secao">';
-  h += '  <div class="m-secao-h"><span>🎯</span> 2. Classificação Orçamentária</div>';
-  h += '  <div class="m-grid-4">';
-  h += '    <div class="m-card-class">';
-  h += '      <span class="m-lbl">PTRES / Ação</span>';
-  h += '      <b class="mono">' + bcmsEsc(item.ptres || '—') + '</b>';
-  h += '      <small>' + bcmsEsc(item.acao_desc || 'Ação orçamentária') + '</small>';
-  h += '    </div>';
-  h += '    <div class="m-card-class">';
-  h += '      <span class="m-lbl">Fonte de Recursos</span>';
-  h += '      <b><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></b>';
-  h += '      <small>' + bcmsEsc(fonteExtenso) + '</small>';
-  h += '    </div>';
-  h += '    <div class="m-card-class">';
-  h += '      <span class="m-lbl">Natureza de Despesa (ND)</span>';
-  h += '      <b class="mono">' + bcmsEsc(item.nd || '—') + '</b>';
-  h += '      <small>' + bcmsEsc(item.nd_desc || 'Elemento de despesa') + '</small>';
-  h += '    </div>';
-  h += '    <div class="m-card-class">';
-  h += '      <span class="m-lbl">Plano Interno (PI)</span>';
-  h += '      <b class="mono">' + bcmsEsc(item.pi || '—') + '</b>';
-  h += '      <small>' + bcmsEsc(item.pi_desc || 'Plano interno') + '</small>';
-  h += '    </div>';
-  h += '  </div>';
-  h += '</div>';
-
-  /* Bloco 3: Balanço e Posição Financeira */
-  h += '<div class="m-secao">';
-  h += '  <div class="m-secao-h"><span>💰</span> 3. Balanço e Valores em Tempo Real</div>';
-  h += '  <div class="m-kpis-fin">';
-  h += '    <div class="m-kpi-fin">';
-  h += '      <span class="m-lbl">Valor Original (Recebido)</span>';
-  h += '      <b class="col-prov">' + bcmsBRL(prov) + '</b>';
-  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">Total descentralizado</small>';
-  h += '    </div>';
-  h += '    <div class="m-kpi-fin">';
-  h += '      <span class="m-lbl">Bloqueado / Pré-empenho</span>';
-  h += '      <b>' + bcmsBRL(bloq) + '</b>';
-  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">Reserva de crédito</small>';
-  h += '    </div>';
-  h += '    <div class="m-kpi-fin">';
-  h += '      <span class="m-lbl">Executado (Empenhado)</span>';
-  h += '      <b class="col-emp">' + bcmsBRL(emp) + '</b>';
-  h += '      <small style="color:var(--ink-muted);font-size:0.75rem;">' + pEmp.toFixed(1) + '% consumido</small>';
-  h += '    </div>';
-  h += '    <div class="m-kpi-fin hero-saldo">';
-  h += '      <span class="m-lbl">Saldo Disponível em Tela</span>';
-  h += '      <b class="col-disp">' + bcmsBRL(cred) + '</b>';
-  h += '      <small style="color:var(--success-strong);font-size:0.75rem;font-weight:700;">' + pCred.toFixed(1) + '% remanescente</small>';
+  h += '    <div class="m-sub-meta">';
+  h += '      <span class="m-meta-chip">⚙️ ' + bcmsEsc(item.op || 'DESCENTRALIZACAO DE CREDITO') + '</span>';
+  h += '      <span class="m-meta-chip">📅 Emissão: <b>' + bcmsEsc(item.dia || '—') + '</b>' + (item.dias !== null && item.dias !== undefined ? ' (' + item.dias + ' dias)' : '') + '</span>';
+  h += '      <span class="m-meta-chip">🏛️ Exercício Financeiro 2026</span>';
   h += '    </div>';
   h += '  </div>';
 
-  /* Estágios da despesa na célula */
-  h += '  <div class="m-estagios-grid">';
-  h += '    <div class="m-estagio">';
-  h += '      <div class="m-estagio-t"><span>Liquidação sobre Empenho</span><b>' + bcmsBRL(liq) + ' (' + pLiq.toFixed(1) + '%)</b></div>';
-  h += '      <div class="m-barra-track"><div class="m-barra-fill fill-liq" style="width:' + Math.min(100, pLiq).toFixed(1) + '%"></div></div>';
+  /* Seção 1: Balanço Financeiro */
+  h += '  <div class="m-fin-section">';
+  h += '    <div class="m-fin-grid">';
+  h += '      <div class="m-fin-card">';
+  h += '        <span class="m-fin-label">Valor Original (Recebido)</span>';
+  h += '        <span class="m-fin-val col-prov">' + bcmsBRL(prov) + '</span>';
+  h += '        <span class="m-fin-sub">Dotação integral descentralizada</span>';
+  h += '      </div>';
+  h += '      <div class="m-fin-card">';
+  h += '        <span class="m-fin-label">Bloqueado / Pré-Empenho</span>';
+  h += '        <span class="m-fin-val">' + bcmsBRL(bloq) + '</span>';
+  h += '        <span class="m-fin-sub">Reserva de crédito orçamentário</span>';
+  h += '      </div>';
+  h += '      <div class="m-fin-card">';
+  h += '        <span class="m-fin-label">Executado (Empenhado)</span>';
+  h += '        <span class="m-fin-val col-emp">' + bcmsBRL(emp) + '</span>';
+  h += '        <span class="m-fin-sub">' + pEmp.toFixed(1) + '% consumido da dotação</span>';
+  h += '      </div>';
+  h += '      <div class="m-fin-card hero-saldo">';
+  h += '        <span class="m-fin-label" style="color:#10B981;">Saldo Disponível em Tela</span>';
+  h += '        <span class="m-fin-val-hero">' + bcmsBRL(cred) + '</span>';
+  h += '        <span class="m-fin-tag-hero">✓ ' + pCred.toFixed(1) + '% remanescente líquido</span>';
+  h += '      </div>';
   h += '    </div>';
-  h += '    <div class="m-estagio">';
-  h += '      <div class="m-estagio-t"><span>Pagamento sobre Liquidação</span><b>' + bcmsBRL(pag) + ' (' + pPag.toFixed(1) + '%)</b></div>';
-  h += '      <div class="m-barra-track"><div class="m-barra-fill fill-pag" style="width:' + Math.min(100, pPag).toFixed(1) + '%"></div></div>';
+
+  /* Pipeline 3 Estágios */
+  h += '    <div class="m-pipeline-card">';
+  h += '      <div class="m-pipeline-header">Pipeline de Execução Orçamentária e Financeira (SIAFI)</div>';
+  h += '      <div class="m-stages-grid">';
+  h += '        <div class="m-stage-item">';
+  h += '          <div class="m-stage-header"><span>1. Empenho / Recebido</span><b>' + bcmsBRL(emp) + ' (' + pEmp.toFixed(1) + '%)</b></div>';
+  h += '          <div class="m-progress-track"><div class="m-progress-bar bar-emp" style="width:' + Math.min(100, pEmp).toFixed(1) + '%"></div></div>';
+  h += '          <span class="m-stage-sub">Comprometimento formal da dotação</span>';
+  h += '        </div>';
+  h += '        <div class="m-stage-item">';
+  h += '          <div class="m-stage-header"><span>2. Liquidação / Empenho</span><b>' + bcmsBRL(liq) + ' (' + pLiq.toFixed(1) + '%)</b></div>';
+  h += '          <div class="m-progress-track"><div class="m-progress-bar bar-liq" style="width:' + Math.min(100, pLiq).toFixed(1) + '%"></div></div>';
+  h += '          <span class="m-stage-sub">Atesto e liquidação de serviços ou bens</span>';
+  h += '        </div>';
+  h += '        <div class="m-stage-item">';
+  h += '          <div class="m-stage-header"><span>3. Pagamento / Liquidação</span><b>' + bcmsBRL(pag) + ' (' + pPag.toFixed(1) + '%)</b></div>';
+  h += '          <div class="m-progress-track"><div class="m-progress-bar bar-pag" style="width:' + Math.min(100, pPag).toFixed(1) + '%"></div></div>';
+  h += '          <span class="m-stage-sub">Ordem bancária efetivada no Tesouro</span>';
+  h += '        </div>';
+  h += '      </div>';
   h += '    </div>';
   h += '  </div>';
-  h += '</div>';
 
-  /* Bloco 4: Observação / Finalidade */
-  h += '<div class="m-secao">';
-  h += '  <div class="m-secao-h"><span>📝</span> 4. Observação / Finalidade Cadastrada na Nota</div>';
-  h += '  <div class="m-nc-justificativa">' + bcmsEsc(item.obj || '(Sem texto de observação cadastrado no SIAFI)') + '</div>';
-  h += '</div>';
+  /* Seção 2: Tramitação de UGs */
+  h += '  <div class="m-route-grid">';
+  h += '    <div class="m-route-card">';
+  h += '      <span class="m-route-badge">UG Emitente (Origem)</span>';
+  h += '      <div class="m-route-title"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod || '160073') + '</span> ' + bcmsEsc(item.emit_nome || 'DGO') + '</div>';
+  h += '      <span class="m-route-desc">Órgão Central Setorial / Diretoria de Gestão Orçamentária</span>';
+  h += '    </div>';
+  h += '    <div class="m-route-arrow">➔</div>';
+  h += '    <div class="m-route-card">';
+  h += '      <span class="m-route-badge">UG Favorecida (Executora)</span>';
+  h += '      <div class="m-route-title"><span class="ug-pill fav">' + bcmsEsc(item.fav_cod || '160329') + '</span> ' + bcmsEsc(item.fav_nome || 'BCMS') + (item.om_sigla ? ' (' + bcmsEsc(item.om_sigla) + ')' : '') + '</div>';
+  h += '      <span class="m-route-desc">Unidade Gestora Executora Operacional</span>';
+  h += '    </div>';
+  h += '  </div>';
+
+  /* Seção 3: Classificação Orçamentária */
+  h += '  <div class="m-class-grid">';
+  h += '    <div class="m-class-card">';
+  h += '      <span class="m-class-label">PTRES / Ação Orçamentária</span>';
+  h += '      <span class="m-class-code">' + bcmsEsc(item.ptres || '—') + '</span>';
+  h += '      <span class="m-class-desc">' + bcmsEsc(item.acao_desc || 'Ação Governamental') + '</span>';
+  h += '    </div>';
+  h += '    <div class="m-class-card">';
+  h += '      <span class="m-class-label">Fonte de Recursos</span>';
+  h += '      <span class="m-class-code"><span class="pill-fonte">' + bcmsEsc(item.fonte || 'OGU') + '</span></span>';
+  h += '      <span class="m-class-desc">' + bcmsEsc(fonteExtenso) + '</span>';
+  h += '    </div>';
+  h += '    <div class="m-class-card">';
+  h += '      <span class="m-class-label">Natureza de Despesa (ND)</span>';
+  h += '      <span class="m-class-code">' + bcmsEsc(item.nd || '—') + '</span>';
+  h += '      <span class="m-class-desc">' + bcmsEsc(item.nd_desc || 'Elemento de Despesa') + '</span>';
+  h += '    </div>';
+  h += '    <div class="m-class-card">';
+  h += '      <span class="m-class-label">Plano Interno (PI)</span>';
+  h += '      <span class="m-class-code">' + bcmsEsc(item.pi || '—') + '</span>';
+  h += '      <span class="m-class-desc">' + bcmsEsc(item.pi_desc || 'Plano Interno') + '</span>';
+  h += '    </div>';
+  h += '  </div>';
+
+  /* Seção 4: Finalidade / Observação */
+  var rawObj = item.obj || '(Sem texto de observação cadastrado no SIAFI)';
+  var escObjAttr = bcmsEsc(rawObj).replace(/"/g, '&quot;');
+  h += '  <div class="m-justif-card">';
+  h += '    <div class="m-justif-header">';
+  h += '      <span class="m-justif-title">Finalidade / Objeto Cadastrado no SIAFI</span>';
+  h += '      <button type="button" class="m-btn-pill" style="padding:4px 10px;font-size:0.75rem;" onclick="bcmsCopiarTexto(this)" data-copy="' + escObjAttr + '">📋 Copiar Texto</button>';
+  h += '    </div>';
+  h += '    <div class="m-justif-body">' + bcmsEsc(rawObj) + '</div>';
+  h += '  </div>';
 
   /* Subtabela de desdobramentos se houver mais de 1 lançamento */
   if(item.itens && item.itens.length > 1){
-    h += '<div class="m-secao">';
-    h += '  <div class="m-secao-h"><span>📑</span> Desdobramentos da Nota (' + item.itens.length + ' lançamentos)</div>';
-    h += '  <div class="tbl-scroll"><table class="det det-itens"><thead><tr><th>Ação</th><th>PI</th><th>ND</th><th class="num">Valor</th></tr></thead><tbody>';
+    h += '  <div class="m-justif-card" style="border-left-color:var(--primary-600);">';
+    h += '    <div class="m-justif-header"><span class="m-justif-title">Desdobramentos da Nota (' + item.itens.length + ' lançamentos)</span></div>';
+    h += '    <div class="tbl-scroll"><table class="det det-itens"><thead><tr><th>Ação</th><th>PI</th><th>ND</th><th class="num">Valor</th></tr></thead><tbody>';
     for(var j = 0; j < item.itens.length; j++){
       var sub = item.itens[j];
       h += '<tr><td class="mono2">' + bcmsEsc(sub.acao || '—') + '</td><td class="mono2">' + bcmsEsc(sub.pi || '—') + '</td><td class="mono2">' + bcmsEsc(sub.nd || '—') + '</td><td class="num">' + bcmsBRL(sub.val || 0) + '</td></tr>';
     }
     h += '</tbody></table></div>';
-    h += '</div>';
+    h += '  </div>';
   }
 
-  /* Rodapé de Ações */
-  h += '<div class="m-footer-actions">';
-  h += '  <button type="button" class="btn-goto-hist" onclick="bcmsVerNoHistorico(\'' + bcmsEsc(item.nc) + '\')">🔍 Localizar no Histórico Geral</button>';
-  h += '  <button type="button" class="btn-copy-nc" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\')">📋 Copiar Nº da NC</button>';
-  h += '  <button type="button" class="btn-pag" onclick="bcmsCelClose()">Fechar ✕</button>';
+  /* Rodapé de Ações Executivo */
+  h += '  <div class="m-footer-actions-v2">';
+  h += '    <button type="button" class="m-btn-pill" onclick="bcmsVerNoHistorico(\'' + bcmsEsc(item.nc) + '\')">🔍 Localizar no Histórico Geral</button>';
+  h += '    <button type="button" class="m-btn-pill" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\', this)">📋 Copiar Nº da NC</button>';
+  h += '    <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
+  h += '  </div>';
+
   h += '</div>';
 
   document.getElementById('modal-body').innerHTML = h;
@@ -4556,10 +5140,15 @@ function bcmsDetalheNC(hid){
   if(x) x.focus();
 }
 
-function bcmsCopiarNC(ncNumero){
+function bcmsCopiarNC(ncNumero, btn){
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(ncNumero).then(function(){
-      bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada com sucesso!');
+      bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada para a área de transferência!');
+      if(btn){
+        var old = btn.innerHTML;
+        btn.innerHTML = '✓ Copiado!';
+        setTimeout(function(){ btn.innerHTML = old; }, 2000);
+      }
     }).catch(function(){
       bcmsToast('NC: ' + ncNumero);
     });
@@ -4568,7 +5157,41 @@ function bcmsCopiarNC(ncNumero){
     ta.value = ncNumero;
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada!'); } catch(e){}
+    try {
+      document.execCommand('copy');
+      bcmsToast('📋 Nota de Crédito ' + ncNumero + ' copiada!');
+      if(btn){
+        var old2 = btn.innerHTML;
+        btn.innerHTML = '✓ Copiado!';
+        setTimeout(function(){ btn.innerHTML = old2; }, 2000);
+      }
+    } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+function bcmsCopiarTexto(btn){
+  var txt = btn.getAttribute('data-copy');
+  if(!txt) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      bcmsToast('📋 Objeto / Finalidade copiado para a área de transferência!');
+      var old = btn.innerHTML;
+      btn.innerHTML = '✓ Copiado!';
+      setTimeout(function(){ btn.innerHTML = old; }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      bcmsToast('📋 Objeto / Finalidade copiado!');
+      var old2 = btn.innerHTML;
+      btn.innerHTML = '✓ Copiado!';
+      setTimeout(function(){ btn.innerHTML = old2; }, 2000);
+    } catch(e){}
     document.body.removeChild(ta);
   }
 }
