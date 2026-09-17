@@ -1958,7 +1958,7 @@ CSS = r"""
   --warning-bg:     #FFFBEB;
   --warning-border: #FDE68A;
 
-  --danger:         #DC2626;
+  --danger:         #B91C1C;
   --danger-main:    #DC2626;
   --danger-bg:      #FEF2F2;
   --danger-border:  #FECACA;
@@ -4618,13 +4618,33 @@ function bcmsDay(row){
   if(x) x.focus();
 }
 
+var bcmsLastFocus = null;
+document.addEventListener('focusin', function(e){
+  var m = document.getElementById('modal');
+  if(m && !m.classList.contains('open') && e.target && e.target.closest && !e.target.closest('#modal')){
+    bcmsLastFocus = e.target;
+  }
+}, true);
+
 function bcmsCelClose(){
   var m=document.getElementById('modal');
   if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+  if(bcmsLastFocus && document.contains(bcmsLastFocus) && typeof bcmsLastFocus.focus==='function'){
+    bcmsLastFocus.focus();
+  }
 }
 
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape') bcmsCelClose();
+  var m = document.getElementById('modal');
+  var modalOpen = m && m.classList.contains('open');
+  if(e.key==='Escape'){ bcmsCelClose(); return; }
+  if(e.key==='Tab' && modalOpen){
+    var focusables = m.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if(!focusables.length) return;
+    var first = focusables[0], last = focusables[focusables.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  }
 });
 
 /* ==========================================================================
