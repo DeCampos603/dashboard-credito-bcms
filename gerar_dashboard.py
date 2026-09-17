@@ -3291,7 +3291,6 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 .omds-hist.on span { color: #fff; }
 .hist-icon { font-size: 1.25rem; }
 
-.unidade-hist { display: none; }
 .hist-header-card {
   margin-top: 24px;
   padding: 26px 30px;
