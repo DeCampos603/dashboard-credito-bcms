@@ -2735,6 +2735,26 @@ h1 {
   border-radius: 14px;
   background: var(--bg-surface);
   box-shadow: var(--shadow);
+  transition: box-shadow .15s ease;
+}
+/* Indicador de rolagem horizontal: sombra interna nas bordas quando ha
+   mais colunas fora da area visivel (essencial em telas estreitas). */
+.tbl-scroll.can-scroll-left  { box-shadow: var(--shadow), inset 14px 0 12px -12px rgba(0,0,0,.22); }
+.tbl-scroll.can-scroll-right { box-shadow: var(--shadow), inset -14px 0 12px -12px rgba(0,0,0,.22); }
+.tbl-scroll.can-scroll-left.can-scroll-right {
+  box-shadow: var(--shadow), inset 14px 0 12px -12px rgba(0,0,0,.22), inset -14px 0 12px -12px rgba(0,0,0,.22);
+}
+@media (max-width: 720px) {
+  .tbl-scroll.can-scroll-right::before {
+    content: "\21D4  arraste a tabela para o lado para ver mais colunas";
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--bg-surface);
+    padding: 6px 12px;
+    border-bottom: 1px dashed var(--border);
+  }
 }
 
 table.det { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
@@ -4646,6 +4666,37 @@ document.addEventListener('keydown', function(e){
     else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
   }
 });
+
+/* ==========================================================================
+   INDICADOR DE ROLAGEM HORIZONTAL DAS TABELAS (mobile)
+   Marca cada .tbl-scroll com can-scroll-left/can-scroll-right conforme a
+   posicao de rolagem, para a sombra interna definida no CSS aparecer so
+   quando ha conteudo escondido para aquele lado.
+   ========================================================================== */
+function bcmsUpdateScrollFade(el){
+  if(!el || !el.classList || !el.classList.contains('tbl-scroll')) return;
+  if(el.scrollWidth <= el.clientWidth + 1){
+    el.classList.remove('can-scroll-left', 'can-scroll-right');
+    return;
+  }
+  el.classList.toggle('can-scroll-left', el.scrollLeft > 4);
+  el.classList.toggle('can-scroll-right', el.scrollLeft < (el.scrollWidth - el.clientWidth - 4));
+}
+function bcmsRefreshScrollFades(){
+  document.querySelectorAll('.tbl-scroll').forEach(bcmsUpdateScrollFade);
+}
+document.addEventListener('scroll', function(e){
+  bcmsUpdateScrollFade(e.target);
+}, true);
+window.addEventListener('resize', bcmsRefreshScrollFades);
+window.addEventListener('load', bcmsRefreshScrollFades);
+if(document.readyState === 'complete' || document.readyState === 'interactive'){
+  setTimeout(bcmsRefreshScrollFades, 0);
+}
+new MutationObserver(function(){
+  clearTimeout(window._bcmsScrollFadeTimer);
+  window._bcmsScrollFadeTimer = setTimeout(bcmsRefreshScrollFades, 80);
+}).observe(document.body, {childList: true, subtree: true});
 
 /* ==========================================================================
    HISTÓRICO CONSOLIDADO DE NOTAS DE CRÉDITO & DRILL-DOWN MODAL
