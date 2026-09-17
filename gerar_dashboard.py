@@ -3274,6 +3274,8 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   .hero-num { font-size: 2.2rem; }
   .kpis { grid-template-columns: 1fr; }
   .det td.mono2, .det th:first-child, .det td:first-child { position: sticky; left: 0; background: var(--bg-surface); }
+}
+
 /* ==========================================================================
    ESTILOS PARA A ABA: HISTÓRICO DE NOTAS DE CRÉDITO E MODAL EXPANDIDO
    ========================================================================== */
