@@ -162,48 +162,69 @@ def anotar_trocas_nd(res):
                             L["nc_origem"] = {"nc": orig["nc"], "obj": orig["obj"], "dia": orig["dia"],
                                               "emit": orig["emit"], "op": orig["op"]}
 
+def obter_horario_brasilia():
+    """Retorna datetime atual no fuso horário de Brasília (UTC-3), imune ao fuso do servidor."""
+    try:
+        import zoneinfo
+        tz_br = zoneinfo.ZoneInfo("America/Sao_Paulo")
+        return datetime.datetime.now(tz_br)
+    except Exception:
+        tz_br = datetime.timezone(datetime.timedelta(hours=-3))
+        return datetime.datetime.now(tz_br)
+
 def etl(path):
-    wb = openpyxl.load_workbook(path, data_only=True)
+    wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
     ws = None
     for nm in wb.sheetnames:
         if norm(nm).startswith("CREDITO DISP") or "CRÉDITO DISP" in nm:
             ws = wb[nm]; break
     if ws is None:
         ws = wb.active
+    aba_titulo = ws.title
+    rows = list(ws.iter_rows(values_only=True))
+    wb.close()
+
+    def cell_val(r_1idx, c_1idx):
+        if r_1idx < 1 or r_1idx > len(rows): return None
+        r = rows[r_1idx - 1]
+        if not r or c_1idx < 1 or c_1idx > len(r): return None
+        return r[c_1idx - 1]
+
     hdr_row = None
-    for r in range(1, 16):
-        rowvals = {norm(ws.cell(r, c).value) for c in range(1, ws.max_column + 1)}
+    max_c = max(len(r) for r in rows) if rows else 0
+    for r in range(1, min(16, len(rows) + 1)):
+        rowvals = {norm(cell_val(r, c)) for c in range(1, max_c + 1)}
         if "CREDITO DISPONIVEL" in rowvals or "PROVISAO RECEBIDA" in rowvals:
             hdr_row = r; break
     if not hdr_row:
         raise SystemExit("Não encontrei o cabeçalho (PROVISAO RECEBIDA / CREDITO DISPONIVEL) — a fonte no Drive pode ter mudado de formato.")
+
     hdr = {}
-    for c in range(1, ws.max_column + 1):
-        n = norm(ws.cell(hdr_row, c).value)
+    for c in range(1, max_c + 1):
+        n = norm(cell_val(hdr_row, c))
         if n and n not in hdr: hdr[n] = c
+
     def col(name, req=True):
         c = hdr.get(name)
         if not c and req:
-            raise SystemExit(f"Coluna '{name}' não encontrada (aba '{ws.title}') — a fonte mudou de layout.")
+            raise SystemExit(f"Coluna '{name}' não encontrada (aba '{aba_titulo}') — a fonte mudou de layout.")
         return c
+
     C = dict(prov=col("PROVISAO RECEBIDA"), cred=col("CREDITO DISPONIVEL"),
              emp=col("DESPESAS EMPENHADAS"), liq=col("DESPESAS LIQUIDADAS"), pag=col("DESPESAS PAGAS"),
              conc=col("PROVISAO CONCEDIDA", req=False))
-    # [FIX layout 2026-08] Os rótulos (Ação/PI/ND/NC + descrições) ficam em linhas de
-    # cabeçalho ACIMA da linha de métricas e a fonte JÁ MUDOU de posições. Resolve por
-    # NOME varrendo as linhas de cabeçalho, com fallback p/ as posições atuais conhecidas
-    # (col 6/7/8/9/10/5/11/12/13/1). Antes liam posições fixas ERRADAS (col 4/6/11/8/9/…),
-    # o que embaralhava os rótulos (Ação lia o nome da UG, ND lia a descrição da NC) e
-    # quebrava a soma por célula — o empenho não abatia o recebimento e o "em tela" inflava.
+
     hdrL = {}
     for rr in range(max(1, hdr_row - 4), hdr_row + 1):
-        for c in range(1, ws.max_column + 1):
-            nn = norm(ws.cell(rr, c).value)
+        for c in range(1, max_c + 1):
+            nn = norm(cell_val(rr, c))
             if nn and nn not in hdrL:
                 hdrL[nn] = c
+
     def colL(name, fb):
         c = hdrL.get(name)
         return c if c else fb
+
     CA    = colL("ACAO GOVERNO", 6)           # código da Ação de Governo
     CPI   = colL("PI", 7)                      # código do Plano Interno
     CPID  = CPI + 1                            # descrição do PI (coluna à direita, sem cabeçalho próprio)
@@ -214,16 +235,18 @@ def etl(path):
     COP   = colL("NC - OPERACAO (TIPO)", 12)   # operação (recebimento/detalhamento/anulação)
     CDIA  = colL("NC - DIA EMISSAO", 13)       # data de emissão da NC
     CEMIT = colL("EMITENTE - UG", 1)           # UG emitente
+
     data_row = None
-    for r in range(hdr_row + 1, min(hdr_row + 8, ws.max_row + 1)):
-        if norm(ws.cell(r, 3).value).replace("'", "").isdigit():
+    for r in range(hdr_row + 1, min(hdr_row + 8, len(rows) + 1)):
+        if norm(cell_val(r, 3)).replace("'", "").isdigit():
             data_row = r; break
     if not data_row:
         data_row = hdr_row + 1
+
     periodo = None
-    for r in range(max(1, hdr_row - 2), hdr_row + 3):
-        for c in range(1, ws.max_column + 1):
-            v = str(ws.cell(r, c).value or "").strip().upper()
+    for r in range(max(1, hdr_row - 2), min(hdr_row + 3, len(rows) + 1)):
+        for c in range(1, max_c + 1):
+            v = str(cell_val(r, c) or "").strip().upper()
             if re.match(r"^[A-Z]{3}/\d{4}$", v):
                 periodo = v; break
         if periodo:
@@ -235,44 +258,44 @@ def etl(path):
     codigos_alvo = set(res.keys())
     ugs_presentes = set()
 
-    for r in range(data_row, ws.max_row + 1):
-        ug_raw = ws.cell(r, 3).value
+    for r in range(data_row, len(rows) + 1):
+        ug_raw = cell_val(r, 3)
         if ug_raw is None: continue
         ug = str(ug_raw).strip().replace("'", "")
         if not ug.isdigit(): continue
         ugs_presentes.add(ug)
         if ug not in codigos_alvo: continue
 
-        prov = to_num(ws.cell(r, C["prov"]).value)
-        conc = to_num(ws.cell(r, C["conc"]).value) if C["conc"] else 0.0
-        cred = to_num(ws.cell(r, C["cred"]).value)
-        emp  = to_num(ws.cell(r, C["emp"]).value)
-        liq  = to_num(ws.cell(r, C["liq"]).value)
-        pag  = to_num(ws.cell(r, C["pag"]).value)
+        prov = to_num(cell_val(r, C["prov"]))
+        conc = to_num(cell_val(r, C["conc"])) if C["conc"] else 0.0
+        cred = to_num(cell_val(r, C["cred"]))
+        emp  = to_num(cell_val(r, C["emp"]))
+        liq  = to_num(cell_val(r, C["liq"]))
+        pag  = to_num(cell_val(r, C["pag"]))
 
         d = res[ug]
         d["prov"] += prov; d["conc"] += conc; d["cred"] += cred
         d["emp"]  += emp;  d["liq"]  += liq;  d["pag"]  += pag
         d["n"]    += 1
 
-        acao     = disp(ws.cell(r, CA).value)
-        pi       = disp(ws.cell(r, CPI).value)
-        pi_nome  = disp(ws.cell(r, CPID).value)
-        nd       = disp(ws.cell(r, CND).value)
-        nd_nome  = disp(ws.cell(r, CNDD).value)
-        nc       = disp(ws.cell(r, CNC).value)
-        dia      = disp(ws.cell(r, CDIA).value)
-        emit      = disp(ws.cell(r, CEMIT).value)
-        emit_nome = disp(ws.cell(r, CEMIT + 1).value)
-        fav_nome  = disp(ws.cell(r, 4).value) or d["nome"]
-        op        = disp(ws.cell(r, COP).value)
-        obj       = disp(ws.cell(r, COBJ).value)
-        
+        acao     = disp(cell_val(r, CA))
+        pi       = disp(cell_val(r, CPI))
+        pi_nome  = disp(cell_val(r, CPID))
+        nd       = disp(cell_val(r, CND))
+        nd_nome  = disp(cell_val(r, CNDD))
+        nc       = disp(cell_val(r, CNC))
+        dia      = disp(cell_val(r, CDIA))
+        emit      = disp(cell_val(r, CEMIT))
+        emit_nome = disp(cell_val(r, CEMIT + 1))
+        fav_nome  = disp(cell_val(r, 4)) or d["nome"]
+        op        = disp(cell_val(r, COP))
+        obj       = disp(cell_val(r, COBJ))
+
         # fallback na busca de descrição caso a coluna 13 esteja vazia
         if not obj:
             for ci in (15, 16, 17, 18, 19, 20):
-                if ci <= ws.max_column:
-                    cand = disp(ws.cell(r, ci).value)
+                if ci <= max_c:
+                    cand = disp(cell_val(r, ci))
                     if len(cand) > 10 and not cand.replace(".", "").replace(",", "").replace("-", "").isdigit():
                         obj = cand; break
 
@@ -304,7 +327,7 @@ def etl(path):
     total_linhas = sum(d["n"] for d in res.values())
     if total_linhas == 0:
         raise SystemExit(
-            f"Nenhuma linha das UASGs da Ba Ap Log na aba '{ws.title}'. "
+            f"Nenhuma linha das UASGs da Ba Ap Log na aba '{aba_titulo}'. "
             f"UGs presentes: {', '.join(sorted(ugs_presentes)[:8]) or 'nenhuma'}. "
             "Verifique a planilha no Google Drive.")
 
@@ -549,7 +572,7 @@ def uasg_card(cod, d):
             f'</div>')
 
 def tabela_html(tid, celulas, com_fonte, ativo):
-    """Relação de crédito EM TELA por célula orçamentária (saldo líquido positivo)."""
+    """Relação de dotações e créditos por célula orçamentária no exercício."""
     cols = (["Fonte"] if com_fonte else []) + ["Ação", "PI", "ND", "Aplicação", "Recebido (líq)", "Empenhado", "Crédito Disp."]
     ths = []
     for c in cols:
@@ -557,28 +580,43 @@ def tabela_html(tid, celulas, com_fonte, ativo):
         cls = ' class="num"' if numc else ''
         ths.append(f'<th{cls} tabindex="0" role="button" aria-sort="none" onclick="bcmsSort(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsSort(this)}}">{esc(c)}<span class="sort"></span></th>')
     body = []
-    tot = sum(c["cred"] for c in celulas)
+    tot_cred = sum(c["cred"] for c in celulas)
+    tot_aloc = sum(c["aloc"] for c in celulas)
+    tot_emp  = sum(c["emp"]  for c in celulas)
+    n_com_saldo = sum(1 for c in celulas if c["cred"] > 0.005)
+    n_zeradas   = len(celulas) - n_com_saldo
     for c in celulas:
         fonte = f'<td><span class="pill-fonte">{esc(FONTE_CURTA.get(c.get("uasg",""),""))}</span></td>' if com_fonte else ''
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
         cid = esc(c.get("cid", ""))
+        is_zerada = c["cred"] <= 0.005
+        cred_disp_html = (f'{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>'
+                          if not is_zerada else
+                          f'<span class="pill-100" title="Crédito 100% empenhado no exercício">100% Empenhado</span> {esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>')
         body.append(
-            f'<tr class="cel-row" tabindex="0" role="button" data-cel="{cid}" title="Ver as notas de crédito desta célula (descrição completa)" '
+            f'<tr class="cel-row{" cel-zerada" if is_zerada else ""}" tabindex="0" role="button" data-cel="{cid}" data-cred="{c["cred"]:.2f}" '
+            f'title="Ver as notas de crédito desta célula (descrição completa)" '
             f'onclick="bcmsCel(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsCel(this)}}">'
             f'{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
             f'<td class="obj" title="{esc(aplic)}">{esc(aplic[:60])}</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
-            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
+            f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{cred_disp_html}</td></tr>')
     ncols = len(cols)
-    tfoot = (f'<tfoot><tr><td colspan="{ncols-1}">TOTAL · {len(celulas)} célula(s) com crédito em tela</td>'
-             f'<td class="num anchor">{esc(brl(tot))}</td></tr></tfoot>')
+    tfoot = (f'<tfoot><tr><td colspan="{ncols-3}" id="tf-lbl-{tid}">TOTAL · {len(celulas)} célula(s) orçamentária(s)</td>'
+             f'<td class="num" id="tf-aloc-{tid}" data-sort="{tot_aloc:.2f}">{esc(brl(tot_aloc))}</td>'
+             f'<td class="num" id="tf-emp-{tid}" data-sort="{tot_emp:.2f}">{esc(brl(tot_emp))}</td>'
+             f'<td class="num anchor" id="tf-cred-{tid}" data-sort="{tot_cred:.2f}">{esc(brl(tot_cred))}</td></tr></tfoot>')
     disp_style = "" if ativo else ' style="display:none"'
+    tgl_zero = (f'<label class="toggle-zero" title="Alternar visualização para focar apenas nas células com saldo disponível">'
+                f'<input type="checkbox" id="chk-zero-{tid}" onchange="bcmsToggleZero(this,\'{tid}\')"> '
+                f'Ocultar 100% empenhadas ({n_zeradas})</label>' if n_zeradas > 0 else '')
     return (f'<div class="tabpanel" id="{tid}" role="tabpanel"{disp_style}>'
             f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
             f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND ou aplicação…" oninput="bcmsSearch(this,\'{tid}\')">'
-            f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_em_tela_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
-            f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células</span></div>'
+            f'{tgl_zero}'
+            f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_exercicio_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
+            f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células ({n_com_saldo} com saldo)</span></div>'
             f'<div class="tbl-scroll"><table class="det"><thead><tr>{"".join(ths)}</tr></thead>'
             f'<tbody>{"".join(body)}</tbody>{tfoot}</table></div></div>')
 
@@ -588,7 +626,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         u_hist_items = []
     ALVOS = _par(u); sfx = u["key"]
     tot = {k: sum(res[c][k] for c, _ in ALVOS) for k in ("prov", "conc", "cred", "emp", "liq", "pag", "n")}
-    ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
+    ger = obter_horario_brasilia().strftime("%d/%m/%Y às %H:%M")
     posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
 
     delta_html = ""
@@ -635,8 +673,8 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
             cid_seq[0] += 1
             cid = "%s_c%d" % (sfx, cid_seq[0])
             cid_map[key] = cid
-            ncs = sorted(([L["nc"], L["op"], round(L["cred"], 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
-                          for L in lin_idx.get(key, [])), key=lambda x: -x[2])
+            ncs = sorted(([L["nc"], L["op"], round(L.get("prov") or L.get("cred", 0.0), 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
+                          for L in lin_idx.get(key, []) if L.get("nc") and str(L["nc"]).strip() != '-9'), key=lambda x: -x[2])
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
                             "acao": c["acao"], "pi": c["pi"], "pinome": c.get("pi_nome", ""),
@@ -645,24 +683,28 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
                             "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2), "ncs": ncs}
         c["cid"] = cid
         return cid
-    def celulas_pos(cod):
-        cl = [c for c in res[cod]["celulas"].values() if c["cred"] > 0.005]
-        cl.sort(key=lambda x: x["cred"], reverse=True)
+    def celulas_todas(cod):
+        cl = [c for c in res[cod]["celulas"].values() if c["aloc"] > 0.005 or c["cred"] > 0.005]
+        cl.sort(key=lambda x: (-x["cred"], -x["aloc"]))
         for c in cl:
             cid_for(cod, c)
         return cl
+    def celulas_pos(cod):
+        return [c for c in celulas_todas(cod) if c["cred"] > 0.005]
     cons_cel = []
     for cod, _ in ALVOS:
-        for c in celulas_pos(cod):
+        for c in celulas_todas(cod):
             cons_cel.append({**c, "uasg": cod, "cid": cid_for(cod, c)})
-    cons_cel.sort(key=lambda x: x["cred"], reverse=True)
+    cons_cel.sort(key=lambda x: (-x["cred"], -x["aloc"]))
     ogu_c, fex_c = ALVOS[0][0], ALVOS[1][0]
-    abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons-{sfx}\')" onkeydown="bcmsTabKey(event,this)">Consolidado</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{ogu_c}\')" onkeydown="bcmsTabKey(event,this)">{ogu_c} · OGU</button>'
-            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{fex_c}\')" onkeydown="bcmsTabKey(event,this)">{fex_c} · FEx</button>')
+    cel_ogu = celulas_todas(ogu_c)
+    cel_fex = celulas_todas(fex_c)
+    abas = (f'<button class="tab on" role="tab" aria-selected="true" tabindex="0" onclick="bcmsTab(this,\'tab-cons-{sfx}\')" onkeydown="bcmsTabKey(event,this)">Consolidado ({len(cons_cel)})</button>'
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{ogu_c}\')" onkeydown="bcmsTabKey(event,this)">{ogu_c} · OGU ({len(cel_ogu)})</button>'
+            f'<button class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="bcmsTab(this,\'tab-{fex_c}\')" onkeydown="bcmsTabKey(event,this)">{fex_c} · FEx ({len(cel_fex)})</button>')
     tabs = (tabela_html(f"tab-cons-{sfx}", cons_cel, True, True) +
-            tabela_html(f"tab-{ogu_c}", celulas_pos(ogu_c), False, False) +
-            tabela_html(f"tab-{fex_c}", celulas_pos(fex_c), False, False))
+            tabela_html(f"tab-{ogu_c}", cel_ogu, False, False) +
+            tabela_html(f"tab-{fex_c}", cel_fex, False, False))
 
     movs = []
     for cod, _ in ALVOS:
@@ -902,7 +944,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         if _c["nd"] and _c["nd"] not in _nd_lbl and _c.get("nd_nome"):
             _nd_lbl[_c["nd"]] = _c["nd_nome"]
     opt_fonte = '<option value="">Fonte: todas</option>' + "".join(
-        f'<option value="{esc(_f)}">{esc(_f)}{" · OGU (exercício corrente)" if _f == "160" else (" · FEx (exercícios anteriores)" if _f == "167" else "")}</option>' for _f in _fontes)
+        f'<option value="{esc(_f)}">{esc(_f)}{" · OGU (Orçamento Geral da União)" if _f == "160" else (" · FEx (Fundo do Exército)" if _f == "167" else "")}</option>' for _f in _fontes)
     opt_acao = '<option value="">Ação: todas</option>' + "".join(
         f'<option value="{esc(_a)}">{esc(_a)}</option>' for _a in _acoes)
     opt_nd = '<option value="">ND: todas</option>' + "".join(
@@ -1805,7 +1847,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
                                  "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
     u0 = UNIDADES[0]
     posicao = periodo if periodo else (data_str[8:10] + "/" + data_str[5:7] + "/" + data_str[0:4])
-    ger = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
+    ger = obter_horario_brasilia().strftime("%d/%m/%Y às %H:%M")
     celdata_json = json.dumps(CEL, ensure_ascii=False).replace("</", "<\\/")
     ncdata_json = json.dumps(NCD, ensure_ascii=False).replace("</", "<\\/")
     daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
@@ -2640,6 +2682,53 @@ h1 {
   border-color: var(--border-focus);
 }
 .tbl-count { font-size: 0.78125rem; color: var(--ink-muted); margin-left: auto; font-weight: 500; }
+.toggle-zero {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  transition: all .2s var(--ease-out-expo);
+  white-space: nowrap;
+}
+.toggle-zero:hover {
+  background: var(--bg-surface);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.toggle-zero input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary, #2563EB);
+  cursor: pointer;
+}
+.pill-100 {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--ink-muted, #64748b);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  margin-right: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.cel-zerada {
+  opacity: 0.82;
+  transition: opacity .15s;
+}
+.cel-zerada:hover {
+  opacity: 1;
+}
 .tbl-scroll {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -3591,14 +3680,21 @@ function trocaOMDSPorKey(key){
 })();
 
 function bcmsSearch(inp,tid){
-  var q=inp.value.toLowerCase();
+  var q=(inp.value||'').toLowerCase().trim();
   var container=document.getElementById(tid);
   if(!container)return;
   var tb=container.querySelector('tbody');
   if(!tb)return;
   var rows=tb.querySelectorAll('tr');
+  var chkZero = document.getElementById('chk-zero-' + tid);
+  var hideZero = chkZero ? chkZero.checked : false;
   var n=0;
   rows.forEach(function(r){
+    var cr = parseFloat(r.getAttribute('data-cred') || '0');
+    if(hideZero && cr <= 0.005){
+      r.style.display='none';
+      return;
+    }
     var ok=r.textContent.toLowerCase().indexOf(q)>-1;
     r.style.display=ok?'':'none';
     if(ok) n++;
@@ -3608,6 +3704,46 @@ function bcmsSearch(inp,tid){
     var u=cnt.getAttribute('data-unit')||'linha(s)';
     cnt.textContent=n+' '+u;
   }
+}
+
+function bcmsToggleZero(chk, tid){
+  var panel = document.getElementById(tid);
+  if(!panel) return;
+  var qInput = document.getElementById('q-' + tid);
+  var q = qInput ? qInput.value.toLowerCase().trim() : '';
+  var rows = panel.querySelectorAll('tbody tr.cel-row');
+  var hide = chk.checked;
+  var totAloc = 0, totEmp = 0, totCred = 0, visCount = 0;
+  rows.forEach(function(r){
+    var cr = parseFloat(r.getAttribute('data-cred') || '0');
+    var matchSearch = !q || r.textContent.toLowerCase().indexOf(q) > -1;
+    if((hide && cr <= 0.005) || !matchSearch){
+      r.style.display = 'none';
+    } else {
+      r.style.display = '';
+      visCount++;
+      var cells = r.querySelectorAll('td.num');
+      if(cells.length >= 3){
+        totAloc += parseFloat(cells[0].getAttribute('data-sort') || '0');
+        totEmp += parseFloat(cells[1].getAttribute('data-sort') || '0');
+        totCred += parseFloat(cells[2].getAttribute('data-sort') || (cr + ''));
+      }
+    }
+  });
+  var cnt = document.getElementById('cnt-' + tid);
+  if(cnt){
+    cnt.textContent = visCount + ' célula(s)' + (hide ? ' (com saldo)' : '');
+  }
+  var tfLbl = document.getElementById('tf-lbl-' + tid);
+  if(tfLbl){
+    tfLbl.textContent = 'TOTAL · ' + visCount + ' célula(s)' + (hide ? ' com saldo disponível' : ' orçamentária(s)');
+  }
+  var tfAloc = document.getElementById('tf-aloc-' + tid);
+  if(tfAloc) tfAloc.textContent = bcmsBRL(totAloc);
+  var tfEmp = document.getElementById('tf-emp-' + tid);
+  if(tfEmp) tfEmp.textContent = bcmsBRL(totEmp);
+  var tfCred = document.getElementById('tf-cred-' + tid);
+  if(tfCred) tfCred.textContent = bcmsBRL(totCred);
 }
 
 function bcmsNC(row){
@@ -3922,7 +4058,7 @@ function bcmsBarra(v,total,rot){
 function bcmsCel(row){
   var d=CELDATA[row.getAttribute('data-cel')];if(!d)return;
   var h='<h3 id="modal-title">'+bcmsEsc(d.t)+'</h3>';
-  var fonte=d.u==='OGU'?'OGU (Orçamento Geral da União)':(d.u==='FEx'?'FEx (Fundo do Exército)':(d.u||'—'));
+  var fonte=(d.u==='OGU'||d.u==='160')?'160 · OGU (Orçamento Geral da União)':((d.u==='FEx'||d.u==='167')?'167 · FEx (Fundo do Exército)':(d.u||'—'));
   h+='<div class="m-ficha">'
     +'<span>UASG (Executora)<b>'+bcmsEsc(d.uasg||'—')+'</b></span>'
     +'<span>Fonte<b>'+bcmsEsc(fonte)+'</b></span>'
@@ -4289,7 +4425,7 @@ function bcmsDetalheNC(hid){
   var pPag = liq > 0 ? (pag / liq * 100) : 0;
   var statusCls = 'status-' + item.status_slug;
 
-  var fonteExtenso = item.fonte === 'OGU' ? '160 - Orçamento Geral da União (OGU)' : (item.fonte === 'FEx' ? '167 - Fundo do Exército (FEx)' : item.fonte);
+  var fonteExtenso = (item.fonte === 'OGU' || item.fonte === '160') ? '160 · Orçamento Geral da União (OGU)' : ((item.fonte === 'FEx' || item.fonte === '167') ? '167 · Fundo do Exército (FEx)' : item.fonte);
 
   var h = '';
   /* Header do Modal */
