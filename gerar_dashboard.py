@@ -5221,6 +5221,8 @@ function bcmsDetalheNC(hid){
     }
     h += '</tbody></table></div>';
     h += '  </div>';
+  }
+
   /* Seção 5: Notas de Empenho (NEs) Vinculadas ao Crédito */
   if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nc_to_nes){
     var nesDaNc = EMPENHODATA.nc_to_nes[item.nc] || [];
