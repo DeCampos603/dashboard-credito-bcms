@@ -1,17 +1,20 @@
-# Dashboard Crédito Disponível — OMDS Ba Ap Log Ex
+# SICOF — Sistema Integrado de Controle Orçamentário e Financeiro
+**Base de Apoio Logístico do Exército (Ba Ap Log Ex) & OMDS Subordinadas**
 
-Painel web (HTML estático) do **Crédito Disponível** das Organizações Militares Diretamente Subordinadas (OMDS) da **Base de Apoio Logístico do Exército** — **BCMS** (160329/167329), **Ba Ap Log** (160238/167238), **D C Mun** (160246/167246), **BMSA** (160304/167304), **1º D Sup** (160307/167307) e **ECT** (160321/167321) — gerado a partir do export do Tesouro Gerencial `CRÉDITO DISP.xlsx` publicado no Google Drive e **atualizado automaticamente todos os dias** via **GitHub Actions**, hospedado no **GitHub Pages**.
+Painel web (HTML estático autocontido) para controle integral da execução orçamentária das Organizações Militares Diretamente Subordinadas (OMDS) — **BCMS** (160329/167329), **Ba Ap Log** (160238/167238), **D C Mun** (160246/167246), **BMSA** (160304/167304), **1º D Sup** (160307/167307) e **ECT** (160321/167321) — integrando em tempo real o **Aporte do Recurso (Notas de Crédito - NC)** com o **Comprometimento da Despesa (Notas de Empenho - NE)**, credores (CNPJ) e processos licitatórios. Atualizado diariamente via **GitHub Actions** e hospedado no **GitHub Pages**.
 
 - **URL pública**: `https://DeCampos603.github.io/dashboard-credito-bcms/`
-- **Nova Subaba "Histórico Completo" por Unidade**: Cada OMDS (BCMS, Ba Ap Log, D C Mun, BMSA, 1º D Sup, ECT) agora conta com sua própria aba de histórico completo com 4 KPIs dedicados, filtros de período/fonte/PTRES/saldo, busca instantânea, paginação e exportação individual formatada para Excel.
-- **Aba "Histórico de Notas de Crédito" (Consolidada)**: Visão geral de todas as 1.400+ NCs emitidas e recebidas na Base de Apoio Logístico no exercício corrente (2026), com rastreabilidade total.
-- **Drill-down / Modal Completo de NC**: Ao clicar em qualquer Nota de Crédito no painel ou no histórico, abre detalhamento integral com Identificação (UG Emitente/Favorecida), Classificação Orçamentária (PTRES, Fonte, ND, PI), Posição Financeira em tempo real (Original, Bloqueado, Empenhado, Liquidado, Pago e Saldo Disponível) e Justificativa/Observação integral.
-- **Tema Escuro de Alta Legibilidade (WCAG AAA)**: Correção completa no contraste dos filtros e menus `<select>`/`<option>` no modo escuro, com suporte a `color-scheme: dark` e superfícies escuras com tipografia nítida.
-- **Exportação em Excel (.xls formatado)**: Download instantâneo de planilhas formatadas com tipos numéricos, formatação de moeda e cabeçalhos estilizados (para a visualização em tela, histórico da unidade e histórico consolidado).
-- **Aba de Ranking & Comparativo OMDS**: Pódio gamificado (🥇, 🥈, 🥉), indicadores globais do Comando e gráficos comparativos de execução orçamentária.
-- **Histórico e Tendência**: Acumula snapshots para acompanhamento da evolução do saldo.
+- **NOVA ABA "🔗 Crédito ➔ Empenho" (Rastreabilidade Integral)**:
+  - **Visão Top-Down (Crédito > Empenhos)**: Tabela em acordeão expansível vinculando cada Nota de Crédito aos seus respectivos empenhos emitidos, com cálculo automático da taxa de queima orçamentária e semáforo de execução.
+  - **Visão Bottom-Up (Auditoria de Empenhos)**: Base consolidada das **2.646 Notas de Empenho** emitidas no ano (R$ 41,55 mi), com busca instantânea por Razão Social, CNPJ, Número da NE, Pregão ou NC de origem.
+  - **Raio-X de Fornecedores & Pregões**: Ranking dos 846 fornecedores contratados e principais Pregões Eletrônicos (PE) que movimentam os recursos da Base.
+  - **Monitor de Riscos Orçamentários**: Identificação preventiva de créditos parados há mais de 45 dias sem empenho para evitar perdas e estornos no encerramento do exercício financeiro.
+- **Drill-down / Modal Enriquecido de NC**: Ao clicar em qualquer Nota de Crédito em qualquer aba do painel, a gaveta modal agora exibe a relação completa das **Notas de Empenho emitidas contra aquele crédito**, credores e valores consumidos.
+- **Nova Subaba "Histórico Completo" por Unidade**: Cada OMDS conta com sua própria aba de histórico completo com 4 KPIs dedicados, filtros multicritério e exportação individual formatada para Excel.
+- **Aba "Histórico de Notas de Crédito" (Consolidada)**: Visão geral de todas as 1.400+ NCs emitidas e recebidas na Base de Apoio Logístico no exercício corrente (2026).
+- **Tema Escuro de Alta Legibilidade (WCAG AAA)**: Suporte dinâmico a tema claro e escuro a 60fps GPU, com tipografia fluida e contraste rigoroso.
+- **Exportação em Excel (.xls formatado)**: Download instantâneo de relatórios formatados para todas as visões (em tela, histórico e empenhos).
 
-> ⚠️ **O GitHub Pages é público.** Ao publicar, os números (Crédito Disponível, empenhado, liquidado, pago, detalhe por NC) ficam **visíveis para qualquer pessoa com o link**.
 
 ---
 

@@ -28,6 +28,10 @@ Uso:
 """
 import os, sys, json, argparse, datetime, urllib.request, tempfile, html, math, re, shutil
 import openpyxl
+from rastreabilidade_empenhos import (
+    DEFAULT_EMPENHOS_URL, baixar_empenhos, etl_empenhos,
+    secao_rastreabilidade_empenhos, CSS_RASTREIO, JS_RASTREIO
+)
 
 HDR_ROW, DATA_ROW = 8, 9
 # Manifesto das OMDS da Ba Ap Log — cada OM = par OGU (16xxxx) + FEx (167xxx).
@@ -1804,7 +1808,7 @@ def secao_historico_ncs(res, hist, data_str, periodo):
     return frag, histdata_payload
 
 # ---------------- shell da página (multi-OMDS) ----------------
-def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
+def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data=None):
     hist_frag, histdata = secao_historico_ncs(res, hist, data_str, periodo)
 
     frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
@@ -1820,6 +1824,10 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     ranking_frag = secao_comparativo_omds(res, hist, data_str, periodo)
     frags.append(ranking_frag)
     frags.append(hist_frag)
+
+    if empenhos_data:
+        rastreio_frag = secao_rastreabilidade_empenhos(res, empenhos_data, histdata, data_str, periodo)
+        frags.append(rastreio_frag)
 
     banner = ""
     if alertas:
@@ -1843,6 +1851,12 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
         '<span class="hist-icon" aria-hidden="true">📜</span>'
         '<span>Histórico de NCs</span></button>'
     )
+    omds += (
+        '<button class="omds omds-rastreio" data-key="RASTREIO" aria-current="false" '
+        'title="Rastreabilidade Completa: Crédito ➔ Empenho Emitido, Fornecedores e Contratações" onclick="trocaOMDS(this)">'
+        '<span class="rastreio-icon" aria-hidden="true">🔗</span>'
+        '<span>Crédito ➔ Empenho</span></button>'
+    )
     ujs = json.dumps({u["key"]: {"sigla": u["sigla"], "nome": u["nome"], "ogu": u["ogu"], "fex": u["fex"],
                                  "logo": u["logo"], "accent": u["accent"]} for u in UNIDADES}, ensure_ascii=False)
     u0 = UNIDADES[0]
@@ -1853,6 +1867,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
     daydata_json = json.dumps(DAY, ensure_ascii=False).replace("</", "<\\/")
     teladata_json = json.dumps(TELA, ensure_ascii=False).replace("</", "<\\/")
     histdata_json = json.dumps(histdata, ensure_ascii=False).replace("</", "<\\/")
+    empenhosdata_json = json.dumps(empenhos_data, ensure_ascii=False).replace("</", "<\\/") if empenhos_data else "{}"
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
@@ -1861,7 +1876,8 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
-<style>{CSS}</style></head>
+<style>{CSS}
+{CSS_RASTREIO}</style></head>
 <body>
 <div class="bcms-bar" aria-hidden="true"></div>
 <header class="topbar">
@@ -1892,11 +1908,13 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None):
 <footer class="rodape">
   <p class="rodape-brand">⚙ Comando da Base de Apoio Logístico do Exército · OMDS Subordinadas</p>
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo líquido não empenhado no Tesouro Gerencial / SIAFI). O detalhe é o saldo real por célula orçamentária (Ação · PI · ND). A soma das células reconcilia com exatidão matemática com o total consolidado de cada OM.</p>
-  <p>Fonte: CRÉDITO DISP.xlsx (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
+  <p>Fonte: CRÉDITO DISP.xlsx & EMPENHOS EMITIDOS (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};var HISTDATA={histdata_json};</script>
-<script>{JS}</script>
+<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};var HISTDATA={histdata_json};var EMPENHODATA={empenhosdata_json};</script>
+<script>{JS}
+{JS_RASTREIO}</script>
 </body></html>"""
+
 
 # ============ CSS / JS (Constantes Sênior UI/UX) ============
 CSS = r"""
@@ -3936,6 +3954,16 @@ function trocaOMDS(btn){
     var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio Logístico do Exército';
     var uu=document.getElementById('uUasg');if(uu)uu.textContent='Consolidado das 6 Organizações Militares Diretamente Subordinadas';
     try{document.title='Crédito Disponível — Ranking & Comparativo OMDS';}catch(e){}
+  } else if(key==='RASTREIO'){
+    document.documentElement.style.setProperty('--accent','#059669');
+    var em=document.getElementById('emblema');if(em){em.src='assets/logos/BAAPLOG.png';em.alt='Brasão Base de Apoio Logístico';}
+    var t=document.getElementById('uTitulo');if(t)t.textContent='Controle Orçamentário: Crédito ➔ Empenho';
+    var n=document.getElementById('uNome');if(n)n.textContent='Base de Apoio Logístico do Exército e OMDS · Execução e Fornecedores';
+    var uu=document.getElementById('uUasg');if(uu)uu.textContent='Rastreabilidade Integral: Descentralizações, Empenhos Emitidos e Contratos';
+    try{document.title='Crédito ➔ Empenho · Ba Ap Log Ex';}catch(e){}
+    if(!RASTREIO_INITIALIZED){
+      bcmsInitRastreio();
+    }
   } else {
     var u=UNIDADES[key];if(!u)return;
     document.documentElement.style.setProperty('--accent',u.accent);
@@ -5193,6 +5221,29 @@ function bcmsDetalheNC(hid){
     }
     h += '</tbody></table></div>';
     h += '  </div>';
+  /* Seção 5: Notas de Empenho (NEs) Vinculadas ao Crédito */
+  if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nc_to_nes){
+    var nesDaNc = EMPENHODATA.nc_to_nes[item.nc] || [];
+    h += '  <div class="m-justif-card modal-empenhos-secao" style="border-left-color:#10B981;margin-top:20px;">';
+    h += '    <div class="m-justif-header">';
+    h += '      <span class="m-justif-title">📦 Notas de Empenho Vinculadas (' + nesDaNc.length + ' emitidas)</span>';
+    if(nesDaNc.length > 0){
+      var totEmpDaNc = 0;
+      for(var k = 0; k < nesDaNc.length; k++) totEmpDaNc += nesDaNc[k].val;
+      h += '      <span class="m-meta-chip" style="color:#059669;background:rgba(16,185,129,0.1);border-color:#10B981;">Total Empenhado: ' + bcmsBRL(totEmpDaNc) + '</span>';
+    }
+    h += '    </div>';
+    if(nesDaNc.length > 0){
+      h += '    <div class="tbl-scroll"><table class="mini-ne-table"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th>Ação</th></tr></thead><tbody>';
+      for(var k = 0; k < nesDaNc.length; k++){
+        var neIt = nesDaNc[k];
+        h += '<tr><td class="font-mono font-bold">' + bcmsEsc(neIt.ne) + '</td><td>' + bcmsEsc(neIt.dia) + '</td><td>' + bcmsEsc(neIt.fav) + ' (' + bcmsEsc(neIt.doc) + ')</td><td>' + (neIt.proc ? '<span class="badge-pregao">' + bcmsEsc(neIt.proc) + '</span>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td><button class="btn-secundario btn-xs" onclick="bcmsCopiarTexto(\'' + bcmsEsc(neIt.ne) + '\')">Copiar</button></td></tr>';
+      }
+      h += '</tbody></table></div>';
+    } else {
+      h += '    <p style="margin:8px 0 0 0;font-size:0.85rem;color:var(--text-muted);">Nenhum empenho emitido até o momento vinculado a esta Nota de Crédito. Saldo integral disponível em caixa.</p>';
+    }
+    h += '  </div>';
   }
 
   /* Rodapé de Ações Executivo */
@@ -5718,16 +5769,29 @@ def main():
     ap.add_argument("--local", help="caminho de um xlsx local (teste)")
     ap.add_argument("--date", help="data do snapshot YYYY-MM-DD (default: hoje)")
     ap.add_argument("--file-id", default=(os.environ.get("DRIVE_FILE_ID") or DEFAULT_FILE_ID))
+    ap.add_argument("--empenhos-url", default=(os.environ.get("EMPENHOS_URL") or DEFAULT_EMPENHOS_URL))
+    ap.add_argument("--empenhos-local", help="caminho de um xlsx de empenhos local (teste)")
     args = ap.parse_args()
 
     data_str = args.date or datetime.date.today().isoformat()
     path = args.local if args.local else baixar(args.file_id)
-    print("Fonte:", path)
+    print("Fonte Créditos:", path)
     res, periodo, alertas = etl(path)
+
+    # Empenhos
+    emp_data = None
+    try:
+        path_emp = args.empenhos_local if args.empenhos_local else baixar_empenhos(args.empenhos_url)
+        print("Fonte Empenhos:", path_emp)
+        emp_data = etl_empenhos(path_emp, res)
+        print(f"Empenhos carregados: {emp_data['total_qtd']} NEs | Total: R$ {emp_data['total_val']:,.2f}")
+    except Exception as e:
+        print("[AVISO] Falha ao carregar base de empenhos:", e)
+
     for a in alertas:
         print("[ALERTA]", a)
     hist = atualizar_historico(res, data_str)
-    html_out = montar_pagina(res, hist, data_str, periodo, alertas)
+    html_out = montar_pagina(res, hist, data_str, periodo, alertas, empenhos_data=emp_data)
 
     os.makedirs(SITE, exist_ok=True)
     os.makedirs(os.path.join(SITE, "data"), exist_ok=True)
