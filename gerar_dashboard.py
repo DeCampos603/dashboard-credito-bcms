@@ -2174,7 +2174,7 @@ body {
 }
 
 .wrap {
-  max-width: 1280px;
+  max-width: min(98vw, 1860px);
   margin: 0 auto;
   padding: 0 24px 64px;
 }
@@ -2372,7 +2372,7 @@ h1 {
   z-index: 30;
 }
 .omds-nav-in {
-  max-width: 1280px;
+  max-width: min(98vw, 1860px);
   margin: 0 auto;
   padding: 10px 24px;
   display: flex;
@@ -3126,7 +3126,7 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   border: 1px solid var(--border-strong);
   border-radius: 20px;
   box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  max-width: 860px;
+  max-width: min(96vw, 1140px);
   width: 100%;
   max-height: calc(100vh - 40px);
   max-height: calc(100dvh - 40px);
@@ -3256,7 +3256,7 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 
 /* Rodapé */
 .rodape {
-  max-width: 1280px;
+  max-width: min(98vw, 1860px);
   margin: 48px auto 0;
   padding: 24px;
   border-top: 1px solid var(--border);
@@ -4678,6 +4678,7 @@ document.addEventListener('focusin', function(e){
 function bcmsCelClose(){
   var m=document.getElementById('modal');
   if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+  if(typeof BCMS_MODAL_STACK !== 'undefined'){ BCMS_MODAL_STACK = []; }
   if(bcmsLastFocus && document.contains(bcmsLastFocus) && typeof bcmsLastFocus.focus==='function'){
     bcmsLastFocus.focus();
   }
@@ -5047,6 +5048,7 @@ function bcmsDetalheNC(hid){
     };
   }
   if(!item) return;
+  if(typeof bcmsModalPush === 'function') bcmsModalPush(function(){ bcmsDetalheNC(hid); });
 
   var prov = item.prov || 0;
   var bloq = item.bloq || 0;
@@ -5225,7 +5227,7 @@ function bcmsDetalheNC(hid){
 
   /* Seção 5: Notas de Empenho (NEs) Vinculadas ao Crédito */
   if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nc_to_nes){
-    var nesDaNc = EMPENHODATA.nc_to_nes[item.nc] || [];
+    var nesDaNc = (typeof bcmsGetNesDaNC === 'function') ? bcmsGetNesDaNC(item.nc) : (EMPENHODATA.nc_to_nes[item.nc] || []);
     h += '  <div class="m-justif-card modal-empenhos-secao" style="border-left-color:#10B981;margin-top:20px;">';
     h += '    <div class="m-justif-header">';
     h += '      <span class="m-justif-title">📦 Notas de Empenho Vinculadas (' + nesDaNc.length + ' emitidas)</span>';
@@ -5236,10 +5238,10 @@ function bcmsDetalheNC(hid){
     }
     h += '    </div>';
     if(nesDaNc.length > 0){
-      h += '    <div class="tbl-scroll"><table class="mini-ne-table"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th>Ação</th></tr></thead><tbody>';
+      h += '    <div class="tbl-scroll" style="max-height:320px;"><table class="det det-compact"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th style="text-align:center;">Ação</th></tr></thead><tbody>';
       for(var k = 0; k < nesDaNc.length; k++){
         var neIt = nesDaNc[k];
-        h += '<tr><td class="font-mono font-bold">' + bcmsEsc(neIt.ne) + '</td><td>' + bcmsEsc(neIt.dia) + '</td><td>' + bcmsEsc(neIt.fav) + ' (' + bcmsEsc(neIt.doc) + ')</td><td>' + (neIt.proc ? '<span class="badge-pregao">' + bcmsEsc(neIt.proc) + '</span>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td><button class="btn-secundario btn-xs" onclick="bcmsCopiarTexto(\'' + bcmsEsc(neIt.ne) + '\')">Copiar</button></td></tr>';
+        h += '<tr><td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" class="link-drill">' + bcmsEsc(neIt.ne) + '</a></td><td>' + bcmsEsc(neIt.dia || '—') + '</td><td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(neIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(neIt.fav) + '</a> <small style="color:var(--ink-muted);">(' + bcmsEsc(neIt.doc) + ')</small></td><td>' + (neIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(neIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(neIt.proc) + '</a>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')">Detalhar ↗</button></td></tr>';
       }
       h += '</tbody></table></div>';
     } else {
@@ -5250,6 +5252,9 @@ function bcmsDetalheNC(hid){
 
   /* Rodapé de Ações Executivo */
   h += '  <div class="m-footer-actions-v2">';
+  if(typeof BCMS_MODAL_STACK !== 'undefined' && BCMS_MODAL_STACK.length > 1){
+    h += '    <button type="button" class="m-btn-pill" onclick="bcmsModalBack()">‹ Voltar</button>';
+  }
   h += '    <button type="button" class="m-btn-pill" onclick="bcmsVerNoHistorico(\'' + bcmsEsc(item.nc) + '\')">🔍 Localizar no Histórico Geral</button>';
   h += '    <button type="button" class="m-btn-pill" onclick="bcmsCopiarNC(\'' + bcmsEsc(item.nc) + '\', this)">📋 Copiar Nº da NC</button>';
   h += '    <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
