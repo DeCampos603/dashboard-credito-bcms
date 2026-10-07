@@ -577,16 +577,17 @@ def uasg_card(cod, d):
 
 def tabela_html(tid, celulas, com_fonte, ativo):
     """Relação de dotações e créditos por célula orçamentária no exercício."""
-    cols = (["Fonte"] if com_fonte else []) + ["Ação", "PI", "ND", "Aplicação", "Recebido (líq)", "Empenhado", "Crédito Disp."]
+    cols = (["Fonte"] if com_fonte else []) + ["Ação", "PI", "ND", "Aplicação", "Recebido (líq)", "Empenhado", "Liquidado", "Crédito Disp."]
     ths = []
     for c in cols:
-        numc = c in ("Recebido (líq)", "Empenhado", "Crédito Disp.")
+        numc = c in ("Recebido (líq)", "Empenhado", "Liquidado", "Crédito Disp.")
         cls = ' class="num"' if numc else ''
         ths.append(f'<th{cls} tabindex="0" role="button" aria-sort="none" onclick="bcmsSort(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsSort(this)}}">{esc(c)}<span class="sort"></span></th>')
     body = []
     tot_cred = sum(c["cred"] for c in celulas)
     tot_aloc = sum(c["aloc"] for c in celulas)
     tot_emp  = sum(c["emp"]  for c in celulas)
+    tot_liq  = sum(c.get("liq", 0.0) for c in celulas)
     n_com_saldo = sum(1 for c in celulas if c["cred"] > 0.005)
     n_zeradas   = len(celulas) - n_com_saldo
     for c in celulas:
@@ -594,6 +595,8 @@ def tabela_html(tid, celulas, com_fonte, ativo):
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
         cid = esc(c.get("cid", ""))
         is_zerada = c["cred"] <= 0.005
+        liq_val = c.get("liq", 0.0)
+        liq_fmt = esc(brl(liq_val)) if liq_val > 0.005 else '<span style="color:var(--ink-soft);">R$ 0,00</span>'
         cred_disp_html = (f'{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>'
                           if not is_zerada else
                           f'<span class="pill-100" title="Crédito 100% empenhado no exercício">100% Empenhado</span> {esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>')
@@ -605,11 +608,13 @@ def tabela_html(tid, celulas, com_fonte, ativo):
             f'<td class="obj" title="{esc(aplic)}">{esc(aplic[:60])}</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
+            f'<td class="num" data-sort="{liq_val:.2f}">{liq_fmt}</td>'
             f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{cred_disp_html}</td></tr>')
     ncols = len(cols)
-    tfoot = (f'<tfoot><tr><td colspan="{ncols-3}" id="tf-lbl-{tid}">TOTAL · {len(celulas)} célula(s) orçamentária(s)</td>'
+    tfoot = (f'<tfoot><tr><td colspan="{ncols-4}" id="tf-lbl-{tid}">TOTAL · {len(celulas)} célula(s) orçamentária(s)</td>'
              f'<td class="num" id="tf-aloc-{tid}" data-sort="{tot_aloc:.2f}">{esc(brl(tot_aloc))}</td>'
              f'<td class="num" id="tf-emp-{tid}" data-sort="{tot_emp:.2f}">{esc(brl(tot_emp))}</td>'
+             f'<td class="num" id="tf-liq-{tid}" data-sort="{tot_liq:.2f}">{esc(brl(tot_liq))}</td>'
              f'<td class="num anchor" id="tf-cred-{tid}" data-sort="{tot_cred:.2f}">{esc(brl(tot_cred))}</td></tr></tfoot>')
     disp_style = "" if ativo else ' style="display:none"'
     tgl_zero = (f'<label class="toggle-zero" title="Alternar visualização para focar apenas nas células com saldo disponível">'
@@ -4031,7 +4036,7 @@ function bcmsToggleZero(chk, tid){
   var q = qInput ? qInput.value.toLowerCase().trim() : '';
   var rows = panel.querySelectorAll('tbody tr.cel-row');
   var hide = chk.checked;
-  var totAloc = 0, totEmp = 0, totCred = 0, visCount = 0;
+  var totAloc = 0, totEmp = 0, totLiq = 0, totCred = 0, visCount = 0;
   rows.forEach(function(r){
     var cr = parseFloat(r.getAttribute('data-cred') || '0');
     var matchSearch = !q || r.textContent.toLowerCase().indexOf(q) > -1;
@@ -4041,7 +4046,12 @@ function bcmsToggleZero(chk, tid){
       r.style.display = '';
       visCount++;
       var cells = r.querySelectorAll('td.num');
-      if(cells.length >= 3){
+      if(cells.length >= 4){
+        totAloc += parseFloat(cells[0].getAttribute('data-sort') || '0');
+        totEmp += parseFloat(cells[1].getAttribute('data-sort') || '0');
+        totLiq += parseFloat(cells[2].getAttribute('data-sort') || '0');
+        totCred += parseFloat(cells[3].getAttribute('data-sort') || (cr + ''));
+      } else if(cells.length === 3){
         totAloc += parseFloat(cells[0].getAttribute('data-sort') || '0');
         totEmp += parseFloat(cells[1].getAttribute('data-sort') || '0');
         totCred += parseFloat(cells[2].getAttribute('data-sort') || (cr + ''));
@@ -4060,6 +4070,8 @@ function bcmsToggleZero(chk, tid){
   if(tfAloc) tfAloc.textContent = bcmsBRL(totAloc);
   var tfEmp = document.getElementById('tf-emp-' + tid);
   if(tfEmp) tfEmp.textContent = bcmsBRL(totEmp);
+  var tfLiq = document.getElementById('tf-liq-' + tid);
+  if(tfLiq) tfLiq.textContent = bcmsBRL(totLiq);
   var tfCred = document.getElementById('tf-cred-' + tid);
   if(tfCred) tfCred.textContent = bcmsBRL(totCred);
 }
@@ -4573,8 +4585,38 @@ function bcmsCel(row){
   });
   h+='<div class="m-ncs" style="margin-bottom:20px;">'+(itens||'<p class="vazio">Sem notas de crédito para detalhar.</p>')+'</div>';
 
+  var nesDaCel = [];
+  if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nes){
+    for(var idxNe = 0; idxNe < EMPENHODATA.nes.length; idxNe++){
+      var neCand = EMPENHODATA.nes[idxNe];
+      if((neCand.ug === d.uasg || !d.uasg) && neCand.pi === d.pi && (neCand.nd === d.nd || (neCand.nd && d.nd && neCand.nd.slice(0,4) === d.nd.slice(0,4)))){
+        nesDaCel.push(neCand);
+      }
+    }
+  }
+
+  if(nesDaCel.length > 0){
+    var neItens = '';
+    var totValNes = 0;
+    for(var ki = 0; ki < nesDaCel.length; ki++){
+      var nObj = nesDaCel[ki];
+      totValNes += (nObj.val || 0);
+      var sClsNe = (nObj.prova_slug === 'ok' ? 'status-disp' : (nObj.prova_slug === 'info' ? 'status-parcial' : (nObj.prova_slug === 'danger' ? 'status-canc' : 'status-canc')));
+      neItens += '<tr class="cel-row">' +
+        '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
+        '<td class="mono2">' + bcmsEsc(nObj.dia || '—') + '</td>' +
+        '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
+        '<td class="num font-mono" style="color:var(--success-strong);font-weight:700;">' + bcmsBRL(nObj.val) + '</td>' +
+        '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span></td>' +
+        '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')">Ficha ↗</button></td>' +
+      '</tr>';
+    }
+    h += '<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de Empenho Emitidas da Célula (' + nesDaCel.length + ' NEs · ' + bcmsBRL(totValNes) + ')</div>';
+    h += '<div class="tbl-scroll" style="max-height:260px;margin-bottom:20px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
+  }
+
   h+='<div class="m-footer-actions-v2">';
-  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · ' + nq + ' NC(s) vinculada(s)</span>';
+  h+='  <span class="m-footer-meta">SIAFI / Tesouro Gerencial · ' + nq + ' NC(s) · ' + nesDaCel.length + ' NE(s) vinculada(s)</span>';
   h+='  <button type="button" class="m-btn-pill primary" onclick="bcmsCelClose()">Fechar Janela ✕</button>';
   h+='</div>';
   h+='</div>';

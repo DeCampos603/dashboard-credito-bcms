@@ -59,11 +59,50 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
     nc_pat = re.compile(r'(202\dNC\d{6})', re.IGNORECASE)
     proc_pat = re.compile(r'\b(PE\s*\d+[/_\-]\d+|PREG[ÃA]O\s*(?:ELETR[ÔO]NICO)?\s*(?:N[º°])?\s*\d+[/_\-]\d+|DISPENSA\s*(?:N[º°])?\s*\d+[/_\-]\d+|INEX\w*\s*(?:N[º°])?\s*\d+[/_\-]\d+|DIEX\s*(?:N[º°])?\s*\d+[/_\-]\d+)', re.IGNORECASE)
 
-    # 1. Mapeamento do Acervo de Créditos para a PROVA DA VERDADE (chaves curtas e longas)
+    # 1. Mapeamento do Acervo de Créditos para a PROVA DA VERDADE e LIQUIDAÇÃO SIAFI
     cred_audit_db = {} # nc_code / nc_raw -> list of dicts
     cel_to_ncs = {}    # (ug, pi, nd) -> list of nc_codes
+    cel_liq_db = {}    # (ug, pi, nd) -> dict com liq, pag, emp, prov
+    cel_elem_liq_db = {} # (ug, pi, nd_elem) -> dict
+    pi_liq_db = {}     # (ug, pi) -> dict
+    global_pi_liq_db = {} # pi -> dict
+    tot_liq_global = 0.0
+    tot_pag_global = 0.0
 
     for cod, d in res_credito.items():
+        tot_liq_global += d.get("liq", 0.0)
+        tot_pag_global += d.get("pag", 0.0)
+        for (acao, pi_c, nd_c), cel in d.get("celulas", {}).items():
+            k_cel = (cod, pi_c, nd_c)
+            cel_liq_db[k_cel] = {
+                "liq": cel.get("liq", 0.0),
+                "pag": cel.get("pag", 0.0),
+                "emp": cel.get("emp", 0.0),
+                "prov": cel.get("prov", 0.0),
+                "cred": cel.get("cred", 0.0),
+                "acao": acao
+            }
+            nd_elem = nd_c[:4] + "00" if len(nd_c) >= 6 else nd_c
+            k_elem = (cod, pi_c, nd_elem)
+            if k_elem not in cel_elem_liq_db:
+                cel_elem_liq_db[k_elem] = {"liq": 0.0, "pag": 0.0, "emp": 0.0}
+            cel_elem_liq_db[k_elem]["liq"] += cel.get("liq", 0.0)
+            cel_elem_liq_db[k_elem]["pag"] += cel.get("pag", 0.0)
+            cel_elem_liq_db[k_elem]["emp"] += cel.get("emp", 0.0)
+
+            k_pi = (cod, pi_c)
+            if k_pi not in pi_liq_db:
+                pi_liq_db[k_pi] = {"liq": 0.0, "pag": 0.0, "emp": 0.0}
+            pi_liq_db[k_pi]["liq"] += cel.get("liq", 0.0)
+            pi_liq_db[k_pi]["pag"] += cel.get("pag", 0.0)
+            pi_liq_db[k_pi]["emp"] += cel.get("emp", 0.0)
+
+            if pi_c not in global_pi_liq_db:
+                global_pi_liq_db[pi_c] = {"liq": 0.0, "pag": 0.0, "emp": 0.0}
+            global_pi_liq_db[pi_c]["liq"] += cel.get("liq", 0.0)
+            global_pi_liq_db[pi_c]["pag"] += cel.get("pag", 0.0)
+            global_pi_liq_db[pi_c]["emp"] += cel.get("emp", 0.0)
+
         for L in d.get("linhas", []):
             nc_raw = L.get("nc")
             if not nc_raw: continue
@@ -144,10 +183,31 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         desc = str(r[11] or "").strip()
 
         # Saldo das contas contábeis
+        try: mov_emp = float(str(r[14] or 0).replace("'", "").strip())
+        except Exception: mov_emp = 0.0
         try: a_liquidar = float(str(r[15] or 0).replace("'", "").strip())
         except Exception: a_liquidar = 0.0
         try: liquidado_pago = float(str(r[21] or 0).replace("'", "").strip())
         except Exception: liquidado_pago = 0.0
+
+        # Identificação da Liquidação na Célula Contábil do SIAFI
+        nd_elem = nd[:4] + "00" if len(nd) >= 6 else nd
+        c_liq_cand = (cel_liq_db.get((ug_cur, pi, nd)) or 
+                      cel_elem_liq_db.get((ug_cur, pi, nd_elem)) or 
+                      pi_liq_db.get((ug_cur, pi)) or 
+                      global_pi_liq_db.get(pi) or {})
+        
+        cel_liq = c_liq_cand.get("liq", 0.0)
+        cel_pag = c_liq_cand.get("pag", 0.0)
+        cel_emp = c_liq_cand.get("emp", 0.0)
+        pct_liq = (cel_liq / cel_emp * 100.0) if cel_emp > 0 else 0.0
+
+        # Liquidação atribuída à NE
+        ne_liq = 0.0
+        if mov_emp > a_liquidar and mov_emp > 0:
+            ne_liq = round(mov_emp - a_liquidar, 2)
+        elif cel_liq > 0 and val > 0:
+            ne_liq = min(val, cel_liq)
 
         ne_num = ne_full[-12:] if len(ne_full) >= 12 else ne_full
 
@@ -263,7 +323,12 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "proc": proc_str,
             "desc": desc,
             "a_liquidar": round(a_liquidar, 2),
-            "pago": round(liquidado_pago, 2)
+            "pago": round(cel_pag if cel_pag > 0 else (ne_liq if ne_liq > 0 else liquidado_pago), 2),
+            "cel_liq": round(cel_liq, 2),
+            "cel_pag": round(cel_pag, 2),
+            "cel_emp": round(cel_emp, 2),
+            "pct_liq": round(pct_liq, 1),
+            "ne_liq": round(ne_liq, 2)
         }
         nes_list.append(ne_item)
         tot_val += val
@@ -283,7 +348,10 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "prova": status_prova,
             "prova_slug": status_slug,
             "motivo": motivo_divergencia,
-            "desc": desc
+            "desc": desc,
+            "cel_liq": round(cel_liq, 2),
+            "cel_pag": round(cel_pag, 2),
+            "ne_liq": round(ne_liq, 2)
         }
         if nc_efetiva:
             _add_to_nc_to_nes(nc_efetiva, ne_summary)
@@ -314,11 +382,15 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         "total_val": round(tot_val, 2),
         "total_qtd": len(nes_list),
         "qtd_fav": len(top_forn),
+        "tot_liq_global": round(tot_liq_global, 2),
+        "tot_pag_global": round(tot_pag_global, 2),
         "estat_prova": estat_prova,
         "inconsistencias": inconsistencias_citacao,
         "top_fornecedores": top_forn_list,
         "top_processos": top_procs_list,
         "nc_to_nes": nc_to_nes,
+        "celulas_liq": {f"{k[0]}_{k[1]}_{k[2]}": v for k, v in cel_liq_db.items()},
+        "pi_liq": global_pi_liq_db,
         "nes": nes_list
     }
 
@@ -332,6 +404,9 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     tot_emp = emp_data["total_val"]
     qtd_nes = emp_data["total_qtd"]
     qtd_fav = emp_data["qtd_fav"]
+    tot_liq = emp_data.get("tot_liq_global", 0.0)
+    tot_pag = emp_data.get("tot_pag_global", 0.0)
+    pct_liq_total = (tot_liq / tot_emp * 100.0) if tot_emp > 0 else 0.0
     
     taxa_exec = (tot_emp / tot_prov_rec * 100.0) if tot_prov_rec > 0 else 0.0
 
@@ -355,6 +430,11 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
         <span class="kpi-lbl">TOTAL EMPENHADO (NEs)</span>
         <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_emp)}</div>
         <div class="kpi-sub"><b>{qtd_nes:,} NEs</b> ({taxa_exec:.1f}% do crédito descentralizado)</div>
+      </div>
+      <div class="kpi" style="border-left-color:#F59E0B;">
+        <span class="kpi-lbl">DESPESAS LIQUIDADAS NO SIAFI</span>
+        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_liq)}</div>
+        <div class="kpi-sub"><b>{_fmt_brl(tot_pag)} pagos</b> ({pct_liq_total:.1f}% do empenhado)</div>
       </div>
       <div class="kpi" style="border-left-color:var(--success);">
         <span class="kpi-lbl">CRÉDITO DISPONÍVEL LÍQUIDO</span>
@@ -455,6 +535,7 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('nd')" title="Ordenar por Natureza de Despesa">ND <span class="sort" id="sort-nc-nd"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('prov')" class="num" title="Ordenar por Provisão Recebida">Crédito Recebido <span class="sort" id="sort-nc-prov">▼</span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('emp')" class="num" title="Ordenar por Total Empenhado">Total Empenhado <span class="sort" id="sort-nc-emp"></span></th>
+            <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('liq')" class="num" title="Ordenar por Despesas Liquidadas">Liquidado (SIAFI) <span class="sort" id="sort-nc-liq"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('cred')" class="num anchor" title="Ordenar por Saldo Disponível">Saldo Disponível <span class="sort" id="sort-nc-cred"></span></th>
             <th style="width:130px;text-align:center;">Execução</th>
             <th style="width:84px;text-align:center;">Ações</th>
@@ -524,6 +605,7 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
             <th>CNPJ / CPF</th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('proc')" title="Ordenar por Processo / Pregão">Processo / Pregão <span class="sort" id="sort-ne-proc"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('val')" class="num anchor" title="Ordenar por Valor Empenhado">Valor da NE <span class="sort" id="sort-ne-val"></span></th>
+            <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('cel_liq')" class="num" title="Ordenar por Liquidação da Célula">Liquidado (SIAFI) <span class="sort" id="sort-ne-liq"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('nd')" title="Ordenar por Natureza de Despesa">ND <span class="sort" id="sort-ne-nd"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('pi')" title="Ordenar por Plano Interno">Plano Interno <span class="sort" id="sort-ne-pi"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('nc')" title="Ordenar por NC Citada">NC de Origem <span class="sort" id="sort-ne-nc"></span></th>
@@ -1008,6 +1090,12 @@ function bcmsInitRastreio(){
       faixa = 'zero';
     }
 
+    var celKey = (it.fav_cod || it.uasg) + '_' + it.pi + '_' + it.nd;
+    var cLiq = (EMPENHODATA.celulas_liq && EMPENHODATA.celulas_liq[celKey]) ? EMPENHODATA.celulas_liq[celKey] :
+               (EMPENHODATA.pi_liq && EMPENHODATA.pi_liq[it.pi]) ? EMPENHODATA.pi_liq[it.pi] : null;
+    var ncLiq = cLiq ? (cLiq.liq || 0) : (it.liq || 0);
+    var ncPag = cLiq ? (cLiq.pag || 0) : (it.pag || 0);
+
     var ncObj = {
       hid: it.hid,
       nc: it.nc,
@@ -1024,6 +1112,8 @@ function bcmsInitRastreio(){
       obj: it.obj || '',
       prov: provVal,
       emp: totEmpNE > 0 ? totEmpNE : consumido,
+      liq: ncLiq,
+      pag: ncPag,
       cred: credOficial,
       taxa_queima: taxaQueima,
       faixa_queima: faixa,
@@ -1109,7 +1199,7 @@ function bcmsSortRastreioNC(col){
     RASTREIO_SORT_NC.asc = (col === 'nc' || col === 'emit_nome' || col === 'om_sigla');
   }
 
-  var sortIds = ['nc', 'dia', 'emit', 'uasg', 'pi', 'nd', 'prov', 'emp', 'cred'];
+  var sortIds = ['nc', 'dia', 'emit', 'uasg', 'pi', 'nd', 'prov', 'emp', 'liq', 'cred'];
   for(var s = 0; s < sortIds.length; s++){
     var elS = document.getElementById('sort-nc-' + sortIds[s]);
     if(elS){
@@ -1153,7 +1243,7 @@ function bcmsRenderRastreioNC(){
   var paginaItens = RASTREIO_NC_FILTRADOS.slice(ini, fim);
 
   if(paginaItens.length === 0){
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma Nota de Crédito encontrada para os filtros aplicados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma Nota de Crédito encontrada para os filtros aplicados.</td></tr>';
     document.getElementById('paginacaoRastreioNC').innerHTML = '';
     return;
   }
@@ -1178,6 +1268,7 @@ function bcmsRenderRastreioNC(){
       '<td class="mono2">' + bcmsEsc(it.nd || '—') + '</td>' +
       '<td class="num font-mono">' + bcmsBRL(it.prov) + '</td>' +
       '<td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(it.emp) + '</td>' +
+      '<td class="num font-mono" style="color:#059669;font-weight:600;">' + (it.liq > 0.005 ? bcmsBRL(it.liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>') + '</td>' +
       '<td class="num font-mono anchor">' + bcmsBRL(it.cred) + '</td>' +
       '<td>' +
         '<div class="queima-bar-wrap" title="' + it.taxa_queima.toFixed(1) + '% empenhado">' +
@@ -1188,7 +1279,7 @@ function bcmsRenderRastreioNC(){
       '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNC(\'' + it.hid + '\')">Ficha ↗</button></td>' +
     '</tr>' +
     '<tr id="acordeao-' + it.hid + '" class="sub-row-detalhe" style="display:none">' +
-      '<td colspan="12" style="padding:0;">' +
+      '<td colspan="13" style="padding:0;">' +
         '<div class="sub-ne-wrap" id="acordeao-cont-' + it.hid + '"></div>' +
       '</td>' +
     '</tr>';
@@ -1235,7 +1326,7 @@ function bcmsToggleAcordeaoNC(hid){
   var nes = item.nes;
   var miniHtml = '<div class="sub-ne-header">' +
     '<div class="sub-ne-title">📦 ' + nes.length + ' Nota(s) de Empenho vinculadas à NC ' + bcmsEsc(item.nc) + '</div>' +
-    '<div class="sub-ne-meta">Total Empenhado: <b style="color:var(--success-strong);">' + bcmsBRL(item.emp) + '</b> de <b>' + bcmsBRL(item.prov) + '</b> (' + item.taxa_queima.toFixed(1) + '% executado)</div>' +
+    '<div class="sub-ne-meta">Total Empenhado: <b style="color:var(--success-strong);">' + bcmsBRL(item.emp) + '</b> de <b>' + bcmsBRL(item.prov) + '</b> (' + item.taxa_queima.toFixed(1) + '% executado) · Liquidado no SIAFI: <b style="color:#059669;">' + bcmsBRL(item.liq||0) + '</b> (Pago: <b>' + bcmsBRL(item.pag||0) + '</b>)</div>' +
   '</div>' +
   '<table class="det det-compact">' +
     '<thead>' +
@@ -1324,11 +1415,12 @@ function bcmsSortRastreioNE(col){
     RASTREIO_SORT_NE.asc = (col === 'ne' || col === 'fav' || col === 'ug');
   }
 
-  var sortIds = ['ne', 'dia', 'ug', 'fav', 'proc', 'val', 'nd', 'pi', 'nc'];
+  var sortIds = ['ne', 'dia', 'ug', 'fav', 'proc', 'val', 'liq', 'nd', 'pi', 'nc'];
   for(var s = 0; s < sortIds.length; s++){
     var elS = document.getElementById('sort-ne-' + sortIds[s]);
     if(elS){
-      elS.textContent = (sortIds[s] === col) ? (RASTREIO_SORT_NE.asc ? '▲' : '▼') : '';
+      var match = (sortIds[s] === col || (sortIds[s] === 'liq' && col === 'cel_liq'));
+      elS.textContent = match ? (RASTREIO_SORT_NE.asc ? '▲' : '▼') : '';
     }
   }
 
@@ -1367,7 +1459,7 @@ function bcmsRenderRastreioNE(){
   var paginaItens = RASTREIO_NE_FILTRADOS.slice(ini, fim);
 
   if(paginaItens.length === 0){
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum empenho encontrado para os filtros aplicados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum empenho encontrado para os filtros aplicados.</td></tr>';
     document.getElementById('paginacaoRastreioNE').innerHTML = '';
     return;
   }
@@ -1383,6 +1475,11 @@ function bcmsRenderRastreioNE(){
     var pregaoTag = it.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(it.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(it.proc) + '</a>' : '—';
     var ncLink = it.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + it.nc + '\')" class="link-drill">' + bcmsEsc(it.nc) + '</a>' : '<span style="color:var(--ink-muted);">—</span>';
 
+    var liqCelExib = (it.cel_liq > 0.005 ? bcmsBRL(it.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
+    if(it.cel_liq > 0.005 && it.pct_liq > 0){
+      liqCelExib += ' <small style="display:block;font-size:0.7rem;color:#059669;">' + it.pct_liq.toFixed(0) + '% Célula</small>';
+    }
+
     html += '<tr class="cel-row">' +
       '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')" class="link-drill">' + bcmsEsc(it.ne) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(it.dia || '—') + '</td>' +
@@ -1391,6 +1488,7 @@ function bcmsRenderRastreioNE(){
       '<td class="mono2">' + bcmsEsc(it.doc || '—') + '</td>' +
       '<td>' + pregaoTag + '</td>' +
       '<td class="num font-mono font-bold anchor" style="color:var(--success-strong);">' + bcmsBRL(it.val) + '</td>' +
+      '<td class="num font-mono" style="color:#059669;font-weight:700;">' + liqCelExib + '</td>' +
       '<td class="mono2">' + bcmsEsc(it.nd) + '</td>' +
       '<td class="mono2">' + bcmsEsc(it.pi) + '</td>' +
       '<td class="mono2">' + ncLink + '</td>' +
@@ -1678,8 +1776,13 @@ function bcmsDetalheNE(neNum){
             (neObj.prova_slug === 'danger' ? 'status-canc' : 'status-zerada')));
 
   var aLiq = neObj.a_liquidar || 0;
-  var liqPago = neObj.pago || 0;
-  var pLiq = (neObj.val > 0) ? Math.min(100, Math.max(0, (liqPago / neObj.val) * 100)) : 0;
+  var celLiq = neObj.cel_liq || 0;
+  var celPag = neObj.cel_pag || 0;
+  var neLiq = neObj.ne_liq || 0;
+  var liqExib = (celLiq > 0) ? celLiq : (neObj.pago || 0);
+  var pagExib = (celPag > 0) ? celPag : liqExib;
+  var pctCelLiq = neObj.pct_liq || 0;
+  var pLiq = pctCelLiq > 0 ? pctCelLiq : (neObj.val > 0 ? Math.min(100, (liqExib / neObj.val) * 100) : 0);
 
   var h = '<div class="m-accent-bar" style="background:linear-gradient(90deg, #059669 0%, #10B981 50%, #2563EB 100%);"></div>';
   h += '<div class="m-content-wrap">';
@@ -1718,17 +1821,33 @@ function bcmsDetalheNE(neNum){
   h += '        <span class="m-fin-sub">Conta contábil 622110000</span>';
   h += '      </div>';
   h += '      <div class="m-fin-card">';
-  h += '        <span class="m-fin-label">Liquidado / Pago</span>';
-  h += '        <span class="m-fin-val col-prov">' + bcmsBRL(liqPago) + '</span>';
-  h += '        <span class="m-fin-sub">Conta contábil 622130400</span>';
+  h += '        <span class="m-fin-label">Liquidado no SIAFI (Célula)</span>';
+  h += '        <span class="m-fin-val col-prov" style="color:#059669;">' + bcmsBRL(liqExib) + '</span>';
+  h += '        <span class="m-fin-sub">Pago: ' + bcmsBRL(pagExib) + '</span>';
   h += '      </div>';
   h += '      <div class="m-fin-card hero-saldo">';
-  h += '        <span class="m-fin-label" style="color:#10B981;">Estágio de Execução</span>';
+  h += '        <span class="m-fin-label" style="color:#10B981;">Estágio da Dotação</span>';
   h += '        <span class="m-fin-val-hero">' + pLiq.toFixed(1) + '%</span>';
-  h += '        <span class="m-fin-tag-hero">✓ Liquidado / Pago</span>';
+  h += '        <span class="m-fin-tag-hero">✓ ' + (pLiq >= 100 ? '100% Liquidado' : 'Liquidado no SIAFI') + '</span>';
   h += '      </div>';
   h += '    </div>';
   h += '  </div>';
+
+  if(celLiq > 0){
+    h += '  <div class="m-justif-card" style="border-left-color:#10B981;background:rgba(16,185,129,0.06);margin-bottom:16px;">';
+    h += '    <div class="m-justif-header">';
+    h += '      <span class="m-justif-title" style="color:#059669;">🏛️ Execução Orçamentária no SIAFI · PI ' + bcmsEsc(neObj.pi) + '</span>';
+    h += '      <span class="m-badge-status-lg status-ok">✓ ' + (pctCelLiq >= 100 ? '100% LIQUIDADO' : pctCelLiq.toFixed(1) + '% LIQUIDADO') + '</span>';
+    h += '    </div>';
+    h += '    <div class="m-justif-body" style="font-size:0.875rem;line-height:1.5;color:var(--ink);">';
+    h += '      A dotação orçamentária vinculada (<b>PI ' + bcmsEsc(neObj.pi) + ' · ND ' + bcmsEsc(neObj.nd) + '</b>) registra ';
+    h += '      <b>' + bcmsBRL(celLiq) + '</b> de despesas liquidadas e <b>' + bcmsBRL(celPag) + '</b> pagas no SIAFI / Tesouro Gerencial.';
+    if(neLiq > 0){
+      h += ' Esta NE possui redução de saldo a liquidar correspondente a <b>' + bcmsBRL(neLiq) + '</b>.';
+    }
+    h += '    </div>';
+    h += '  </div>';
+  }
 
   // Cards Cadastrais
   h += '  <div class="m-class-grid" style="margin-bottom:16px;">';
