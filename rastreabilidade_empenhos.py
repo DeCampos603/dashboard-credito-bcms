@@ -116,6 +116,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
                 "emit_nome": L.get("emit_nome") or "",
                 "pi": L.get("pi") or "",
                 "nd": L.get("nd") or "",
+                "acao": L.get("acao") or "",
                 "prov": L.get("prov", 0.0) or L.get("cred", 0.0),
                 "obj": L.get("obj") or ""
             }
@@ -130,6 +131,27 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             k_elem = (cod, L.get("pi"), nd_elem)
             cel_to_ncs.setdefault(k_elem, []).append(nc_code)
             cel_to_ncs.setdefault(k_elem, []).append(nc_raw)
+
+    # Mapeamento para resolução determinística de Ação Orçamentária
+    nc_to_acao = {}
+    cel_unica_acao = {}
+    for cod, d in res_credito.items():
+        for L in d.get("linhas", []):
+            nc_l = L.get("nc")
+            if nc_l and L.get("acao"):
+                m_l = nc_pat.search(nc_l)
+                if m_l:
+                    nc_to_acao[(cod, m_l.group(1).upper())] = L.get("acao")
+                nc_to_acao[(cod, nc_l)] = L.get("acao")
+        
+        pi_nd_map = {}
+        for (acao, pi_c, nd_c) in d.get("celulas", {}).keys():
+            pi_nd_map.setdefault((pi_c, nd_c), set()).add(acao)
+            nd_el = nd_c[:4] + "00" if len(nd_c) >= 6 else nd_c
+            pi_nd_map.setdefault((pi_c, nd_el), set()).add(acao)
+        for (pi_c, nd_c), acoes in pi_nd_map.items():
+            if len(acoes) == 1:
+                cel_unica_acao[(cod, pi_c, nd_c)] = list(acoes)[0]
 
     ug_cur = ""
     ug_nome_cur = ""
@@ -302,6 +324,28 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         m_proc = proc_pat.search(desc)
         proc_str = m_proc.group(0).upper().strip() if m_proc else ""
 
+        # Identificação da Ação Orçamentária
+        acao_ne = ""
+        if nc_citada and (ug_cur, nc_citada) in nc_to_acao:
+            acao_ne = nc_to_acao[(ug_cur, nc_citada)]
+        elif nc_citada and nc_citada in cred_audit_db:
+            recs_nc = [x for x in cred_audit_db[nc_citada] if x.get("acao")]
+            if recs_nc:
+                mesma_ug = [x for x in recs_nc if x["ug"] == ug_cur]
+                if mesma_ug:
+                    mesmo_pi = [x for x in mesma_ug if x["pi"] == pi]
+                    acao_ne = mesmo_pi[0]["acao"] if mesmo_pi else mesma_ug[0]["acao"]
+                else:
+                    acao_ne = recs_nc[0]["acao"]
+        
+        if not acao_ne:
+            if c_liq_cand.get("acao"):
+                acao_ne = c_liq_cand.get("acao")
+            elif (ug_cur, pi, nd) in cel_unica_acao:
+                acao_ne = cel_unica_acao[(ug_cur, pi, nd)]
+            elif (ug_cur, pi, nd_elem) in cel_unica_acao:
+                acao_ne = cel_unica_acao[(ug_cur, pi, nd_elem)]
+
         ne_item = {
             "ne": ne_num,
             "ne_full": ne_full,
@@ -311,6 +355,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "doc": fav_doc,
             "fav": fav_nome,
             "val": round(val, 2),
+            "acao": acao_ne,
             "nd": nd,
             "nd_desc": nd_desc,
             "pi": pi,
@@ -342,6 +387,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "fav": fav_nome,
             "doc": fav_doc,
             "val": round(val, 2),
+            "acao": acao_ne,
             "nd": nd,
             "pi": pi,
             "proc": proc_str,
@@ -572,6 +618,15 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
         <option value="167307">167307 · 1º D Sup (FEx)</option>
         <option value="160321">160321 · ECT (OGU)</option>
         <option value="167321">167321 · ECT (FEx)</option>
+      </select>
+      <select class="flt" id="rSelAcaoNE" aria-label="Filtrar por Ação Orçamentária" onchange="bcmsFiltraRastreioNE()">
+        <option value="">Ação: todas as ações</option>
+        <option value="2000">2000 · Adm. da Unidade</option>
+        <option value="212B">212B · Aviação / Defesa</option>
+        <option value="21A0">21A0 · Operações Militares</option>
+        <option value="2865">2865 · Missões Específicas</option>
+        <option value="4269">4269 · GVA (Eleições)</option>
+        <option value="00T0">00T0 · Sentenças / Judiciais</option>
       </select>
       <select class="flt" id="rSelNDNE" aria-label="Filtrar por Natureza de Despesa" onchange="bcmsFiltraRastreioNE()">
         <option value="">ND: todas as despesas</option>
@@ -1383,11 +1438,13 @@ function bcmsLimpaFiltrosRastreioNC(){
 function bcmsFiltraRastreioNE(){
   var q = (document.getElementById('rBuscaNE') ? document.getElementById('rBuscaNE').value : '').toLowerCase().trim();
   var om = document.getElementById('rSelOMNE') ? document.getElementById('rSelOMNE').value : '';
+  var acao = document.getElementById('rSelAcaoNE') ? document.getElementById('rSelAcaoNE').value : '';
   var nd = document.getElementById('rSelNDNE') ? document.getElementById('rSelNDNE').value : '';
   var prova = document.getElementById('rSelProvaNE') ? document.getElementById('rSelProvaNE').value : '';
 
   RASTREIO_NE_FILTRADOS = RASTREIO_NE_ITEMS.filter(function(it){
     if(om && it.ug !== om) return false;
+    if(acao && it.acao !== acao) return false;
     if(nd && it.nd !== nd) return false;
     if(prova && it.prova_slug !== prova) return false;
     if(q){
@@ -1396,6 +1453,7 @@ function bcmsFiltraRastreioNE(){
                   (it.doc && it.doc.indexOf(q) !== -1) ||
                   (it.nc && it.nc.toLowerCase().indexOf(q) !== -1) ||
                   (it.proc && it.proc.toLowerCase().indexOf(q) !== -1) ||
+                  (it.acao && it.acao.toLowerCase().indexOf(q) !== -1) ||
                   (it.desc && it.desc.toLowerCase().indexOf(q) !== -1);
       if(!match) return false;
     }
@@ -1490,7 +1548,7 @@ function bcmsRenderRastreioNE(){
       '<td class="num font-mono font-bold anchor" style="color:var(--success-strong);">' + bcmsBRL(it.val) + '</td>' +
       '<td class="num font-mono" style="color:#059669;font-weight:700;">' + liqCelExib + '</td>' +
       '<td class="mono2">' + bcmsEsc(it.nd) + '</td>' +
-      '<td class="mono2">' + bcmsEsc(it.pi) + '</td>' +
+      '<td class="mono2">' + bcmsEsc(it.pi) + (it.acao ? ' <small class="ug-pill emit" style="margin-left:4px;font-size:0.6875rem;" title="Ação ' + bcmsEsc(it.acao) + '">' + bcmsEsc(it.acao) + '</small>' : '') + '</td>' +
       '<td class="mono2">' + ncLink + '</td>' +
       '<td style="text-align:center;">' + badgeProva + '</td>' +
       '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')">Detalhar ↗</button></td>' +
@@ -1517,6 +1575,7 @@ function bcmsPaginaRastreioNE(p){
 function bcmsLimpaFiltrosRastreioNE(){
   if(document.getElementById('rBuscaNE')) document.getElementById('rBuscaNE').value = '';
   if(document.getElementById('rSelOMNE')) document.getElementById('rSelOMNE').value = '';
+  if(document.getElementById('rSelAcaoNE')) document.getElementById('rSelAcaoNE').value = '';
   if(document.getElementById('rSelNDNE')) document.getElementById('rSelNDNE').value = '';
   if(document.getElementById('rSelProvaNE')) document.getElementById('rSelProvaNE').value = '';
   bcmsFiltraRastreioNE();
@@ -1884,6 +1943,15 @@ function bcmsDetalheNE(neNum){
   h += '      <span class="m-class-desc">' + bcmsEsc(neObj.nd_desc || 'Despesa') + '</span>';
   h += '    </div>';
 
+  // Ação Orçamentária
+  if(neObj.acao){
+    h += '    <div class="m-class-card">';
+    h += '      <span class="m-class-label">🏷️ Ação Orçamentária</span>';
+    h += '      <span class="m-class-code" style="font-size:0.875rem;color:#059669;">Ação ' + bcmsEsc(neObj.acao) + '</span>';
+    h += '      <span class="m-class-desc">Programa Governamental LOA 2026</span>';
+    h += '    </div>';
+  }
+
   h += '  </div>';
 
   // Laudo Prova Real
@@ -2008,17 +2076,19 @@ function bcmsDetalheFornecedor(favNome){
   h += '      <span class="m-justif-title">📦 Relação de Notas de Empenho Emitidas (' + nesDoForn.length + ')</span>';
   h += '    </div>';
   h += '    <div class="tbl-scroll" style="max-height:360px;"><table class="det det-compact"><thead><tr>';
-  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
+  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
   h += '    </tr></thead><tbody>';
 
   for(var k = 0; k < nesDoForn.length; k++){
     var nIt = nesDoForn[k];
+    var liqForn = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : (nIt.cel_liq > 0.005 ? bcmsBRL(nIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
     h += '<tr class="cel-row">';
     h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.dia || '—') + '</td>';
     h += '  <td><span class="ug-pill fav">' + bcmsEsc(nIt.ug) + '</span></td>';
     h += '  <td>' + (nIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(nIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(nIt.proc) + '</a>' : '—') + '</td>';
     h += '  <td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(nIt.val) + '</td>';
+    h += '  <td class="num font-mono" style="color:#059669;font-weight:600;">' + liqForn + '</td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.nd) + '</td>';
     h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + '</td>';
     h += '  <td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')">Detalhar ↗</button></td>';
@@ -2119,17 +2189,19 @@ function bcmsDetalheProcesso(procStr){
   h += '      <span class="m-justif-title">📦 Relação de Notas de Empenho Vinculadas (' + nesDoProc.length + ')</span>';
   h += '    </div>';
   h += '    <div class="tbl-scroll" style="max-height:360px;"><table class="det det-compact"><thead><tr>';
-  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Favorecido / Fornecedor</th><th class="num">Valor da NE</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
+  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Favorecido / Fornecedor</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
   h += '    </tr></thead><tbody>';
 
   for(var k = 0; k < nesDoProc.length; k++){
     var nIt = nesDoProc[k];
+    var liqProc = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : (nIt.cel_liq > 0.005 ? bcmsBRL(nIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
     h += '<tr class="cel-row">';
     h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.dia || '—') + '</td>';
     h += '  <td><span class="ug-pill fav">' + bcmsEsc(nIt.ug) + '</span></td>';
     h += '  <td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nIt.fav) + '</a></td>';
     h += '  <td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(nIt.val) + '</td>';
+    h += '  <td class="num font-mono" style="color:#059669;font-weight:600;">' + liqProc + '</td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.nd) + '</td>';
     h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + '</td>';
     h += '  <td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')">Detalhar ↗</button></td>';
@@ -2188,6 +2260,8 @@ function bcmsExportRastreioExcel(tipo){
       '<Cell><Data ss:Type="String">Natureza Despesa</Data></Cell>' +
       '<Cell><Data ss:Type="String">Crédito Recebido</Data></Cell>' +
       '<Cell><Data ss:Type="String">Total Empenhado</Data></Cell>' +
+      '<Cell><Data ss:Type="String">Liquidado (SIAFI)</Data></Cell>' +
+      '<Cell><Data ss:Type="String">Pago (SIAFI)</Data></Cell>' +
       '<Cell><Data ss:Type="String">Saldo Disponível</Data></Cell>' +
       '<Cell><Data ss:Type="String">Taxa Queima (%)</Data></Cell>' +
       '<Cell><Data ss:Type="String">Qtd NEs</Data></Cell>' +
@@ -2204,6 +2278,8 @@ function bcmsExportRastreioExcel(tipo){
         '<Cell><Data ss:Type="String">' + bcmsEscXml(it.nd) + '</Data></Cell>' +
         '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (it.prov || 0).toFixed(2) + '</Data></Cell>' +
         '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (it.emp || 0).toFixed(2) + '</Data></Cell>' +
+        '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (it.liq || 0).toFixed(2) + '</Data></Cell>' +
+        '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (it.pag || 0).toFixed(2) + '</Data></Cell>' +
         '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (it.cred || 0).toFixed(2) + '</Data></Cell>' +
         '<Cell><Data ss:Type="Number">' + (it.taxa_queima || 0).toFixed(1) + '</Data></Cell>' +
         '<Cell><Data ss:Type="Number">' + (it.nes ? it.nes.length : 0) + '</Data></Cell>' +
@@ -2218,6 +2294,8 @@ function bcmsExportRastreioExcel(tipo){
       '<Cell><Data ss:Type="String">CNPJ / CPF</Data></Cell>' +
       '<Cell><Data ss:Type="String">Processo / Pregão</Data></Cell>' +
       '<Cell><Data ss:Type="String">Valor Empenhado</Data></Cell>' +
+      '<Cell><Data ss:Type="String">Liquidado (SIAFI)</Data></Cell>' +
+      '<Cell><Data ss:Type="String">Ação Orçamentária</Data></Cell>' +
       '<Cell><Data ss:Type="String">Natureza Despesa</Data></Cell>' +
       '<Cell><Data ss:Type="String">Plano Interno</Data></Cell>' +
       '<Cell><Data ss:Type="String">NC de Origem</Data></Cell>' +
@@ -2226,6 +2304,7 @@ function bcmsExportRastreioExcel(tipo){
 
     for(var j = 0; j < list.length; j++){
       var ne = list[j];
+      var neLiqVal = (ne.ne_liq != null && ne.ne_liq > 0.005) ? ne.ne_liq : ((ne.cel_liq != null && ne.cel_liq > 0.005) ? ne.cel_liq : 0.0);
       xml += '<Row>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.ne) + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.dia) + '</Data></Cell>' +
@@ -2234,6 +2313,8 @@ function bcmsExportRastreioExcel(tipo){
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.doc) + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.proc) + '</Data></Cell>' +
         '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + (ne.val || 0).toFixed(2) + '</Data></Cell>' +
+        '<Cell ss:StyleID="sCur"><Data ss:Type="Number">' + Number(neLiqVal).toFixed(2) + '</Data></Cell>' +
+        '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.acao || '') + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.nd) + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.pi) + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.nc) + '</Data></Cell>' +

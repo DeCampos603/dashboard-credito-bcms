@@ -4393,7 +4393,7 @@ function bcmsTelaAba(aba){
   h+='</div>';
 
   /* etapas tablist */
-  var abas=[['tela','🟢 Em tela'],['hist','📜 Histórico do PI'],['liq','🧾 Liquidação'],['pag','💰 Pagamento']];
+  var abas=[['tela','🟢 Em tela'],['hist','📜 Histórico do PI'],['liq','🧾 Liquidação'],['pag','💰 Pagamento'],['emp','📦 Empenhos da Célula']];
   h+='<div class="m-etapas" role="tablist" style="margin-bottom:18px;">';
   abas.forEach(function(a){
     h+='<button class="m-etapa'+(a[0]===aba?' on':'')+'" role="tab" aria-selected="'+(a[0]===aba)+'" onclick="bcmsTelaAba(\''+a[0]+'\')">'+a[1]+'</button>';
@@ -4447,6 +4447,49 @@ function bcmsTelaAba(aba){
       +'</div></div>';
     h+=bcmsBarra(liq,emp,'Liquidado sobre o empenhado');
     h+='<p class="m-formula" style="margin-top:12px;">Liquidação é a etapa em que a despesa é atestada (bem/serviço entregue). Valores da célula <b>'+bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd)+'</b> — o SIAFI não segrega liquidação por NC individual.</p>';
+  } else if(aba==='emp'){
+    var nesDaCel = [];
+    if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nes){
+      var isGenerica = (c.nd && (c.nd.endsWith('00') || c.nd.endsWith('0000')));
+      for(var idxNe = 0; idxNe < EMPENHODATA.nes.length; idxNe++){
+        var neCand = EMPENHODATA.nes[idxNe];
+        var matchND = isGenerica ? (neCand.nd && c.nd && neCand.nd.slice(0,4) === c.nd.slice(0,4)) : (neCand.nd === c.nd);
+        var matchAcao = (!c.acao || !neCand.acao || neCand.acao === c.acao);
+        if((neCand.ug === c.uasg || !c.uasg) && neCand.pi === c.pi && matchND && matchAcao){
+          nesDaCel.push(neCand);
+        }
+      }
+    }
+    h+='<p class="m-formula" style="margin-bottom:14px;">Notas de Empenho emitidas e debitadas na dotação desta célula (<b>' + bcmsEsc(t.acao+' · PI '+t.pi+' · ND '+t.nd) + '</b>).</p>';
+    if(nesDaCel.length > 0){
+      var neItens = '';
+      var totValNes = 0;
+      var totLiqNes = 0;
+      for(var ki = 0; ki < nesDaCel.length; ki++){
+        var nObj = nesDaCel[ki];
+        totValNes += (nObj.val || 0);
+        totLiqNes += (nObj.ne_liq || 0);
+        var sClsNe = (nObj.prova_slug === 'ok' ? 'status-disp' : (nObj.prova_slug === 'info' ? 'status-parcial' : (nObj.prova_slug === 'danger' ? 'status-canc' : 'status-canc')));
+        var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : (nObj.cel_liq > 0.005 ? bcmsBRL(nObj.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
+        neItens += '<tr class="cel-row">' +
+          '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
+          '<td class="mono2">' + bcmsEsc(nObj.dia || '—') + '</td>' +
+          '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
+          '<td class="num font-mono" style="color:var(--success-strong);font-weight:700;">' + bcmsBRL(nObj.val) + '</td>' +
+          '<td class="num font-mono" style="color:#059669;font-weight:600;">' + liqExib + '</td>' +
+          '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span></td>' +
+          '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')">Ficha ↗</button></td>' +
+        '</tr>';
+      }
+      h += '<div class="m-fin-section" style="margin-bottom:14px;"><div class="m-fin-grid">' +
+        '<div class="m-fin-card"><span class="m-fin-label">Total Empenhado</span><span class="m-fin-val col-emp">' + bcmsBRL(totValNes) + '</span></div>' +
+        '<div class="m-fin-card"><span class="m-fin-label">Liquidado</span><span class="m-fin-val" style="color:#059669;">' + bcmsBRL(totLiqNes) + '</span></div>' +
+        '<div class="m-fin-card hero-saldo"><span class="m-fin-label">NEs Emitidas</span><span class="m-fin-val-hero">' + nesDaCel.length + '</span></div>' +
+        '</div></div>';
+      h += '<div class="tbl-scroll" style="max-height:280px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
+    } else {
+      h += '<p class="vazio" style="padding:24px;text-align:center;color:var(--ink-muted);">Nenhum empenho emitido até o momento debitado nesta célula orçamentária.</p>';
+    }
   } else {
     var liq2=c.l||0,pag=c.p||0;
     var pctP=liq2>0?Math.min(100,pag/liq2*100):0;
@@ -4587,9 +4630,12 @@ function bcmsCel(row){
 
   var nesDaCel = [];
   if(typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.nes){
+    var isGenerica = (d.nd && (d.nd.endsWith('00') || d.nd.endsWith('0000')));
     for(var idxNe = 0; idxNe < EMPENHODATA.nes.length; idxNe++){
       var neCand = EMPENHODATA.nes[idxNe];
-      if((neCand.ug === d.uasg || !d.uasg) && neCand.pi === d.pi && (neCand.nd === d.nd || (neCand.nd && d.nd && neCand.nd.slice(0,4) === d.nd.slice(0,4)))){
+      var matchND = isGenerica ? (neCand.nd && d.nd && neCand.nd.slice(0,4) === d.nd.slice(0,4)) : (neCand.nd === d.nd);
+      var matchAcao = (!d.acao || !neCand.acao || neCand.acao === d.acao);
+      if((neCand.ug === d.uasg || !d.uasg) && neCand.pi === d.pi && matchND && matchAcao){
         nesDaCel.push(neCand);
       }
     }
@@ -4598,21 +4644,25 @@ function bcmsCel(row){
   if(nesDaCel.length > 0){
     var neItens = '';
     var totValNes = 0;
+    var totLiqNes = 0;
     for(var ki = 0; ki < nesDaCel.length; ki++){
       var nObj = nesDaCel[ki];
       totValNes += (nObj.val || 0);
+      totLiqNes += (nObj.ne_liq || 0);
       var sClsNe = (nObj.prova_slug === 'ok' ? 'status-disp' : (nObj.prova_slug === 'info' ? 'status-parcial' : (nObj.prova_slug === 'danger' ? 'status-canc' : 'status-canc')));
+      var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : (nObj.cel_liq > 0.005 ? bcmsBRL(nObj.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
       neItens += '<tr class="cel-row">' +
         '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
         '<td class="mono2">' + bcmsEsc(nObj.dia || '—') + '</td>' +
         '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
         '<td class="num font-mono" style="color:var(--success-strong);font-weight:700;">' + bcmsBRL(nObj.val) + '</td>' +
+        '<td class="num font-mono" style="color:#059669;font-weight:600;">' + liqExib + '</td>' +
         '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span></td>' +
         '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')">Ficha ↗</button></td>' +
       '</tr>';
     }
-    h += '<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de Empenho Emitidas da Célula (' + nesDaCel.length + ' NEs · ' + bcmsBRL(totValNes) + ')</div>';
-    h += '<div class="tbl-scroll" style="max-height:260px;margin-bottom:20px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
+    h += '<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de Empenho Emitidas da Célula (' + nesDaCel.length + ' NEs · ' + bcmsBRL(totValNes) + (totLiqNes > 0 ? ' · Liquidado ' + bcmsBRL(totLiqNes) : '') + ')</div>';
+    h += '<div class="tbl-scroll" style="max-height:260px;margin-bottom:20px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
   }
 
   h+='<div class="m-footer-actions-v2">';
@@ -5275,15 +5325,25 @@ function bcmsDetalheNC(hid){
     h += '      <span class="m-justif-title">📦 Notas de Empenho Vinculadas (' + nesDaNc.length + ' emitidas)</span>';
     if(nesDaNc.length > 0){
       var totEmpDaNc = 0;
-      for(var k = 0; k < nesDaNc.length; k++) totEmpDaNc += nesDaNc[k].val;
-      h += '      <span class="m-meta-chip" style="color:#059669;background:rgba(16,185,129,0.1);border-color:#10B981;">Total Empenhado: ' + bcmsBRL(totEmpDaNc) + '</span>';
+      var totLiqDaNc = 0;
+      for(var k = 0; k < nesDaNc.length; k++){
+        totEmpDaNc += (nesDaNc[k].val || 0);
+        totLiqDaNc += (nesDaNc[k].ne_liq || 0);
+      }
+      h += '      <div style="display:flex;gap:6px;align-items:center;">';
+      h += '        <span class="m-meta-chip" style="color:#059669;background:rgba(16,185,129,0.1);border-color:#10B981;">Total Empenhado: ' + bcmsBRL(totEmpDaNc) + '</span>';
+      if(totLiqDaNc > 0){
+        h += '        <span class="m-meta-chip" style="color:#047857;background:rgba(5,150,105,0.1);border-color:#059669;">Liquidado: ' + bcmsBRL(totLiqDaNc) + '</span>';
+      }
+      h += '      </div>';
     }
     h += '    </div>';
     if(nesDaNc.length > 0){
-      h += '    <div class="tbl-scroll" style="max-height:320px;"><table class="det det-compact"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th style="text-align:center;">Ação</th></tr></thead><tbody>';
+      h += '    <div class="tbl-scroll" style="max-height:320px;"><table class="det det-compact"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Ação</th></tr></thead><tbody>';
       for(var k = 0; k < nesDaNc.length; k++){
         var neIt = nesDaNc[k];
-        h += '<tr><td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" class="link-drill">' + bcmsEsc(neIt.ne) + '</a></td><td>' + bcmsEsc(neIt.dia || '—') + '</td><td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(neIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(neIt.fav) + '</a> <small style="color:var(--ink-muted);">(' + bcmsEsc(neIt.doc) + ')</small></td><td>' + (neIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(neIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(neIt.proc) + '</a>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')">Detalhar ↗</button></td></tr>';
+        var liqNeExib = (neIt.ne_liq > 0.005 ? bcmsBRL(neIt.ne_liq) : (neIt.cel_liq > 0.005 ? bcmsBRL(neIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
+        h += '<tr><td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" class="link-drill">' + bcmsEsc(neIt.ne) + '</a></td><td>' + bcmsEsc(neIt.dia || '—') + '</td><td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(neIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(neIt.fav) + '</a> <small style="color:var(--ink-muted);">(' + bcmsEsc(neIt.doc) + ')</small></td><td>' + (neIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(neIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(neIt.proc) + '</a>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td class="num font-mono" style="color:#047857;font-weight:600;">' + liqNeExib + '</td><td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')">Detalhar ↗</button></td></tr>';
       }
       h += '</tbody></table></div>';
     } else {
