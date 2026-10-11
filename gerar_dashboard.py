@@ -337,9 +337,9 @@ def etl(path):
 
     for d in res.values():
         for cel in d["celulas"].values():
-            # Recebido (líq) − Empenhado/Consumido = Crédito Disponível (fecha por construção)
-            cel["aloc"] = cel["cpos"]
-            cel["emp"]  = cel["cneg"]
+            # Alocação = Provisão recebida líquida ou créditos positivos em tela
+            cel["aloc"] = cel["prov"] if cel["prov"] > 0 else cel["cpos"]
+            # Preserva cel["emp"] intacto com as Despesas Empenhadas reais do SIAFI (não sobrescrever com cneg!)
 
     anotar_trocas_nd(res)
 
@@ -377,14 +377,31 @@ def atualizar_historico(res, data_str):
 
 # ---------------- formatação ----------------
 def _fmt(v):
-    s = f"{abs(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return s
+    if v is None:
+        return "0,00"
+    cents = int(round(abs(float(v)) * 100))
+    inteiro = cents // 100
+    resto = cents % 100
+    s_int = f"{inteiro:,}".replace(",", ".")
+    return f"{s_int},{resto:02d}"
 
 def brl(v):
-    return ("−R$ " if v < 0 else "R$ ") + _fmt(v)
+    if v is None:
+        return "R$ 0,00"
+    cents = int(round(float(v) * 100))
+    if cents == 0:
+        return "R$ 0,00"
+    prefix = "−R$ " if cents < 0 else "R$ "
+    return prefix + _fmt(v)
 
 def num(v):
-    return ("−" if v < 0 else "") + _fmt(v)
+    if v is None:
+        return "0,00"
+    cents = int(round(float(v) * 100))
+    if cents == 0:
+        return "0,00"
+    prefix = "−" if cents < 0 else ""
+    return prefix + _fmt(v)
 
 def pct(a, b): return (100.0 * a / b) if b else 0.0
 
@@ -1004,8 +1021,16 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         + semana_tabela(week_rows) + '</section>'
     )
 
+    conc_box = ""
+    if tot.get("conc", 0.0) > 0.005:
+        conc_box = (
+            f'<span class="hero-eq-sign">−</span>'
+            f'<div class="hero-eq-box"><span class="eq-tag">CONCEDIDO</span><span class="eq-val num">{esc(brl(tot["conc"]))}</span></div>'
+        )
+
     hero_eq = (
         f'<div class="hero-eq-box"><span class="eq-tag">RECEBIDO</span><span class="eq-val num">{esc(brl(tot["prov"]))}</span></div>'
+        f'{conc_box}'
         f'<span class="hero-eq-sign">−</span>'
         f'<div class="hero-eq-box"><span class="eq-tag">EMPENHADO</span><span class="eq-val num eq-emp">{esc(brl(tot["emp"]))}</span></div>'
         f'<span class="hero-eq-sign">=</span>'
@@ -1348,8 +1373,7 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         _th_r("Liquidado", True) +
         _th_r("% Liquidação", True) +
         _th_r("Pago", True) +
-        _th_r("Células", True) +
-        _th_r("Ação", False)
+        _th_r("Células", True)
     )
     
     body_rows = []
@@ -1357,8 +1381,8 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         medalha = "🥇 1º" if pos == 1 else ("🥈 2º" if pos == 2 else ("🥉 3º" if pos == 3 else f"{pos}º"))
         bar_w = min(100.0, u["exec_pct"])
         body_rows.append(
-            f'<tr class="cel-row" tabindex="0" role="button" onclick="trocaOMDSPorKey(\'{u["key"]}\')" '
-            f'title="Clique para ir ao painel do {esc(u["sigla"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();trocaOMDSPorKey(\'{u["key"]}\')}}">'
+            f'<tr class="cel-row" data-om="{esc(u["sigla"])}" tabindex="0" role="button" onclick="trocaOMDSPorKey(\'{u["key"]}\')" '
+            f'title="Clique na linha para ir ao painel do {esc(u["sigla"])}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();trocaOMDSPorKey(\'{u["key"]}\')}}">'
             f'<td class="mono2" style="font-weight:700">{medalha}</td>'
             f'<td><div class="tbl-om-cell"><img src="assets/logos/{u["logo"]}" alt="" class="tbl-om-logo" onerror="this.style.display=\'none\'"><b>{esc(u["sigla"])}</b> <span class="tbl-om-sub">{esc(u["nome"])}</span></div></td>'
             f'<td class="mono2">{esc(u["ogu"])} / {esc(u["fex"])}</td>'
@@ -1369,8 +1393,7 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
             f'<td class="num" data-sort="{u["liq"]:.2f}">{esc(brl(u["liq"]))}</td>'
             f'<td class="num" data-sort="{u["liq_pct"]:.2f}">{u["liq_pct"]:.1f}%</td>'
             f'<td class="num" data-sort="{u["pag"]:.2f}">{esc(brl(u["pag"]))}</td>'
-            f'<td class="num" data-sort="{u["n_cel"]}">{u["n_cel"]}</td>'
-            f'<td><button type="button" class="tbl-action-btn" onclick="event.stopPropagation();trocaOMDSPorKey(\'{u["key"]}\')">Abrir ›</button></td>'
+            f'<td class="num" data-sort="{u["n_cel"]}">{u["n_cel"]}<i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>'
             f'</tr>'
         )
     
@@ -1385,7 +1408,6 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         f'<td class="num"><b>{cmd_liq_pct:.1f}%</b></td>'
         f'<td class="num"><b>{esc(brl(cmd_pag))}</b></td>'
         f'<td class="num"><b>{cmd_n_cel}</b></td>'
-        f'<td>—</td>'
         f'</tr></tfoot>'
     )
     
@@ -1393,14 +1415,32 @@ def secao_comparativo_omds(res, hist, data_str, periodo):
         f'<div class="tbl-tools">'
         f'<label class="visually-hidden" for="q-tab-ranking-det">Buscar</label>'
         f'<input type="search" id="q-tab-ranking-det" class="tbl-search" placeholder="Buscar no comparativo por OMDS, UASG..." oninput="bcmsSearch(this,\'tab-ranking-det\')">'
+        f'<select class="flt" id="flt-rank-om" aria-label="Filtrar comparativo por Unidade" onchange="bcmsFiltraRankingOM(this)">'
+        f'<option value="">Unidade: todas as OMDS</option>'
+        f'<option value="BCMS">BCMS · Batalhão de Comando e Serviços</option>'
+        f'<option value="Ba Ap Log">Ba Ap Log · Base de Apoio Logístico do Exército</option>'
+        f'<option value="D C Mun">D C Mun · Depósito Central de Munição</option>'
+        f'<option value="BMSA">BMSA · Batalhão de Manutenção e Suprimento de Aviação</option>'
+        f'<option value="1º D Sup">1º D Sup · 1º Depósito de Suprimento</option>'
+        f'<option value="ECT">ECT · Estabelecimento Central de Transportes</option>'
+        f'</select>'
         f'<button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-ranking-det\',\'ranking_comparativo_omds\')" title="Baixar comparativo completo das OMDS em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Planilha Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-ranking-det" data-unit="unidades" aria-live="polite">6 unidades</span>'
         f'</div>'
         f'<div class="tbl-scroll" id="tab-ranking-det"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{"".join(body_rows)}</tbody>{tfoot_tbl}</table></div>'
     )
     
+    cmd_conc = sum(x.get("conc", 0.0) for x in u_stats)
+    conc_box_cmd = ""
+    if cmd_conc > 0.005:
+        conc_box_cmd = (
+            f'<span class="hero-eq-sign">−</span>'
+            f'<div class="hero-eq-box"><span class="eq-tag">CONCEDIDO TOTAL</span><span class="eq-val num">{esc(brl(cmd_conc))}</span></div>'
+        )
+
     hero_eq_cmd = (
         f'<div class="hero-eq-box"><span class="eq-tag">PROVISÃO TOTAL</span><span class="eq-val num">{esc(brl(cmd_prov))}</span></div>'
+        f'{conc_box_cmd}'
         f'<span class="hero-eq-sign">−</span>'
         f'<div class="hero-eq-box"><span class="eq-tag">EMPENHADO TOTAL</span><span class="eq-val num eq-emp">{esc(brl(cmd_emp))}</span></div>'
         f'<span class="hero-eq-sign">=</span>'
@@ -1513,8 +1553,8 @@ def secao_historico_ncs(res, hist, data_str, periodo):
                     "linhas": []
                 }
             it = todas_ncs[key]
-            it["linhas"].append(L)
-            val = L.get("prov", 0.0) or (L.get("cred", 0.0) if L.get("cred", 0.0) > 0 else 0.0)
+            # Provisão recebida descentralizada (não inflar com saldo de detalhamentos internos)
+            val = L.get("prov", 0.0)
             it["prov"] += val
             it["liq"]  += L.get("liq", 0.0)
             it["pag"]  += L.get("pag", 0.0)
@@ -1535,10 +1575,13 @@ def secao_historico_ncs(res, hist, data_str, periodo):
             recs = cel_recs.get(cel_key, [])
             recs_sorted = sorted(recs, key=lambda x: _dt_br(x[2]) or datetime.date.min, reverse=True)
             restante = saldo_cel
-            for nc_key, val_rec, _ in recs_sorted:
+            for idx_r, (nc_key, val_rec, _) in enumerate(recs_sorted):
                 if restante <= 0.005:
                     break
-                atribuido = min(val_rec, restante)
+                if idx_r == len(recs_sorted) - 1:
+                    atribuido = restante
+                else:
+                    atribuido = min(val_rec, restante)
                 todas_ncs[nc_key]["cred_calc"] += atribuido
                 restante -= atribuido
 
@@ -1682,12 +1725,28 @@ def secao_historico_ncs(res, hist, data_str, periodo):
         f'<span class="flt-lbl">Filtrar:</span>'
         f'<select class="flt" id="flt-hist-om" aria-label="Filtrar por organização militar" onchange="bcmsFiltraHistorico()">'
         f'<option value="">Unidade: todas</option>'
-        f'<option value="BCMS">BCMS</option>'
-        f'<option value="Ba Ap Log Ex">Ba Ap Log Ex</option>'
-        f'<option value="D C Mun">D C Mun</option>'
-        f'<option value="BMSA">BMSA</option>'
-        f'<option value="1º D Sup">1º D Sup</option>'
-        f'<option value="ECT">ECT</option>'
+        f'<optgroup label="Por Organização Militar (Consolidado)">'
+        f'<option value="BCMS">BCMS · Batalhão de Comando e Serviços</option>'
+        f'<option value="Ba Ap Log">Ba Ap Log · Base de Apoio Logístico do Exército</option>'
+        f'<option value="D C Mun">D C Mun · Depósito Central de Munição</option>'
+        f'<option value="BMSA">BMSA · Batalhão de Manutenção e Suprimento de Aviação</option>'
+        f'<option value="1º D Sup">1º D Sup · 1º Depósito de Suprimento</option>'
+        f'<option value="ECT">ECT · Estabelecimento Central de Transportes</option>'
+        f'</optgroup>'
+        f'<optgroup label="Por Unidade Gestora / Fonte">'
+        f'<option value="160329">160329 · BCMS (OGU)</option>'
+        f'<option value="167329">167329 · BCMS (FEx)</option>'
+        f'<option value="160238">160238 · Ba Ap Log (OGU)</option>'
+        f'<option value="167238">167238 · Ba Ap Log (FEx)</option>'
+        f'<option value="160246">160246 · D C Mun (OGU)</option>'
+        f'<option value="167246">167246 · D C Mun (FEx)</option>'
+        f'<option value="160304">160304 · BMSA (OGU)</option>'
+        f'<option value="167304">167304 · BMSA (FEx)</option>'
+        f'<option value="160307">160307 · 1º D Sup (OGU)</option>'
+        f'<option value="167307">167307 · 1º D Sup (FEx)</option>'
+        f'<option value="160321">160321 · ECT (OGU)</option>'
+        f'<option value="167321">167321 · ECT (FEx)</option>'
+        f'</optgroup>'
         f'</select>'
         f'<select class="flt" id="flt-hist-fonte" aria-label="Filtrar por fonte" onchange="bcmsFiltraHistorico()">'
         f'<option value="">Fonte: todas</option>'
@@ -2014,6 +2073,12 @@ CSS = r"""
   /* Transições Spring */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Padrões Data Visualization Engineer (IBM Carbon + Tremor + Tufte) */
+  --chart-grid:      rgba(15, 23, 42, 0.06);
+  --chart-zero:      var(--neutral-400);
+  --chart-axis:      var(--neutral-500);
+  --chart-bar-hover: brightness(1.08);
 }
 
 /* --- Dark Mode Elegante (OLED + Baixa Fadiga Ocular) --- */
@@ -2073,6 +2138,9 @@ CSS = r"""
     --shadow:    0 2px 6px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
     --shadow-h:  0 10px 24px rgba(0, 0, 0, 0.6);
+    --chart-grid: rgba(255, 255, 255, 0.06);
+    --chart-zero: var(--neutral-500);
+    --chart-axis: var(--neutral-400);
   }
 }
 
@@ -2132,6 +2200,9 @@ CSS = r"""
   --shadow:    0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-h:  0 10px 24px rgba(0, 0, 0, 0.6);
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-zero: var(--neutral-500);
+  --chart-axis: var(--neutral-400);
 }
 
 :root[data-theme="light"] {
@@ -2147,6 +2218,9 @@ CSS = r"""
   --border:        var(--neutral-200);
   --border-strong: var(--neutral-300);
   --hero-soft:      #F0FDF4;
+  --chart-grid: rgba(15, 23, 42, 0.06);
+  --chart-zero: var(--neutral-400);
+  --chart-axis: var(--neutral-500);
 }
 
 html {
@@ -2568,20 +2642,28 @@ h1 {
   text-transform: uppercase;
 }
 .kpi-v {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 6px 0;
   color: var(--ink);
+  letter-spacing: -0.015em;
 }
 .chip {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--ink-muted);
   background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 2px 10px;
+  padding: 2px 8px;
   width: fit-content;
+  letter-spacing: 0.02em;
 }
 
 /* Grids */
@@ -2941,9 +3023,35 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 .det .mono2 { font-size: 0.8125rem; color: var(--ink-muted); }
 .cell-neg { color: var(--danger); background: var(--danger-bg); }
 .det tfoot td { padding: 12px 14px; font-weight: 700; background: var(--bg-subtle); border-top: 2px solid var(--border-strong); }
-.cel-row { cursor: pointer; }
-.cel-row .chev { float: right; margin-left: 8px; color: var(--ink-soft); font-weight: 400; transition: transform .15s ease, color .15s ease; }
-.cel-row:hover .chev { color: var(--success); transform: translateX(3px); }
+.cel-row {
+  cursor: pointer;
+  transition: background-color .15s ease, transform .15s ease;
+}
+.cel-row:hover {
+  background-color: var(--primary-50, rgba(37, 99, 235, 0.05)) !important;
+}
+:root[data-theme="dark"] .cel-row:hover {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+.cel-row:focus-visible {
+  outline: 2px solid var(--primary-600, #2563EB);
+  outline-offset: -2px;
+}
+.cel-row .chev {
+  display: inline-block;
+  float: right;
+  margin-left: 8px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: transform .18s cubic-bezier(0.16, 1, 0.3, 1), color .18s ease;
+}
+.cel-row:hover .chev {
+  color: var(--success);
+  transform: translateX(3px);
+}
 
 /* Pódio & Benchmarking (Ranking OMDS) */
 .ranking-header-card {
@@ -3086,29 +3194,29 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 }
 .tbl-action-btn:hover { background: var(--primary); color: #FFFFFF; }
 
-/* SVG Classes */
-.svg { width: 100%; height: auto; display: block; }
-.s-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; fill: var(--ink-muted); }
-.s-seg { font-size: 11px; fill: var(--warning-ink); font-weight: 600; font-family: var(--mono); }
+/* SVG Classes — Padrão Tufte & Data-to-Ink Ratio */
+.svg { width: 100%; height: auto; display: block; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }
+.s-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; fill: var(--ink-muted); text-transform: uppercase; }
+.s-seg { font-size: 11px; fill: var(--warning-ink); font-weight: 600; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .s-seg-ok { fill: var(--success-strong); }
 .s-brk { stroke: var(--border-strong); stroke-width: 1; }
 .s-cat { font-size: 12px; fill: var(--ink-muted); }
 .s-cat-ok { fill: var(--success-strong); font-weight: 600; }
-.s-val { font-size: 13px; font-weight: 700; font-family: var(--mono); }
+.s-val { font-size: 13px; font-weight: 700; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .s-on { fill: #FFFFFF; }
 .s-ok { fill: var(--success-strong); }
 .s-warn { fill: var(--warning-ink); }
 .s-on2 { fill: var(--ink); }
-.s-num { font-size: 11px; font-weight: 600; font-family: var(--mono); }
+.s-num { font-size: 11px; font-weight: 600; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .s-neg { fill: var(--danger); }
 .s-conn { stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 4 3; }
-.s-zero { stroke: var(--border-strong); stroke-width: 1.5; }
-.s-grid { stroke: var(--border); stroke-width: 1; }
-.s-ax { font-size: 11px; fill: var(--ink-muted); font-family: var(--mono); }
-.s-line { fill: none; stroke: var(--success); stroke-width: 2.5; }
+.s-zero { stroke: var(--chart-zero, var(--border-strong)); stroke-width: 1.5; }
+.s-grid { stroke: var(--chart-grid, var(--border)); stroke-width: 1; }
+.s-ax { font-size: 11px; fill: var(--ink-muted); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.s-line { fill: none; stroke: var(--success); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .s-area { fill: var(--success); opacity: .12; }
 .s-dot { fill: var(--success); }
-.s-conv { font-size: 10.5px; fill: var(--ink-muted); }
+.s-conv { font-size: 10.5px; fill: var(--ink-muted); font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 /* Modal Drill-Down (Física Spring + Backdrop Blur) */
 .modal {
@@ -4011,10 +4119,16 @@ function bcmsSearch(inp,tid){
   var rows=tb.querySelectorAll('tr');
   var chkZero = document.getElementById('chk-zero-' + tid);
   var hideZero = chkZero ? chkZero.checked : false;
+  var selRankOM = (tid === 'tab-ranking-det') ? document.getElementById('flt-rank-om') : null;
+  var fRankOM = (selRankOM && selRankOM.value) ? selRankOM.value.trim() : '';
   var n=0;
   rows.forEach(function(r){
     var cr = parseFloat(r.getAttribute('data-cred') || '0');
     if(hideZero && cr <= 0.005){
+      r.style.display='none';
+      return;
+    }
+    if(fRankOM && (r.getAttribute('data-om') || '') !== fRankOM){
       r.style.display='none';
       return;
     }
@@ -4026,6 +4140,31 @@ function bcmsSearch(inp,tid){
   if(cnt){
     var u=cnt.getAttribute('data-unit')||'linha(s)';
     cnt.textContent=n+' '+u;
+  }
+}
+
+function bcmsFiltraRankingOM(sel){
+  var om = (sel && sel.value) ? sel.value.trim() : '';
+  var tab = document.getElementById('tab-ranking-det');
+  if(!tab) return;
+  var qInput = document.getElementById('q-tab-ranking-det');
+  var q = qInput ? qInput.value.toLowerCase().trim() : '';
+  var rows = tab.querySelectorAll('tbody tr');
+  var visCount = 0;
+  rows.forEach(function(r){
+    var rOm = r.getAttribute('data-om') || '';
+    var matchOm = !om || rOm === om;
+    var matchQ = !q || r.textContent.toLowerCase().indexOf(q) > -1;
+    if(matchOm && matchQ){
+      r.style.display = '';
+      visCount++;
+    } else {
+      r.style.display = 'none';
+    }
+  });
+  var cnt = document.getElementById('cnt-tab-ranking-det');
+  if(cnt){
+    cnt.textContent = visCount + ' de 6 unidades';
   }
 }
 
@@ -4171,7 +4310,15 @@ function bcmsSort(th){
 
 function bcmsEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function bcmsEscXml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];});}
-function bcmsBRL(v){var neg=v<0,s=Math.abs(v).toFixed(2).split('.');var i=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−R$ ':'R$ ')+i+','+s[1];}
+function bcmsBRL(v){
+  if(v === null || typeof v === 'undefined' || isNaN(v)) return 'R$ 0,00';
+  var num = Number(v);
+  if(Math.abs(num) < 0.005) return 'R$ 0,00';
+  var neg = num < 0;
+  var s = Math.abs(num).toFixed(2).split('.');
+  var i = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '−R$ ' : 'R$ ') + i + ',' + s[1];
+}
 
 function bcmsToast(msg){
   var old=document.getElementById('bcms-toast');if(old)old.remove();
@@ -4470,15 +4617,14 @@ function bcmsTelaAba(aba){
         totValNes += (nObj.val || 0);
         totLiqNes += (nObj.ne_liq || 0);
         var sClsNe = (nObj.prova_slug === 'ok' ? 'status-disp' : (nObj.prova_slug === 'info' ? 'status-parcial' : (nObj.prova_slug === 'danger' ? 'status-canc' : 'status-canc')));
-        var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : (nObj.cel_liq > 0.005 ? bcmsBRL(nObj.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
-        neItens += '<tr class="cel-row">' +
-          '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
+        var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
+        neItens += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\');}" title="Clique na linha para ver a ficha cadastral da NE ' + bcmsEsc(nObj.ne) + '">' +
+          '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
           '<td class="mono2">' + bcmsEsc(nObj.dia || '—') + '</td>' +
-          '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
+          '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
           '<td class="num font-mono" style="color:var(--success-strong);font-weight:700;">' + bcmsBRL(nObj.val) + '</td>' +
           '<td class="num font-mono" style="color:#059669;font-weight:600;">' + liqExib + '</td>' +
-          '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span></td>' +
-          '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')">Ficha ↗</button></td>' +
+          '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span> <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>' +
         '</tr>';
       }
       h += '<div class="m-fin-section" style="margin-bottom:14px;"><div class="m-fin-grid">' +
@@ -4486,7 +4632,7 @@ function bcmsTelaAba(aba){
         '<div class="m-fin-card"><span class="m-fin-label">Liquidado</span><span class="m-fin-val" style="color:#059669;">' + bcmsBRL(totLiqNes) + '</span></div>' +
         '<div class="m-fin-card hero-saldo"><span class="m-fin-label">NEs Emitidas</span><span class="m-fin-val-hero">' + nesDaCel.length + '</span></div>' +
         '</div></div>';
-      h += '<div class="tbl-scroll" style="max-height:280px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
+      h += '<div class="tbl-scroll" style="max-height:280px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
     } else {
       h += '<p class="vazio" style="padding:24px;text-align:center;color:var(--ink-muted);">Nenhum empenho emitido até o momento debitado nesta célula orçamentária.</p>';
     }
@@ -4650,19 +4796,18 @@ function bcmsCel(row){
       totValNes += (nObj.val || 0);
       totLiqNes += (nObj.ne_liq || 0);
       var sClsNe = (nObj.prova_slug === 'ok' ? 'status-disp' : (nObj.prova_slug === 'info' ? 'status-parcial' : (nObj.prova_slug === 'danger' ? 'status-canc' : 'status-canc')));
-      var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : (nObj.cel_liq > 0.005 ? bcmsBRL(nObj.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
-      neItens += '<tr class="cel-row">' +
-        '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
+      var liqExib = (nObj.ne_liq > 0.005 ? bcmsBRL(nObj.ne_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
+      neItens += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\');}" title="Clique na linha para ver a ficha cadastral da NE ' + bcmsEsc(nObj.ne) + '">' +
+        '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')" class="link-drill" title="Abrir ficha cadastral da NE">' + bcmsEsc(nObj.ne) + '</a></td>' +
         '<td class="mono2">' + bcmsEsc(nObj.dia || '—') + '</td>' +
-        '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
+        '<td title="' + bcmsEsc(nObj.fav) + '"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(nObj.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nObj.fav ? (nObj.fav.length > 25 ? nObj.fav.slice(0, 25) + '…' : nObj.fav) : '—') + '</a></td>' +
         '<td class="num font-mono" style="color:var(--success-strong);font-weight:700;">' + bcmsBRL(nObj.val) + '</td>' +
         '<td class="num font-mono" style="color:#059669;font-weight:600;">' + liqExib + '</td>' +
-        '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span></td>' +
-        '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nObj.ne) + '\')">Ficha ↗</button></td>' +
+        '<td style="text-align:center;"><span class="pill-status ' + sClsNe + '">' + bcmsEsc(nObj.prova || 'SIAFI') + '</span> <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>' +
       '</tr>';
     }
     h += '<div class="m-pipeline-header" style="margin-bottom:10px;">Notas de Empenho Emitidas da Célula (' + nesDaCel.length + ' NEs · ' + bcmsBRL(totValNes) + (totLiqNes > 0 ? ' · Liquidado ' + bcmsBRL(totLiqNes) : '') + ')</div>';
-    h += '<div class="tbl-scroll" style="max-height:260px;margin-bottom:20px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th><th style="text-align:center;">Ação</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
+    h += '<div class="tbl-scroll" style="max-height:260px;margin-bottom:20px;"><table class="det det-compact"><thead><tr><th>Número NE</th><th>Emissão</th><th>Favorecido / Credor</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Selo Prova Real</th></tr></thead><tbody>' + neItens + '</tbody></table></div>';
   }
 
   h+='<div class="m-footer-actions-v2">';
@@ -4897,6 +5042,15 @@ function bcmsSortHistorico(col, th){
   bcmsRenderHistorico(HIST_PAGE);
 }
 
+var BCMS_UASG_TO_OM = (typeof BCMS_UASG_TO_OM !== 'undefined') ? BCMS_UASG_TO_OM : {
+  '160329': 'BCMS', '167329': 'BCMS',
+  '160238': 'Ba Ap Log', '167238': 'Ba Ap Log',
+  '160246': 'D C Mun', '167246': 'D C Mun',
+  '160304': 'BMSA', '167304': 'BMSA',
+  '160307': '1º D Sup', '167307': '1º D Sup',
+  '160321': 'ECT', '167321': 'ECT'
+};
+
 function bcmsFiltraHistorico(){
   var raw = bcmsGetHistItems();
   if(!raw || !raw.length) return;
@@ -4909,7 +5063,10 @@ function bcmsFiltraHistorico(){
   var q = (v('flt-hist-busca') || '').toLowerCase();
 
   HIST_FILTERED = raw.filter(function(it){
-    if(fOm && it.om_sigla !== fOm) return false;
+    if(fOm){
+      var matchOm = (it.om_sigla === fOm || it.fav_cod === fOm || (BCMS_UASG_TO_OM && BCMS_UASG_TO_OM[it.fav_cod] === fOm));
+      if(!matchOm) return false;
+    }
     if(fPer){
       if(fPer.startsWith('T')){
         if(it.tri !== fPer) return false;
@@ -5339,11 +5496,11 @@ function bcmsDetalheNC(hid){
     }
     h += '    </div>';
     if(nesDaNc.length > 0){
-      h += '    <div class="tbl-scroll" style="max-height:320px;"><table class="det det-compact"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado</th><th style="text-align:center;">Ação</th></tr></thead><tbody>';
+      h += '    <div class="tbl-scroll" style="max-height:320px;"><table class="det det-compact"><thead><tr><th>Número da NE</th><th>Emissão</th><th>Favorecido / Fornecedor</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado</th></tr></thead><tbody>';
       for(var k = 0; k < nesDaNc.length; k++){
         var neIt = nesDaNc[k];
         var liqNeExib = (neIt.ne_liq > 0.005 ? bcmsBRL(neIt.ne_liq) : (neIt.cel_liq > 0.005 ? bcmsBRL(neIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
-        h += '<tr><td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" class="link-drill">' + bcmsEsc(neIt.ne) + '</a></td><td>' + bcmsEsc(neIt.dia || '—') + '</td><td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(neIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(neIt.fav) + '</a> <small style="color:var(--ink-muted);">(' + bcmsEsc(neIt.doc) + ')</small></td><td>' + (neIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(neIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(neIt.proc) + '</a>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td class="num font-mono" style="color:#047857;font-weight:600;">' + liqNeExib + '</td><td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')">Detalhar ↗</button></td></tr>';
+        h += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\');}" title="Clique na linha para ver a ficha cadastral da NE ' + bcmsEsc(neIt.ne) + '"><td class="font-mono font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(neIt.ne) + '\')" class="link-drill">' + bcmsEsc(neIt.ne) + '</a></td><td>' + bcmsEsc(neIt.dia || '—') + '</td><td><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(neIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(neIt.fav) + '</a> <small style="color:var(--ink-muted);">(' + bcmsEsc(neIt.doc) + ')</small></td><td>' + (neIt.proc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheProcesso(\'' + bcmsEsc(neIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(neIt.proc) + '</a>' : '—') + '</td><td class="num font-mono font-bold" style="color:#059669">' + bcmsBRL(neIt.val) + '</td><td class="num font-mono" style="color:#047857;font-weight:600;">' + liqNeExib + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td></tr>';
       }
       h += '</tbody></table></div>';
     } else {

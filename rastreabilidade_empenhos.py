@@ -42,9 +42,24 @@ def baixar_empenhos(url=None):
     raise RuntimeError("Não foi possível baixar a base de empenhos após 3 tentativas.")
 
 def _fmt_brl(v):
-    if v is None: return "R$ 0,00"
-    s = f"{abs(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return ("−R$ " if v < 0 else "R$ ") + s
+    if v is None:
+        return "R$ 0,00"
+    try:
+        val = float(v)
+        if abs(val) < 0.005:
+            return "R$ 0,00"
+        neg = val < 0
+        val_abs = abs(val)
+        int_part = int(val_abs)
+        cents = int(round((val_abs - int_part) * 100))
+        if cents >= 100:
+            int_part += 1
+            cents = 0
+        formatted_int = f"{int_part:,}".replace(",", ".")
+        res = f"R$ {formatted_int},{cents:02d}"
+        return f"−{res}" if neg else res
+    except Exception:
+        return "R$ 0,00"
 
 def _esc(s):
     return html.escape(str(s or ""))
@@ -58,6 +73,15 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
 
     nc_pat = re.compile(r'(202\dNC\d{6})', re.IGNORECASE)
     proc_pat = re.compile(r'\b(PE\s*\d+[/_\-]\d+|PREG[ÃA]O\s*(?:ELETR[ÔO]NICO)?\s*(?:N[º°])?\s*\d+[/_\-]\d+|DISPENSA\s*(?:N[º°])?\s*\d+[/_\-]\d+|INEX\w*\s*(?:N[º°])?\s*\d+[/_\-]\d+|DIEX\s*(?:N[º°])?\s*\d+[/_\-]\d+)', re.IGNORECASE)
+
+    UASG_TO_OM = {
+        "160329": "BCMS", "167329": "BCMS",
+        "160238": "Ba Ap Log", "167238": "Ba Ap Log",
+        "160246": "D C Mun", "167246": "D C Mun",
+        "160304": "BMSA", "167304": "BMSA",
+        "160307": "1º D Sup", "167307": "1º D Sup",
+        "160321": "ECT", "167321": "ECT",
+    }
 
     # 1. Mapeamento do Acervo de Créditos para a PROVA DA VERDADE e LIQUIDAÇÃO SIAFI
     cred_audit_db = {} # nc_code / nc_raw -> list of dicts
@@ -307,6 +331,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
                 "ne_full": ne_full,
                 "dia": dia,
                 "ug": ug_cur,
+                "om_sigla": UASG_TO_OM.get(ug_cur, ""),
                 "fav": fav_nome,
                 "doc": fav_doc,
                 "val": round(val, 2),
@@ -351,6 +376,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "ne_full": ne_full,
             "ug": ug_cur,
             "ug_nome": ug_nome_cur,
+            "om_sigla": UASG_TO_OM.get(ug_cur, ""),
             "dia": dia,
             "doc": fav_doc,
             "fav": fav_nome,
@@ -384,6 +410,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             "ne_full": ne_full,
             "dia": dia,
             "ug": ug_cur,
+            "om_sigla": UASG_TO_OM.get(ug_cur, ""),
             "fav": fav_nome,
             "doc": fav_doc,
             "val": round(val, 2),
@@ -420,6 +447,25 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
     sorted_forn = sorted(top_forn.items(), key=lambda x: x[1], reverse=True)[:30]
     top_forn_list = [{"nome": f, "val": round(v, 2), "fmt": _fmt_brl(v)} for f, v in sorted_forn]
 
+    # Totais consolidados oficiais do SIAFI por OM e por UG (para calibração exata dos KPIs)
+    om_totais_siafi = {}
+    for cod, d in res_credito.items():
+        om_sig = UASG_TO_OM.get(cod, d.get("nome", "").split("·")[0].strip())
+        entry = {
+            "prov": round(d.get("prov", 0.0), 2),
+            "cred": round(d.get("cred", 0.0), 2),
+            "emp": round(d.get("emp", 0.0), 2),
+            "liq": round(d.get("liq", 0.0), 2),
+            "pag": round(d.get("pag", 0.0), 2),
+        }
+        om_totais_siafi[cod] = entry
+        if om_sig not in om_totais_siafi:
+            om_totais_siafi[om_sig] = {"prov": 0.0, "cred": 0.0, "emp": 0.0, "liq": 0.0, "pag": 0.0}
+        om_totais_siafi[om_sig]["prov"] = round(om_totais_siafi[om_sig]["prov"] + entry["prov"], 2)
+        om_totais_siafi[om_sig]["cred"] = round(om_totais_siafi[om_sig]["cred"] + entry["cred"], 2)
+        om_totais_siafi[om_sig]["emp"]  = round(om_totais_siafi[om_sig]["emp"] + entry["emp"], 2)
+        om_totais_siafi[om_sig]["liq"]  = round(om_totais_siafi[om_sig]["liq"] + entry["liq"], 2)
+        om_totais_siafi[om_sig]["pag"]  = round(om_totais_siafi[om_sig]["pag"] + entry["pag"], 2)
     # Top processos
     sorted_procs = sorted(top_procs.items(), key=lambda x: x[1], reverse=True)[:25]
     top_procs_list = [{"proc": p, "val": round(v, 2), "fmt": _fmt_brl(v)} for p, v in sorted_procs]
@@ -430,6 +476,7 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         "qtd_fav": len(top_forn),
         "tot_liq_global": round(tot_liq_global, 2),
         "tot_pag_global": round(tot_pag_global, 2),
+        "om_totais_siafi": om_totais_siafi,
         "estat_prova": estat_prova,
         "inconsistencias": inconsistencias_citacao,
         "top_fornecedores": top_forn_list,
@@ -452,8 +499,9 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     qtd_fav = emp_data["qtd_fav"]
     tot_liq = emp_data.get("tot_liq_global", 0.0)
     tot_pag = emp_data.get("tot_pag_global", 0.0)
+    tot_a_pagar = max(0.0, tot_liq - tot_pag)
     pct_liq_total = (tot_liq / tot_emp * 100.0) if tot_emp > 0 else 0.0
-    
+    pct_disp_total = (tot_cred_disp / tot_prov_rec * 100.0) if tot_prov_rec > 0 else 0.0
     taxa_exec = (tot_emp / tot_prov_rec * 100.0) if tot_prov_rec > 0 else 0.0
 
     ep = emp_data.get("estat_prova", {})
@@ -461,41 +509,96 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     pct_conf = (qtd_conf / qtd_nes * 100.0) if qtd_nes > 0 else 0.0
     qtd_alertas = len(emp_data.get("inconsistencias", []))
 
+    opt_om_rastreio = """
+        <option value="">Unidade: todas as OMDS</option>
+        <optgroup label="Por Organização Militar (Consolidado)">
+          <option value="BCMS">BCMS · Batalhão de Comando e Serviços</option>
+          <option value="Ba Ap Log">Ba Ap Log · Base de Apoio Logístico do Exército</option>
+          <option value="D C Mun">D C Mun · Depósito Central de Munição</option>
+          <option value="BMSA">BMSA · Batalhão de Manutenção e Suprimento de Aviação</option>
+          <option value="1º D Sup">1º D Sup · 1º Depósito de Suprimento</option>
+          <option value="ECT">ECT · Estabelecimento Central de Transportes</option>
+        </optgroup>
+        <optgroup label="Por Unidade Gestora / Fonte">
+          <option value="160329">160329 · BCMS (OGU)</option>
+          <option value="167329">167329 · BCMS (FEx)</option>
+          <option value="160238">160238 · Ba Ap Log (OGU)</option>
+          <option value="167238">167238 · Ba Ap Log (FEx)</option>
+          <option value="160246">160246 · D C Mun (OGU)</option>
+          <option value="167246">167246 · D C Mun (FEx)</option>
+          <option value="160304">160304 · BMSA (OGU)</option>
+          <option value="167304">167304 · BMSA (FEx)</option>
+          <option value="160307">160307 · 1º D Sup (OGU)</option>
+          <option value="167307">167307 · 1º D Sup (FEx)</option>
+          <option value="160321">160321 · ECT (OGU)</option>
+          <option value="167321">167321 · ECT (FEx)</option>
+        </optgroup>"""
+
     return f"""
 <section class="unidade unidade-rastreio" data-key="RASTREIO" style="display:none" id="secao-RASTREIO">
   <div class="ranking-header-card" style="border-top-color:#059669;margin-top:24px;">
     <div class="rh-tag" style="color:#059669;">SISTEMA INTEGRADO DE CONTROLE ORÇAMENTÁRIO & FINANCEIRO · SICOF</div>
     <h2 class="rh-title">🔗 Rastreabilidade Integral: Crédito ➔ Empenho Emitido</h2>
-    <p class="rh-desc">Controle orçamentário completo da Base de Apoio Logístico do Exército e OMDS subordinadas — Da provisão recebida (Nota de Crédito) à emissão do empenho (NE), com conciliação contábil por Célula SIAFI e Prova Real de integridade entre dotações, fornecedores e processos licitatórios.</p>
+    <p class="rh-desc">Controle orçamentário completo da Base de Apoio Logístico do Exército e OMDS subordinadas — Da provisão recebida (<span class="term-tip" data-tip="NC: Nota de Crédito — Descentralização de crédito orçamentário (provisão/destaque) entre UGs">Nota de Crédito</span>) à emissão do empenho (<span class="term-tip" data-tip="NE: Nota de Empenho — Primeiro estágio da despesa pública; reserva orçamentária que obriga o Estado">NE</span>), com conciliação contábil por Célula SIAFI e Prova Real de integridade entre dotações, credores e processos licitatórios.</p>
   </div>
 
   <section class="sec" style="margin-top:24px;">
     <div class="eyebrow">Indicadores Globais de Execução e Conformidade</div>
     <div class="kpis">
-      <div class="kpi" style="border-left-color:#2563EB;">
-        <span class="kpi-lbl">TOTAL EMPENHADO (NEs)</span>
-        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_emp)}</div>
-        <div class="kpi-sub"><b>{qtd_nes:,} NEs</b> ({taxa_exec:.1f}% do crédito descentralizado)</div>
+      <div class="kpi kpi-emp-card" style="border-left-color:#2563EB;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="kpi-lbl"><span class="term-tip" data-tip="NE: Primeiro estágio da despesa pública. Compromete o orçamento para pagamento futuro.">TOTAL EMPENHADO (NEs)</span></span>
+          <span class="kpi-badge" id="kpi-rastreio-badge-emp" style="background:rgba(37,99,235,0.12);color:#2563EB;">⚡ {taxa_exec:.1f}% Comprometido</span>
+        </div>
+        <div class="kpi-val num" id="kpi-rastreio-tot-emp" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_emp)}</div>
+        <div class="kpi-meter">
+          <div class="kpi-meter-track"><div class="kpi-meter-fill" id="kpi-rastreio-bar-emp" style="width:{min(100.0, taxa_exec):.1f}%;background:linear-gradient(90deg, #3B82F6, #2563EB)"></div></div>
+        </div>
+        <div class="kpi-sub" id="kpi-rastreio-sub-emp" style="margin-top:6px;"><b>{qtd_nes:,} NEs</b> de <b>{_fmt_brl(tot_prov_rec)}</b> descentralizados</div>
       </div>
-      <div class="kpi" style="border-left-color:#F59E0B;">
-        <span class="kpi-lbl">DESPESAS LIQUIDADAS NO SIAFI</span>
-        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_liq)}</div>
-        <div class="kpi-sub"><b>{_fmt_brl(tot_pag)} pagos</b> ({pct_liq_total:.1f}% do empenhado)</div>
+      <div class="kpi kpi-liq-card" style="border-left-color:#F59E0B;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="kpi-lbl"><span class="term-tip" data-tip="SIAFI: Sistema Integrado de Administração Financeira · Liquidação: Atesto formal de recebimento do bem ou prestação de serviço.">LIQUIDADO NO SIAFI</span></span>
+          <span class="kpi-badge" id="kpi-rastreio-badge-liq" style="background:rgba(217,119,6,0.12);color:#D97706;">🟢 {pct_liq_total:.1f}% do Empenho</span>
+        </div>
+        <div class="kpi-val num" id="kpi-rastreio-tot-liq" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{_fmt_brl(tot_liq)}</div>
+        <div class="kpi-meter">
+          <div class="kpi-meter-track"><div class="kpi-meter-fill" id="kpi-rastreio-bar-liq" style="width:{min(100.0, pct_liq_total):.1f}%;background:linear-gradient(90deg, #F59E0B, #D97706)"></div></div>
+        </div>
+        <div class="kpi-sub" id="kpi-rastreio-sub-liq" style="margin-top:6px;"><b>{_fmt_brl(tot_pag)} pagos</b> · A pagar: <b>{_fmt_brl(tot_a_pagar)}</b></div>
       </div>
-      <div class="kpi" style="border-left-color:var(--success);">
-        <span class="kpi-lbl">CRÉDITO DISPONÍVEL LÍQUIDO</span>
-        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--success-strong);">{_fmt_brl(tot_cred_disp)}</div>
-        <div class="kpi-sub">Saldo livre em caixa para novas contratações</div>
+      <div class="kpi kpi-cred-card" style="border-left-color:var(--success);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="kpi-lbl"><span class="term-tip" data-tip="Saldo Livre: Provisão Recebida menos Despesas Empenhadas. Crédito disponível para novas licitações e contratações.">CRÉDITO DISPONÍVEL</span></span>
+          <span class="kpi-badge" id="kpi-rastreio-badge-disp" style="background:var(--success-bg);color:var(--success-strong);">🔵 {pct_disp_total:.1f}% Saldo Livre</span>
+        </div>
+        <div class="kpi-val num" id="kpi-rastreio-tot-disp" style="font-size:1.625rem;font-weight:800;color:var(--success-strong);">{_fmt_brl(tot_cred_disp)}</div>
+        <div class="kpi-meter">
+          <div class="kpi-meter-track"><div class="kpi-meter-fill" id="kpi-rastreio-bar-disp" style="width:{min(100.0, pct_disp_total):.1f}%;background:linear-gradient(90deg, #10B981, #059669)"></div></div>
+        </div>
+        <div class="kpi-sub" id="kpi-rastreio-sub-disp" style="margin-top:6px;">Saldo em caixa livre para novas contratações</div>
       </div>
-      <div class="kpi" style="border-left-color:#059669;">
-        <span class="kpi-lbl">PROVA REAL: INTEGRIDADE SIAFI</span>
-        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:#059669;">{pct_conf:.1f}%</div>
-        <div class="kpi-sub"><b>{qtd_conf:,} NEs</b> com lastro contábil comprovado</div>
+      <div class="kpi kpi-prova-card" style="border-left-color:#059669;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="kpi-lbl"><span class="term-tip" data-tip="Prova Real: Cruzamento contábil SIAFI entre UG favorecida, Plano Interno (PI), Natureza de Despesa (ND) e citação na NE.">PROVA REAL: INTEGRIDADE</span></span>
+          <span class="kpi-badge" id="kpi-rastreio-badge-conf" style="background:rgba(5,150,105,0.12);color:#059669;">🛡️ {pct_conf:.1f}% Conciliado</span>
+        </div>
+        <div class="kpi-val num" id="kpi-rastreio-tot-conf" style="font-size:1.625rem;font-weight:800;color:#059669;">{pct_conf:.1f}%</div>
+        <div class="kpi-meter">
+          <div class="kpi-meter-track"><div class="kpi-meter-fill" id="kpi-rastreio-bar-conf" style="width:{min(100.0, pct_conf):.1f}%;background:linear-gradient(90deg, #059669, #047857)"></div></div>
+        </div>
+        <div class="kpi-sub" id="kpi-rastreio-sub-conf" style="margin-top:6px;"><b>{qtd_conf:,} de {qtd_nes:,} NEs</b> com lastro comprovado</div>
       </div>
-      <div class="kpi" style="border-left-color:#8B5CF6;">
-        <span class="kpi-lbl">FORNECEDORES & CREDORES</span>
-        <div class="kpi-val num" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{qtd_fav:,}</div>
-        <div class="kpi-sub">Pessoas jurídicas e supridos no exercício</div>
+      <div class="kpi kpi-forn-card" style="border-left-color:#8B5CF6;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="kpi-lbl"><span class="term-tip" data-tip="Pessoas jurídicas e fornecedores com notas de empenho emitidas pelas OMDS no exercício.">FORNECEDORES & CREDORES</span></span>
+          <span class="kpi-badge" id="kpi-rastreio-badge-forn" style="background:rgba(139,92,246,0.12);color:#7C3AED;">🏢 Contratados</span>
+        </div>
+        <div class="kpi-val num" id="kpi-rastreio-tot-forn" style="font-size:1.625rem;font-weight:800;color:var(--ink);">{qtd_fav:,}</div>
+        <div class="kpi-meter">
+          <div class="kpi-meter-track"><div class="kpi-meter-fill" id="kpi-rastreio-bar-forn" style="width:100%;background:linear-gradient(90deg, #8B5CF6, #7C3AED)"></div></div>
+        </div>
+        <div class="kpi-sub" id="kpi-rastreio-sub-forn" style="margin-top:6px;">Empresas e credores com contratos ativos</div>
       </div>
     </div>
   </section>
@@ -529,20 +632,8 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     </div>
     <div class="tbl-filtros" role="group" aria-label="Filtros de Crédito e Empenho">
       <span class="flt-lbl">Filtrar:</span>
-      <select class="flt" id="rSelOM" aria-label="Filtrar por Organização Militar" onchange="bcmsFiltraRastreioNC()">
-        <option value="">Unidade: todas as OMDS</option>
-        <option value="160329">BCMS · OGU</option>
-        <option value="167329">BCMS · FEx</option>
-        <option value="160238">Ba Ap Log · OGU</option>
-        <option value="167238">Ba Ap Log · FEx</option>
-        <option value="160246">D C Mun · OGU</option>
-        <option value="167246">D C Mun · FEx</option>
-        <option value="160304">BMSA · OGU</option>
-        <option value="167304">BMSA · FEx</option>
-        <option value="160307">1º D Sup · OGU</option>
-        <option value="167307">1º D Sup · FEx</option>
-        <option value="160321">ECT · OGU</option>
-        <option value="167321">ECT · FEx</option>
+      <select class="flt" id="rSelOM" aria-label="Filtrar por Organização Militar" onchange="bcmsSincronizaFiltroOM('rSelOM');bcmsFiltraRastreioNC();">
+{opt_om_rastreio}
       </select>
       <select class="flt" id="rSelNDNC" aria-label="Filtrar por Natureza de Despesa" onchange="bcmsFiltraRastreioNC()">
         <option value="">ND: todas as despesas</option>
@@ -558,12 +649,12 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
         <option value="160">Fonte 160 · OGU (Orçamento Geral)</option>
         <option value="167">Fonte 167 · FEx (Fundo do Exército)</option>
       </select>
-      <select class="flt" id="rSelQueima" aria-label="Filtrar por ritmo de queima" onchange="bcmsFiltraRastreioNC()">
-        <option value="">Ritmo de Queima: todos</option>
-        <option value="alta">🟢 Queima Alta (&gt; 80% empenhado)</option>
-        <option value="media">🟡 Queima Média (30% a 80%)</option>
-        <option value="baixa">🔴 Queima Baixa (&lt; 30% empenhado)</option>
-        <option value="zero">⚪ Sem Empenhos (100% disponível)</option>
+      <select class="flt" id="rSelQueima" aria-label="Filtrar por ritmo de execução" onchange="bcmsFiltraRastreioNC()">
+        <option value="">Ritmo de Execução: todos</option>
+        <option value="alta">🟢 Execução Alta (&gt; 80% empenhado)</option>
+        <option value="media">🟡 Execução Média (30% a 80%)</option>
+        <option value="baixa">🔴 Execução Baixa (&lt; 30% empenhado)</option>
+        <option value="zero">⚪ Não Iniciada (100% disponível)</option>
       </select>
       <button type="button" class="flt-limpa" onclick="bcmsLimpaFiltrosRastreioNC()" title="Limpar todos os filtros">✕ Limpar</button>
     </div>
@@ -584,7 +675,6 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('liq')" class="num" title="Ordenar por Despesas Liquidadas">Liquidado (SIAFI) <span class="sort" id="sort-nc-liq"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNC('cred')" class="num anchor" title="Ordenar por Saldo Disponível">Saldo Disponível <span class="sort" id="sort-nc-cred"></span></th>
             <th style="width:130px;text-align:center;">Execução</th>
-            <th style="width:84px;text-align:center;">Ações</th>
           </tr>
         </thead>
         <tbody id="corpoRastreioNC">
@@ -604,20 +694,8 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     </div>
     <div class="tbl-filtros" role="group" aria-label="Filtros de Empenhos">
       <span class="flt-lbl">Filtrar:</span>
-      <select class="flt" id="rSelOMNE" aria-label="Filtrar por Unidade Gestora" onchange="bcmsFiltraRastreioNE()">
-        <option value="">Unidade: todas as UGs</option>
-        <option value="160329">160329 · BCMS (OGU)</option>
-        <option value="167329">167329 · BCMS (FEx)</option>
-        <option value="160238">160238 · Ba Ap Log (OGU)</option>
-        <option value="167238">167238 · Ba Ap Log (FEx)</option>
-        <option value="160246">160246 · D C Mun (OGU)</option>
-        <option value="167246">167246 · D C Mun (FEx)</option>
-        <option value="160304">160304 · BMSA (OGU)</option>
-        <option value="167304">167304 · BMSA (FEx)</option>
-        <option value="160307">160307 · 1º D Sup (OGU)</option>
-        <option value="167307">167307 · 1º D Sup (FEx)</option>
-        <option value="160321">160321 · ECT (OGU)</option>
-        <option value="167321">167321 · ECT (FEx)</option>
+      <select class="flt" id="rSelOMNE" aria-label="Filtrar por Unidade Gestora" onchange="bcmsSincronizaFiltroOM('rSelOMNE');bcmsFiltraRastreioNE();">
+{opt_om_rastreio}
       </select>
       <select class="flt" id="rSelAcaoNE" aria-label="Filtrar por Ação Orçamentária" onchange="bcmsFiltraRastreioNE()">
         <option value="">Ação: todas as ações</option>
@@ -665,7 +743,6 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('pi')" title="Ordenar por Plano Interno">Plano Interno <span class="sort" id="sort-ne-pi"></span></th>
             <th tabindex="0" role="button" onclick="bcmsSortRastreioNE('nc')" title="Ordenar por NC Citada">NC de Origem <span class="sort" id="sort-ne-nc"></span></th>
             <th style="text-align:center;">Selo Prova Real</th>
-            <th style="text-align:center;">Ações</th>
           </tr>
         </thead>
         <tbody id="corpoRastreioNE">
@@ -684,20 +761,8 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     </div>
     <div class="tbl-filtros" role="group" aria-label="Filtros de Fornecedores e Pregões">
       <span class="flt-lbl">Filtrar:</span>
-      <select class="flt" id="rSelOMForn" aria-label="Filtrar por Unidade Gestora" onchange="bcmsFiltraForn()">
-        <option value="">Unidade: todas as UGs</option>
-        <option value="160329">160329 · BCMS (OGU)</option>
-        <option value="167329">167329 · BCMS (FEx)</option>
-        <option value="160238">160238 · Ba Ap Log (OGU)</option>
-        <option value="167238">167238 · Ba Ap Log (FEx)</option>
-        <option value="160246">160246 · D C Mun (OGU)</option>
-        <option value="167246">167246 · D C Mun (FEx)</option>
-        <option value="160304">160304 · BMSA (OGU)</option>
-        <option value="167304">167304 · BMSA (FEx)</option>
-        <option value="160307">160307 · 1º D Sup (OGU)</option>
-        <option value="167307">167307 · 1º D Sup (FEx)</option>
-        <option value="160321">160321 · ECT (OGU)</option>
-        <option value="167321">167321 · ECT (FEx)</option>
+      <select class="flt" id="rSelOMForn" aria-label="Filtrar por Unidade Gestora" onchange="bcmsSincronizaFiltroOM('rSelOMForn');bcmsFiltraForn();">
+{opt_om_rastreio}
       </select>
       <select class="flt" id="rSelNDForn" aria-label="Filtrar por Natureza de Despesa" onchange="bcmsFiltraForn()">
         <option value="">ND: todas as despesas</option>
@@ -779,14 +844,8 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
       </div>
       <div class="tbl-filtros" style="margin-bottom:16px;" role="group" aria-label="Filtros de Inconsistências">
         <span class="flt-lbl">Filtrar:</span>
-        <select class="flt" id="rSelOMProva" aria-label="Filtrar por UG" onchange="bcmsFiltraProva()">
-          <option value="">Unidade: todas as UGs</option>
-          <option value="160329">160329 · BCMS</option>
-          <option value="160238">160238 · Ba Ap Log</option>
-          <option value="160246">160246 · D C Mun</option>
-          <option value="160304">160304 · BMSA</option>
-          <option value="160307">160307 · 1º D Sup</option>
-          <option value="160321">160321 · ECT</option>
+        <select class="flt" id="rSelOMProva" aria-label="Filtrar por UG" onchange="bcmsSincronizaFiltroOM('rSelOMProva');bcmsFiltraProva();">
+{opt_om_rastreio}
         </select>
         <select class="flt" id="rSelStatusProva" aria-label="Filtrar por Tipo de Inconsistência" onchange="bcmsFiltraProva()">
           <option value="">Tipo: todas as divergências</option>
@@ -810,7 +869,6 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
               <th>ND da NE</th>
               <th>NC Citada no Texto</th>
               <th>Diagnóstico da Inconsistência</th>
-              <th style="text-align:center;">Ação</th>
             </tr>
           </thead>
           <tbody id="corpoInconsistencias">
@@ -837,20 +895,8 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
     </div>
     <div class="tbl-filtros" style="margin-bottom:16px;" role="group" aria-label="Filtros de Créditos Parados">
       <span class="flt-lbl">Filtrar:</span>
-      <select class="flt" id="rSelOMRisco" aria-label="Filtrar por OMDS" onchange="bcmsFiltraRisco()">
-        <option value="">Unidade: todas as OMDS</option>
-        <option value="160329">BCMS · OGU</option>
-        <option value="167329">BCMS · FEx</option>
-        <option value="160238">Ba Ap Log · OGU</option>
-        <option value="167238">Ba Ap Log · FEx</option>
-        <option value="160246">D C Mun · OGU</option>
-        <option value="167246">D C Mun · FEx</option>
-        <option value="160304">BMSA · OGU</option>
-        <option value="167304">BMSA · FEx</option>
-        <option value="160307">1º D Sup · OGU</option>
-        <option value="167307">1º D Sup · FEx</option>
-        <option value="160321">ECT · OGU</option>
-        <option value="167321">ECT · FEx</option>
+      <select class="flt" id="rSelOMRisco" aria-label="Filtrar por OMDS" onchange="bcmsSincronizaFiltroOM('rSelOMRisco');bcmsFiltraRisco();">
+{opt_om_rastreio}
       </select>
       <select class="flt" id="rSelFaixaRisco" aria-label="Filtrar por Faixa de Saldo" onchange="bcmsFiltraRisco()">
         <option value="">Saldo Parado: &gt; R$ 15.000</option>
@@ -874,7 +920,6 @@ def secao_rastreabilidade_empenhos(res, emp_data, histdata, data_str, periodo):
             <th>Natureza Despesa</th>
             <th class="num">Crédito Recebido</th>
             <th class="num anchor" style="color:var(--warning-ink);">Saldo Disponível Parado</th>
-            <th style="text-align:center;">Ação Imediata</th>
           </tr>
         </thead>
         <tbody id="corpoRastreioRisco">
@@ -908,6 +953,80 @@ CSS_RASTREIO = r"""
 .omds-rastreio.on span { color: #FFFFFF !important; }
 .rastreio-icon { font-size: 1.125rem; }
 
+/* Micro Tooltips de Glossário Militar & Orçamentário */
+.term-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  text-decoration: underline dotted var(--ink-soft);
+  text-underline-offset: 3px;
+}
+.term-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--neutral-900);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-family: var(--sans);
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
+  text-align: center;
+  line-height: 1.35;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+:root[data-theme="dark"] .term-tip::after {
+  background: #1E293B;
+  color: #F8FAFC;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.term-tip:hover::after, .term-tip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* KPI Cards com Barras de Progresso e Badges Semânticos */
+.kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.kpi-meter {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kpi-meter-track {
+  width: 100%;
+  height: 5px;
+  background: var(--track, rgba(0,0,0,0.06));
+  border-radius: 999px;
+  overflow: hidden;
+}
+.kpi-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .queima-bar-wrap {
   display: inline-flex;
   align-items: center;
@@ -939,7 +1058,41 @@ CSS_RASTREIO = r"""
   text-align: right;
 }
 
-/* Acordeão de NEs Vinculadas */
+/* Tabela Interativa de Padrão Enterprise: Linhas Clicáveis */
+.unidade-rastreio .det tbody tr.cel-row {
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.unidade-rastreio .det tbody tr.cel-row:hover {
+  background-color: var(--primary-50) !important;
+}
+:root[data-theme="dark"] .unidade-rastreio .det tbody tr.cel-row:hover {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+.unidade-rastreio .det tbody tr.cel-row:focus-visible {
+  outline: 2px solid var(--primary-600);
+  outline-offset: -2px;
+}
+.unidade-rastreio .det tbody tr.cel-row .chev {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+}
+.unidade-rastreio .det tbody tr.cel-row:hover .chev {
+  color: var(--primary-600);
+  transform: translateX(4px);
+}
+
+/* Acordeão de NEs Vinculadas com Animação Fluida */
+.sub-row-detalhe {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .sub-ne-wrap {
   padding: 16px 20px;
   margin: 6px 10px;
@@ -948,6 +1101,11 @@ CSS_RASTREIO = r"""
   border-left: 4px solid var(--accent, #059669);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
+  animation: subNeSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes subNeSlideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .sub-ne-header {
   display: flex;
@@ -972,7 +1130,7 @@ CSS_RASTREIO = r"""
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   font-size: 0.75rem;
   font-weight: 700;
   font-family: var(--mono);
@@ -981,12 +1139,25 @@ CSS_RASTREIO = r"""
   border: 1px solid var(--border);
   color: var(--ink);
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all .16s ease;
 }
 .btn-exp-ne:hover, .btn-exp-ne.aberto {
   background: var(--accent, #059669);
   color: #FFFFFF;
   border-color: var(--accent, #059669);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* Skeleton Loader para requisições e filtros */
+.skeleton-loading {
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--border) 50%, var(--bg-subtle) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Ranking de Fornecedores & Pregões */
@@ -1133,11 +1304,12 @@ function bcmsInitRastreio(){
     // O saldo disponível oficial é rigorosamente o saldo registrado no SIAFI (it.cred)
     var credOficial = (typeof it.cred !== 'undefined' && it.cred !== null) ? it.cred : Math.max(0, provVal - totEmpNE);
     var consumido = Math.max(0, provVal - credOficial);
-    var taxaQueima = provVal > 0 ? Math.min(100, Math.max(0, (consumido / provVal) * 100)) : 0;
+    var empVal = totEmpNE > 0 ? totEmpNE : consumido;
+    var taxaQueima = provVal > 0 ? Math.min(100, Math.max(0, (empVal / provVal) * 100)) : 0;
     var faixa = 'zero';
     if(credOficial <= 0.01 && provVal > 0){
       faixa = 'alta';
-    } else if(totEmpNE > 0 || consumido > 0){
+    } else if(empVal > 0){
       if(taxaQueima >= 80) faixa = 'alta';
       else if(taxaQueima >= 30) faixa = 'media';
       else faixa = 'baixa';
@@ -1155,6 +1327,8 @@ function bcmsInitRastreio(){
       hid: it.hid,
       nc: it.nc,
       dia: it.dia || '',
+      dt: it.dt || '',
+      dias: (typeof it.dias === 'number') ? it.dias : 0,
       emit: it.emit_cod || it.emit || '',
       emit_nome: it.emit_nome || '',
       uasg: it.fav_cod || '',
@@ -1166,7 +1340,7 @@ function bcmsInitRastreio(){
       nd_desc: it.nd_desc || '',
       obj: it.obj || '',
       prov: provVal,
-      emp: totEmpNE > 0 ? totEmpNE : consumido,
+      emp: empVal,
       liq: ncLiq,
       pag: ncPag,
       cred: credOficial,
@@ -1210,6 +1384,142 @@ function bcmsRastreioSubAba(subtab, btn){
   }
 }
 
+var BCMS_UASG_TO_OM = {
+  '160329': 'BCMS', '167329': 'BCMS',
+  '160238': 'Ba Ap Log', '167238': 'Ba Ap Log',
+  '160246': 'D C Mun', '167246': 'D C Mun',
+  '160304': 'BMSA', '167304': 'BMSA',
+  '160307': '1º D Sup', '167307': '1º D Sup',
+  '160321': 'ECT', '167321': 'ECT'
+};
+
+function bcmsMatchOM(itemOM, itemUasg, filtroOM){
+  if(!filtroOM) return true;
+  if(filtroOM === itemOM || filtroOM === itemUasg) return true;
+  if(BCMS_UASG_TO_OM[itemUasg] === filtroOM) return true;
+  return false;
+}
+
+function bcmsSincronizaFiltroOM(origemId){
+  var elOrigem = document.getElementById(origemId);
+  if(!elOrigem) return;
+  var val = elOrigem.value;
+  var ids = ['rSelOM', 'rSelOMNE', 'rSelOMForn', 'rSelOMProva', 'rSelOMRisco'];
+  for(var i = 0; i < ids.length; i++){
+    if(ids[i] !== origemId){
+      var el = document.getElementById(ids[i]);
+      if(el) el.value = val;
+    }
+  }
+}
+
+function bcmsAtualizaKPIsRastreio(omFiltro){
+  var nes = RASTREIO_NE_ITEMS || [];
+  var omSiafi = (typeof EMPENHODATA !== 'undefined' && EMPENHODATA && EMPENHODATA.om_totais_siafi) ? EMPENHODATA.om_totais_siafi : null;
+  
+  var totProv = 0;
+  var totEmp = 0;
+  var totLiq = 0;
+  var totPag = 0;
+  var totCred = 0;
+  var qtdNes = 0;
+  var qtdConf = 0;
+  var fornsSet = {};
+
+  if(omSiafi && omFiltro && omSiafi[omFiltro]){
+    totProv = omSiafi[omFiltro].prov || 0;
+    totCred = omSiafi[omFiltro].cred || 0;
+    totLiq  = omSiafi[omFiltro].liq || 0;
+    totPag  = omSiafi[omFiltro].pag || 0;
+  } else if(omSiafi && !omFiltro){
+    var ugsVisitadas = {};
+    for(var k in omSiafi){
+      if(k.match(/^\d{6}$/) && !ugsVisitadas[k]){
+        ugsVisitadas[k] = true;
+        totProv += (omSiafi[k].prov || 0);
+        totCred += (omSiafi[k].cred || 0);
+        totLiq  += (omSiafi[k].liq || 0);
+        totPag  += (omSiafi[k].pag || 0);
+      }
+    }
+  } else {
+    var ncs = RASTREIO_NC_ITEMS || [];
+    for(var i = 0; i < ncs.length; i++){
+      var nc = ncs[i];
+      if(bcmsMatchOM(nc.om_sigla, nc.uasg, omFiltro)){
+        totProv += (nc.prov || 0);
+        totCred += (nc.cred || 0);
+      }
+    }
+    var celsVistas = {};
+    for(var j = 0; j < nes.length; j++){
+      var ne = nes[j];
+      if(bcmsMatchOM(ne.om_sigla, ne.ug, omFiltro)){
+        var cKey = (ne.ug || '') + '_' + (ne.pi || '') + '_' + (ne.nd || '');
+        if(!celsVistas[cKey]){
+          celsVistas[cKey] = true;
+          totLiq += (ne.cel_liq || 0);
+          totPag += (ne.cel_pag || 0);
+        }
+      }
+    }
+  }
+
+  for(var j = 0; j < nes.length; j++){
+    var ne = nes[j];
+    if(bcmsMatchOM(ne.om_sigla, ne.ug, omFiltro)){
+      totEmp += (ne.val || 0);
+      qtdNes++;
+      if(ne.prova_slug === 'ok' || ne.prova_slug === 'info') qtdConf++;
+      if(ne.fav && ne.fav !== 'NAO SE APLICA') fornsSet[ne.fav] = true;
+    }
+  }
+
+  var taxaExec = totProv > 0 ? Math.min(100, Math.max(0, (totEmp / totProv) * 100)) : 0;
+  var pctLiq = totEmp > 0 ? Math.min(100, Math.max(0, (totLiq / totEmp) * 100)) : 0;
+  var pctDisp = totProv > 0 ? Math.min(100, Math.max(0, (totCred / totProv) * 100)) : 0;
+  var pctConf = qtdNes > 0 ? Math.min(100, Math.max(0, (qtdConf / qtdNes) * 100)) : 0;
+  var totAPagar = Math.max(0, totLiq - totPag);
+  var qtdForns = Object.keys(fornsSet).length;
+
+  var elTotEmp = document.getElementById('kpi-rastreio-tot-emp');
+  var elSubEmp = document.getElementById('kpi-rastreio-sub-emp');
+  var elBarEmp = document.getElementById('kpi-rastreio-bar-emp');
+  var elBadgeEmp = document.getElementById('kpi-rastreio-badge-emp');
+  if(elTotEmp) elTotEmp.textContent = bcmsBRL(totEmp);
+  if(elSubEmp) elSubEmp.innerHTML = '<b>' + qtdNes.toLocaleString('pt-BR') + ' NEs</b> de <b>' + bcmsBRL(totProv) + '</b> descentralizados';
+  if(elBarEmp) elBarEmp.style.width = Math.min(100, taxaExec).toFixed(1) + '%';
+  if(elBadgeEmp) elBadgeEmp.textContent = '⚡ ' + taxaExec.toFixed(1) + '% Comprometido';
+
+  var elTotLiq = document.getElementById('kpi-rastreio-tot-liq');
+  var elSubLiq = document.getElementById('kpi-rastreio-sub-liq');
+  var elBarLiq = document.getElementById('kpi-rastreio-bar-liq');
+  var elBadgeLiq = document.getElementById('kpi-rastreio-badge-liq');
+  if(elTotLiq) elTotLiq.textContent = bcmsBRL(totLiq);
+  if(elSubLiq) elSubLiq.innerHTML = '<b>' + bcmsBRL(totPag) + ' pagos</b> · A pagar: <b>' + bcmsBRL(totAPagar) + '</b>';
+  if(elBarLiq) elBarLiq.style.width = Math.min(100, pctLiq).toFixed(1) + '%';
+  if(elBadgeLiq) elBadgeLiq.textContent = '🟢 ' + pctLiq.toFixed(1) + '% do Empenho';
+
+  var elTotDisp = document.getElementById('kpi-rastreio-tot-disp');
+  var elBarDisp = document.getElementById('kpi-rastreio-bar-disp');
+  var elBadgeDisp = document.getElementById('kpi-rastreio-badge-disp');
+  if(elTotDisp) elTotDisp.textContent = bcmsBRL(totCred);
+  if(elBarDisp) elBarDisp.style.width = Math.min(100, pctDisp).toFixed(1) + '%';
+  if(elBadgeDisp) elBadgeDisp.textContent = '🔵 ' + pctDisp.toFixed(1) + '% Saldo Livre';
+
+  var elTotConf = document.getElementById('kpi-rastreio-tot-conf');
+  var elSubConf = document.getElementById('kpi-rastreio-sub-conf');
+  var elBarConf = document.getElementById('kpi-rastreio-bar-conf');
+  var elBadgeConf = document.getElementById('kpi-rastreio-badge-conf');
+  if(elTotConf) elTotConf.textContent = pctConf.toFixed(1) + '%';
+  if(elSubConf) elSubConf.innerHTML = '<b>' + qtdConf.toLocaleString('pt-BR') + ' de ' + qtdNes.toLocaleString('pt-BR') + ' NEs</b> com lastro comprovado';
+  if(elBarConf) elBarConf.style.width = Math.min(100, pctConf).toFixed(1) + '%';
+  if(elBadgeConf) elBadgeConf.textContent = '🛡️ ' + pctConf.toFixed(1) + '% Conciliado';
+
+  var elTotForn = document.getElementById('kpi-rastreio-tot-forn');
+  if(elTotForn) elTotForn.textContent = qtdForns.toLocaleString('pt-BR');
+}
+
 /* ================= SUB-ABA 1: VISÃO TOP-DOWN (NOTAS DE CRÉDITO) ================= */
 function bcmsFiltraRastreioNC(){
   var q = (document.getElementById('rBuscaNC') ? document.getElementById('rBuscaNC').value : '').toLowerCase().trim();
@@ -1219,7 +1529,7 @@ function bcmsFiltraRastreioNC(){
   var qm = document.getElementById('rSelQueima') ? document.getElementById('rSelQueima').value : '';
 
   RASTREIO_NC_FILTRADOS = RASTREIO_NC_ITEMS.filter(function(it){
-    if(om && it.uasg !== om) return false;
+    if(om && !bcmsMatchOM(it.om_sigla, it.uasg, om)) return false;
     if(nd && it.nd !== nd) return false;
     if(fonte && ((fonte === '160' && it.uasg.indexOf('160') !== 0) || (fonte === '167' && it.uasg.indexOf('167') !== 0))) return false;
     if(qm && it.faixa_queima !== qm) return false;
@@ -1244,6 +1554,7 @@ function bcmsFiltraRastreioNC(){
   RASTREIO_NC_PAGE = 1;
   bcmsSortApplyNC();
   bcmsRenderRastreioNC();
+  bcmsAtualizaKPIsRastreio(om);
 }
 
 function bcmsSortRastreioNC(col){
@@ -1267,10 +1578,34 @@ function bcmsSortRastreioNC(col){
   bcmsRenderRastreioNC();
 }
 
+function _bcmsParseDate(val){
+  if(!val) return 0;
+  if(typeof val === 'number') return val;
+  var s = String(val).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+    return new Date(s).getTime() || 0;
+  }
+  var parts = s.split('/');
+  if(parts.length === 3){
+    var d = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+    var y = parseInt(parts[2], 10);
+    if(!isNaN(d) && !isNaN(m) && !isNaN(y)){
+      return new Date(y, m, d).getTime() || 0;
+    }
+  }
+  return 0;
+}
+
 function bcmsSortApplyNC(){
   var col = RASTREIO_SORT_NC.col;
   var asc = RASTREIO_SORT_NC.asc;
   RASTREIO_NC_FILTRADOS.sort(function(a, b){
+    if(col === 'dia'){
+      var da = _bcmsParseDate(a.dt || a.dia);
+      var db = _bcmsParseDate(b.dt || b.dia);
+      return asc ? (da - db) : (db - da);
+    }
     var va = a[col] != null ? a[col] : '';
     var vb = b[col] != null ? b[col] : '';
     if(typeof va === 'number' && typeof vb === 'number'){
@@ -1298,7 +1633,7 @@ function bcmsRenderRastreioNC(){
   var paginaItens = RASTREIO_NC_FILTRADOS.slice(ini, fim);
 
   if(paginaItens.length === 0){
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma Nota de Crédito encontrada para os filtros aplicados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma Nota de Crédito encontrada para os filtros aplicados.</td></tr>';
     document.getElementById('paginacaoRastreioNC').innerHTML = '';
     return;
   }
@@ -1311,11 +1646,11 @@ function bcmsRenderRastreioNC(){
     var queimaFillW = Math.min(100, Math.round(it.taxa_queima));
     var emitCurto = it.emit_nome ? (it.emit_nome.length > 22 ? it.emit_nome.slice(0, 22) + '…' : it.emit_nome) : it.emit;
 
-    html += '<tr class="cel-row" id="linha-nc-' + it.hid + '">' +
+    html += '<tr class="cel-row" id="linha-nc-' + it.hid + '" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + it.hid + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + it.hid + '\');}" title="Clique na linha para abrir a ficha cadastral completa da NC ' + bcmsEsc(it.nc) + '">' +
       '<td style="text-align:center;">' +
-        (temNE ? '<button type="button" class="btn-exp-ne" id="btn-exp-' + it.hid + '" onclick="bcmsToggleAcordeaoNC(\'' + it.hid + '\')" title="Expandir ' + it.nes.length + ' empenhos emitidos">▼ ' + it.nes.length + '</button>' : '<span style="color:var(--ink-soft);font-size:0.75rem;">—</span>') +
+        (temNE ? '<button type="button" class="btn-exp-ne" id="btn-exp-' + it.hid + '" onclick="event.stopPropagation();bcmsToggleAcordeaoNC(\'' + it.hid + '\')" title="Expandir ' + it.nes.length + ' empenhos emitidos">▼ ' + it.nes.length + '</button>' : '<span style="color:var(--ink-soft);font-size:0.75rem;">—</span>') +
       '</td>' +
-      '<td class="mono2"><a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + it.hid + '\')" class="link-drill" title="Abrir ficha cadastral da NC">' + bcmsEsc(it.nc) + '</a></td>' +
+      '<td class="mono2"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + it.hid + '\')" class="link-drill" title="Abrir ficha cadastral da NC">' + bcmsEsc(it.nc) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(it.dia || '—') + '</td>' +
       '<td title="' + bcmsEsc(it.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(it.emit) + '</span> <small>' + bcmsEsc(emitCurto) + '</small></td>' +
       '<td><span class="ug-pill fav">' + bcmsEsc(it.uasg) + '</span> <b>' + bcmsEsc(it.om_sigla) + '</b></td>' +
@@ -1326,15 +1661,15 @@ function bcmsRenderRastreioNC(){
       '<td class="num font-mono" style="color:#059669;font-weight:600;">' + (it.liq > 0.005 ? bcmsBRL(it.liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>') + '</td>' +
       '<td class="num font-mono anchor">' + bcmsBRL(it.cred) + '</td>' +
       '<td>' +
-        '<div class="queima-bar-wrap" title="' + it.taxa_queima.toFixed(1) + '% empenhado">' +
+        '<div class="queima-bar-wrap" title="' + it.taxa_queima.toFixed(1) + '% executado">' +
           '<div class="queima-track"><div class="queima-fill ' + queimaCls + '" style="width:' + queimaFillW + '%"></div></div>' +
           '<span class="queima-lbl">' + it.taxa_queima.toFixed(0) + '%</span>' +
+          '<i class="chev" aria-hidden="true" style="margin-left:6px;">›</i>' +
         '</div>' +
       '</td>' +
-      '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNC(\'' + it.hid + '\')">Ficha ↗</button></td>' +
     '</tr>' +
     '<tr id="acordeao-' + it.hid + '" class="sub-row-detalhe" style="display:none">' +
-      '<td colspan="13" style="padding:0;">' +
+      '<td colspan="12" style="padding:0;">' +
         '<div class="sub-ne-wrap" id="acordeao-cont-' + it.hid + '"></div>' +
       '</td>' +
     '</tr>';
@@ -1393,7 +1728,6 @@ function bcmsToggleAcordeaoNC(hid){
         '<th>Processo / Pregão</th>' +
         '<th class="num">Valor da NE</th>' +
         '<th style="text-align:center;">Selo Prova Real</th>' +
-        '<th style="text-align:center;">Ação</th>' +
       '</tr>' +
     '</thead>' +
     '<tbody>';
@@ -1405,17 +1739,16 @@ function bcmsToggleAcordeaoNC(hid){
               (nItem.prova_slug === 'warn' ? 'status-canc' :
               (nItem.prova_slug === 'danger' ? 'status-canc' : 'status-zerada')));
     var badgeProva = '<span class="pill-status ' + sCls + '">' + bcmsEsc(nItem.prova || 'Auditado') + '</span>';
-    var pregaoTag = nItem.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(nItem.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(nItem.proc) + '</a>' : '—';
+    var pregaoTag = nItem.proc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheProcesso(\'' + bcmsEsc(nItem.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(nItem.proc) + '</a>' : '—';
 
-    miniHtml += '<tr class="cel-row">' +
-      '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nItem.ne) + '\')" class="link-drill">' + bcmsEsc(nItem.ne) + '</a></td>' +
+    miniHtml += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(nItem.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(nItem.ne) + '\');}" title="Clique na linha para ver ficha completa da NE ' + bcmsEsc(nItem.ne) + '">' +
+      '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(nItem.ne) + '\')" class="link-drill">' + bcmsEsc(nItem.ne) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(nItem.dia || '—') + '</td>' +
-      '<td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nItem.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nItem.fav) + '</a></td>' +
+      '<td><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(nItem.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nItem.fav) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(nItem.doc || '—') + '</td>' +
       '<td>' + pregaoTag + '</td>' +
       '<td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(nItem.val) + '</td>' +
-      '<td style="text-align:center;">' + badgeProva + '</td>' +
-      '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nItem.ne) + '\')">Detalhar ↗</button></td>' +
+      '<td style="text-align:center;">' + badgeProva + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>' +
     '</tr>';
   }
   miniHtml += '</tbody></table>';
@@ -1431,6 +1764,7 @@ function bcmsLimpaFiltrosRastreioNC(){
   if(document.getElementById('rSelNDNC')) document.getElementById('rSelNDNC').value = '';
   if(document.getElementById('rSelFonteNC')) document.getElementById('rSelFonteNC').value = '';
   if(document.getElementById('rSelQueima')) document.getElementById('rSelQueima').value = '';
+  bcmsSincronizaFiltroOM('rSelOM');
   bcmsFiltraRastreioNC();
 }
 
@@ -1443,7 +1777,7 @@ function bcmsFiltraRastreioNE(){
   var prova = document.getElementById('rSelProvaNE') ? document.getElementById('rSelProvaNE').value : '';
 
   RASTREIO_NE_FILTRADOS = RASTREIO_NE_ITEMS.filter(function(it){
-    if(om && it.ug !== om) return false;
+    if(om && !bcmsMatchOM(it.om_sigla, it.ug, om)) return false;
     if(acao && it.acao !== acao) return false;
     if(nd && it.nd !== nd) return false;
     if(prova && it.prova_slug !== prova) return false;
@@ -1463,6 +1797,7 @@ function bcmsFiltraRastreioNE(){
   RASTREIO_NE_PAGE = 1;
   bcmsSortApplyNE();
   bcmsRenderRastreioNE();
+  bcmsAtualizaKPIsRastreio(om);
 }
 
 function bcmsSortRastreioNE(col){
@@ -1490,6 +1825,11 @@ function bcmsSortApplyNE(){
   var col = RASTREIO_SORT_NE.col;
   var asc = RASTREIO_SORT_NE.asc;
   RASTREIO_NE_FILTRADOS.sort(function(a, b){
+    if(col === 'dia'){
+      var da = _bcmsParseDate(a.dia);
+      var db = _bcmsParseDate(b.dia);
+      return asc ? (da - db) : (db - da);
+    }
     var va = a[col] != null ? a[col] : '';
     var vb = b[col] != null ? b[col] : '';
     if(typeof va === 'number' && typeof vb === 'number'){
@@ -1517,7 +1857,7 @@ function bcmsRenderRastreioNE(){
   var paginaItens = RASTREIO_NE_FILTRADOS.slice(ini, fim);
 
   if(paginaItens.length === 0){
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum empenho encontrado para os filtros aplicados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum empenho encontrado para os filtros aplicados.</td></tr>';
     document.getElementById('paginacaoRastreioNE').innerHTML = '';
     return;
   }
@@ -1530,19 +1870,19 @@ function bcmsRenderRastreioNE(){
               (it.prova_slug === 'warn' ? 'status-canc' :
               (it.prova_slug === 'danger' ? 'status-canc' : 'status-zerada')));
     var badgeProva = '<span class="pill-status ' + sCls + '">' + bcmsEsc(it.prova || 'Célula SIAFI') + '</span>';
-    var pregaoTag = it.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(it.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(it.proc) + '</a>' : '—';
-    var ncLink = it.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + it.nc + '\')" class="link-drill">' + bcmsEsc(it.nc) + '</a>' : '<span style="color:var(--ink-muted);">—</span>';
+    var pregaoTag = it.proc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheProcesso(\'' + bcmsEsc(it.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(it.proc) + '</a>' : '—';
+    var ncLink = it.nc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + it.nc + '\')" class="link-drill">' + bcmsEsc(it.nc) + '</a>' : '<span style="color:var(--ink-muted);">—</span>';
 
     var liqCelExib = (it.cel_liq > 0.005 ? bcmsBRL(it.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
     if(it.cel_liq > 0.005 && it.pct_liq > 0){
       liqCelExib += ' <small style="display:block;font-size:0.7rem;color:#059669;">' + it.pct_liq.toFixed(0) + '% Célula</small>';
     }
 
-    html += '<tr class="cel-row">' +
-      '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')" class="link-drill">' + bcmsEsc(it.ne) + '</a></td>' +
+    html += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\');}" title="Clique na linha para ver ficha cadastral da NE ' + bcmsEsc(it.ne) + '">' +
+      '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')" class="link-drill">' + bcmsEsc(it.ne) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(it.dia || '—') + '</td>' +
       '<td><span class="ug-pill fav">' + bcmsEsc(it.ug) + '</span></td>' +
-      '<td title="' + bcmsEsc(it.fav) + '"><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(it.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(it.fav) + '</a></td>' +
+      '<td title="' + bcmsEsc(it.fav) + '"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(it.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(it.fav) + '</a></td>' +
       '<td class="mono2">' + bcmsEsc(it.doc || '—') + '</td>' +
       '<td>' + pregaoTag + '</td>' +
       '<td class="num font-mono font-bold anchor" style="color:var(--success-strong);">' + bcmsBRL(it.val) + '</td>' +
@@ -1550,8 +1890,7 @@ function bcmsRenderRastreioNE(){
       '<td class="mono2">' + bcmsEsc(it.nd) + '</td>' +
       '<td class="mono2">' + bcmsEsc(it.pi) + (it.acao ? ' <small class="ug-pill emit" style="margin-left:4px;font-size:0.6875rem;" title="Ação ' + bcmsEsc(it.acao) + '">' + bcmsEsc(it.acao) + '</small>' : '') + '</td>' +
       '<td class="mono2">' + ncLink + '</td>' +
-      '<td style="text-align:center;">' + badgeProva + '</td>' +
-      '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(it.ne) + '\')">Detalhar ↗</button></td>' +
+      '<td style="text-align:center;">' + badgeProva + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>' +
     '</tr>';
   }
   tbody.innerHTML = html;
@@ -1578,6 +1917,7 @@ function bcmsLimpaFiltrosRastreioNE(){
   if(document.getElementById('rSelAcaoNE')) document.getElementById('rSelAcaoNE').value = '';
   if(document.getElementById('rSelNDNE')) document.getElementById('rSelNDNE').value = '';
   if(document.getElementById('rSelProvaNE')) document.getElementById('rSelProvaNE').value = '';
+  bcmsSincronizaFiltroOM('rSelOMNE');
   bcmsFiltraRastreioNE();
 }
 
@@ -1592,7 +1932,7 @@ function bcmsFiltraForn(){
 
   for(var i = 0; i < RASTREIO_NE_ITEMS.length; i++){
     var it = RASTREIO_NE_ITEMS[i];
-    if(om && it.ug !== om) continue;
+    if(om && !bcmsMatchOM(it.om_sigla, it.ug, om)) continue;
     if(nd && it.nd !== nd) continue;
     if(q){
       var match = (it.fav && it.fav.toLowerCase().indexOf(q) !== -1) ||
@@ -1675,6 +2015,7 @@ function bcmsLimpaFiltrosForn(){
   if(document.getElementById('rBuscaForn')) document.getElementById('rBuscaForn').value = '';
   if(document.getElementById('rSelOMForn')) document.getElementById('rSelOMForn').value = '';
   if(document.getElementById('rSelNDForn')) document.getElementById('rSelNDForn').value = '';
+  bcmsSincronizaFiltroOM('rSelOMForn');
   bcmsFiltraForn();
 }
 
@@ -1686,7 +2027,7 @@ function bcmsFiltraProva(){
 
   var incs = (EMPENHODATA && EMPENHODATA.inconsistencias) ? EMPENHODATA.inconsistencias : [];
   var filtrados = incs.filter(function(it){
-    if(om && it.ug !== om) return false;
+    if(om && !bcmsMatchOM(it.om_sigla, it.ug, om)) return false;
     if(statusSel && it.status_slug !== statusSel) return false;
     if(q){
       var match = (it.ne && it.ne.toLowerCase().indexOf(q) !== -1) ||
@@ -1707,7 +2048,7 @@ function bcmsFiltraProva(){
 
   if(elInc){
     if(filtrados.length === 0){
-      elInc.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma inconsistência encontrada para os filtros aplicados.</td></tr>';
+      elInc.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhuma inconsistência encontrada para os filtros aplicados.</td></tr>';
       return;
     }
     var htmlInc = '';
@@ -1718,17 +2059,16 @@ function bcmsFiltraProva(){
                 (inItem.status_slug === 'warn' ? 'status-canc' :
                 (inItem.status_slug === 'danger' ? 'status-canc' : 'status-zerada')));
 
-      htmlInc += '<tr class="cel-row">' +
-        '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(inItem.ne) + '\')" class="link-drill">' + bcmsEsc(inItem.ne) + '</a></td>' +
+      htmlInc += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(inItem.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(inItem.ne) + '\');}" title="Clique na linha para auditar e inspecionar a NE ' + bcmsEsc(inItem.ne) + '">' +
+        '<td class="mono2 font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(inItem.ne) + '\')" class="link-drill">' + bcmsEsc(inItem.ne) + '</a></td>' +
         '<td class="mono2">' + bcmsEsc(inItem.dia || '—') + '</td>' +
         '<td><span class="ug-pill fav">' + bcmsEsc(inItem.ug) + '</span></td>' +
-        '<td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(inItem.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(inItem.fav) + '</a></td>' +
+        '<td><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(inItem.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(inItem.fav) + '</a></td>' +
         '<td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsEsc(inItem.val_fmt) + '</td>' +
         '<td class="mono2">' + bcmsEsc(inItem.pi_ne) + '</td>' +
         '<td class="mono2">' + bcmsEsc(inItem.nd_ne) + '</td>' +
-        '<td class="mono2"><a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(inItem.nc_citada) + '\')" class="link-drill" style="color:var(--danger);font-weight:bold;">' + bcmsEsc(inItem.nc_citada) + '</a></td>' +
-        '<td><span class="pill-status ' + sCls + '">' + bcmsEsc(inItem.status_prova) + '</span><br><small style="color:var(--ink-muted);font-size:0.75rem;">' + bcmsEsc(inItem.motivo) + '</small></td>' +
-        '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(inItem.ne) + '\')">Inspecionar ↗</button></td>' +
+        '<td class="mono2"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(inItem.nc_citada) + '\')" class="link-drill" style="color:var(--danger);font-weight:bold;">' + bcmsEsc(inItem.nc_citada) + '</a></td>' +
+        '<td><span class="pill-status ' + sCls + '">' + bcmsEsc(inItem.status_prova) + '</span><br><small style="color:var(--ink-muted);font-size:0.75rem;">' + bcmsEsc(inItem.motivo) + '</small> <i class="chev" aria-hidden="true" style="float:right;margin-top:4px;">›</i></td>' +
       '</tr>';
     }
     elInc.innerHTML = htmlInc;
@@ -1739,6 +2079,7 @@ function bcmsLimpaFiltrosProva(){
   if(document.getElementById('rBuscaProva')) document.getElementById('rBuscaProva').value = '';
   if(document.getElementById('rSelOMProva')) document.getElementById('rSelOMProva').value = '';
   if(document.getElementById('rSelStatusProva')) document.getElementById('rSelStatusProva').value = '';
+  bcmsSincronizaFiltroOM('rSelOMProva');
   bcmsFiltraProva();
 }
 
@@ -1754,8 +2095,11 @@ function bcmsFiltraRisco(){
   else if(faixa === '500k') threshold = 500000;
 
   var parados = RASTREIO_NC_ITEMS.filter(function(x){
-    if(x.cred < threshold || x.emp > 0) return false;
-    if(om && x.uasg !== om) return false;
+    if(x.cred < threshold) return false;
+    var taxaExec = (x.prov > 0) ? ((x.emp || 0) / x.prov) : 0;
+    var emRisco = (x.emp === 0) || (taxaExec <= 0.20) || (x.dias && x.dias >= 45);
+    if(!emRisco) return false;
+    if(om && !bcmsMatchOM(x.om_sigla, x.uasg, om)) return false;
     if(q){
       var match = (x.nc && x.nc.toLowerCase().indexOf(q) !== -1) ||
                   (x.emit_nome && x.emit_nome.toLowerCase().indexOf(q) !== -1) ||
@@ -1775,25 +2119,27 @@ function bcmsFiltraRisco(){
 
   if(elRisco){
     if(parados.length === 0){
-      elRisco.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum crédito com saldo parado em risco crítico identificado para os filtros selecionados.</td></tr>';
+      elRisco.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--ink-muted);">Nenhum crédito com saldo parado em risco crítico identificado para os filtros selecionados.</td></tr>';
       return;
     }
     var htmlR = '';
     for(var rI = 0; rI < parados.length; rI++){
       var pItem = parados[rI];
       var emitCurto = pItem.emit_nome ? (pItem.emit_nome.length > 22 ? pItem.emit_nome.slice(0, 22) + '…' : pItem.emit_nome) : pItem.emit;
+      var diasN = (typeof pItem.dias === 'number' && pItem.dias > 0) ? pItem.dias : 0;
+      var diasTxt = diasN > 0 ? (diasN + ' dias') : (pItem.dia ? pItem.dia : '—');
+      var badgeCls = diasN >= 60 ? 'status-canc' : (diasN >= 30 ? 'status-parcial' : 'status-disp');
 
-      htmlR += '<tr class="cel-row">' +
-        '<td class="mono2"><a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(pItem.hid || pItem.nc) + '\')" class="link-drill">' + bcmsEsc(pItem.nc) + '</a></td>' +
+      htmlR += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + bcmsEsc(pItem.hid || pItem.nc) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + bcmsEsc(pItem.hid || pItem.nc) + '\');}" title="Clique na linha para inspecionar o crédito em risco ' + bcmsEsc(pItem.nc) + '">' +
+        '<td class="mono2"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(pItem.hid || pItem.nc) + '\')" class="link-drill">' + bcmsEsc(pItem.nc) + '</a></td>' +
         '<td class="mono2">' + bcmsEsc(pItem.dia || '—') + '</td>' +
-        '<td><span class="pill-status status-canc">&gt; 45 dias</span></td>' +
+        '<td><span class="pill-status ' + badgeCls + '">' + bcmsEsc(diasTxt) + '</span></td>' +
         '<td title="' + bcmsEsc(pItem.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(pItem.emit) + '</span> <small>' + bcmsEsc(emitCurto) + '</small></td>' +
         '<td><span class="ug-pill fav">' + bcmsEsc(pItem.uasg) + '</span> <b>' + bcmsEsc(pItem.om_sigla) + '</b></td>' +
         '<td class="mono2">' + bcmsEsc(pItem.pi) + '</td>' +
         '<td class="mono2">' + bcmsEsc(pItem.nd) + '</td>' +
         '<td class="num font-mono">' + bcmsBRL(pItem.prov) + '</td>' +
-        '<td class="num font-mono anchor" style="color:var(--warning-ink);">' + bcmsBRL(pItem.cred) + '</td>' +
-        '<td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNC(\'' + bcmsEsc(pItem.hid || pItem.nc) + '\')">Inspecionar ↗</button></td>' +
+        '<td class="num font-mono anchor" style="color:var(--warning-ink);">' + bcmsBRL(pItem.cred) + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>' +
       '</tr>';
     }
     elRisco.innerHTML = htmlR;
@@ -1804,6 +2150,7 @@ function bcmsLimpaFiltrosRisco(){
   if(document.getElementById('rBuscaRisco')) document.getElementById('rBuscaRisco').value = '';
   if(document.getElementById('rSelOMRisco')) document.getElementById('rSelOMRisco').value = '';
   if(document.getElementById('rSelFaixaRisco')) document.getElementById('rSelFaixaRisco').value = '';
+  bcmsSincronizaFiltroOM('rSelOMRisco');
   bcmsFiltraRisco();
 }
 
@@ -2074,24 +2421,23 @@ function bcmsDetalheFornecedor(favNome){
   h += '  <div class="m-justif-card" style="border-left-color:#8B5CF6;margin-top:20px;">';
   h += '    <div class="m-justif-header">';
   h += '      <span class="m-justif-title">📦 Relação de Notas de Empenho Emitidas (' + nesDoForn.length + ')</span>';
-  h += '    </div>';
-  h += '    <div class="tbl-scroll" style="max-height:360px;"><table class="det det-compact"><thead><tr>';
-  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
-  h += '    </tr></thead><tbody>';
+    h += '    </div>';
+    h += '    <div class="tbl-scroll" style="max-height:360px;"><table class="det det-compact"><thead><tr>';
+    h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Processo / Pregão</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th>';
+    h += '    </tr></thead><tbody>';
 
   for(var k = 0; k < nesDoForn.length; k++){
     var nIt = nesDoForn[k];
-    var liqForn = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : (nIt.cel_liq > 0.005 ? bcmsBRL(nIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
-    h += '<tr class="cel-row">';
-    h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
+    var liqForn = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
+    h += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\');}" title="Clique na linha para ver a ficha completa da NE ' + bcmsEsc(nIt.ne) + '">';
+    h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.dia || '—') + '</td>';
     h += '  <td><span class="ug-pill fav">' + bcmsEsc(nIt.ug) + '</span></td>';
-    h += '  <td>' + (nIt.proc ? '<a href="javascript:void(0)" onclick="bcmsDetalheProcesso(\'' + bcmsEsc(nIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(nIt.proc) + '</a>' : '—') + '</td>';
+    h += '  <td>' + (nIt.proc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheProcesso(\'' + bcmsEsc(nIt.proc) + '\')" class="badge-pregao" style="cursor:pointer;">' + bcmsEsc(nIt.proc) + '</a>' : '—') + '</td>';
     h += '  <td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(nIt.val) + '</td>';
     h += '  <td class="num font-mono" style="color:#059669;font-weight:600;">' + liqForn + '</td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.nd) + '</td>';
-    h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + '</td>';
-    h += '  <td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')">Detalhar ↗</button></td>';
+    h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>';
     h += '</tr>';
   }
 
@@ -2189,22 +2535,21 @@ function bcmsDetalheProcesso(procStr){
   h += '      <span class="m-justif-title">📦 Relação de Notas de Empenho Vinculadas (' + nesDoProc.length + ')</span>';
   h += '    </div>';
   h += '    <div class="tbl-scroll" style="max-height:360px;"><table class="det det-compact"><thead><tr>';
-  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Favorecido / Fornecedor</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th><th style="text-align:center;">Ação</th>';
+  h += '      <th>Nota de Empenho</th><th>Emissão</th><th>UG</th><th>Favorecido / Fornecedor</th><th class="num">Valor da NE</th><th class="num">Liquidado (SIAFI)</th><th>ND</th><th>NC Origem</th>';
   h += '    </tr></thead><tbody>';
 
   for(var k = 0; k < nesDoProc.length; k++){
     var nIt = nesDoProc[k];
-    var liqProc = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : (nIt.cel_liq > 0.005 ? bcmsBRL(nIt.cel_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>'));
-    h += '<tr class="cel-row">';
-    h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
+    var liqProc = (nIt.ne_liq > 0.005 ? bcmsBRL(nIt.ne_liq) : '<span style="color:var(--ink-soft);">R$ 0,00</span>');
+    h += '<tr class="cel-row" tabindex="0" role="button" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\');}" title="Clique na linha para ver a ficha completa da NE ' + bcmsEsc(nIt.ne) + '">';
+    h += '  <td class="font-mono font-bold"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')" class="link-drill">' + bcmsEsc(nIt.ne) + '</a></td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.dia || '—') + '</td>';
     h += '  <td><span class="ug-pill fav">' + bcmsEsc(nIt.ug) + '</span></td>';
-    h += '  <td><a href="javascript:void(0)" onclick="bcmsDetalheFornecedor(\'' + bcmsEsc(nIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nIt.fav) + '</a></td>';
+    h += '  <td><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheFornecedor(\'' + bcmsEsc(nIt.fav) + '\')" class="link-drill" style="color:var(--ink);">' + bcmsEsc(nIt.fav) + '</a></td>';
     h += '  <td class="num font-mono font-bold" style="color:var(--success-strong);">' + bcmsBRL(nIt.val) + '</td>';
     h += '  <td class="num font-mono" style="color:#059669;font-weight:600;">' + liqProc + '</td>';
     h += '  <td class="mono2">' + bcmsEsc(nIt.nd) + '</td>';
-    h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + '</td>';
-    h += '  <td style="text-align:center;"><button type="button" class="tbl-action-btn" onclick="bcmsDetalheNE(\'' + bcmsEsc(nIt.ne) + '\')">Detalhar ↗</button></td>';
+    h += '  <td class="mono2">' + (nIt.nc ? '<a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + bcmsEsc(nIt.nc) + '\')" class="link-drill">' + bcmsEsc(nIt.nc) + '</a>' : '—') + ' <i class="chev" aria-hidden="true" style="margin-left:6px;">›</i></td>';
     h += '</tr>';
   }
 
@@ -2263,7 +2608,7 @@ function bcmsExportRastreioExcel(tipo){
       '<Cell><Data ss:Type="String">Liquidado (SIAFI)</Data></Cell>' +
       '<Cell><Data ss:Type="String">Pago (SIAFI)</Data></Cell>' +
       '<Cell><Data ss:Type="String">Saldo Disponível</Data></Cell>' +
-      '<Cell><Data ss:Type="String">Taxa Queima (%)</Data></Cell>' +
+      '<Cell><Data ss:Type="String">Taxa de Execução (%)</Data></Cell>' +
       '<Cell><Data ss:Type="String">Qtd NEs</Data></Cell>' +
     '</Row>\n';
 
@@ -2304,7 +2649,7 @@ function bcmsExportRastreioExcel(tipo){
 
     for(var j = 0; j < list.length; j++){
       var ne = list[j];
-      var neLiqVal = (ne.ne_liq != null && ne.ne_liq > 0.005) ? ne.ne_liq : ((ne.cel_liq != null && ne.cel_liq > 0.005) ? ne.cel_liq : 0.0);
+      var neLiqVal = (ne.ne_liq != null && ne.ne_liq > 0.005) ? ne.ne_liq : 0.0;
       xml += '<Row>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.ne) + '</Data></Cell>' +
         '<Cell><Data ss:Type="String">' + bcmsEscXml(ne.dia) + '</Data></Cell>' +
