@@ -488,14 +488,20 @@ def svg_diverg(itens, titulo, max_itens=8):
         return f'<div class="card chart"><div class="eyebrow">{esc(titulo)}</div><p class="vazio">Sem valores no período</p></div>'
     vmax = max(abs(v) for _, v in itens) or 1
     labW, rh, pad = 150, 32, 10
-    zx = labW + 246
-    half = 230
-    W = zx + half + 70
+    tem_neg = any(v < 0 for _, v in itens)
+    if tem_neg:
+        zx = labW + 240
+        half = 220
+        W = zx + half + 115
+    else:
+        zx = labW + 16
+        half = 400
+        W = zx + half + 115
     H = pad * 2 + rh * len(itens) + 16
     el = [f'<line x1="{zx}" y1="{pad}" x2="{zx}" y2="{pad+rh*len(itens):.0f}" class="s-zero"/>']
     for i, (k, v) in enumerate(itens):
         y = pad + i * rh
-        w = abs(v) / vmax * half
+        w = max(3, abs(v) / vmax * half)
         lbl = k if len(k) <= 24 else k[:23] + "…"
         el.append(f'<text x="{labW-8}" y="{y+rh/2+4:.0f}" text-anchor="end" class="s-cat">{esc(lbl)}</text>')
         if v >= 0:
@@ -984,8 +990,8 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         '<div class="et-head">'
         f'<div class="et-kpi et-hero"><span>Crédito Disponível em tela</span><b class="num">{esc(brl(tot_emtela))}</b></div>'
         f'<div class="et-kpi"><span>Notas de Crédito</span><b class="num">{len(emtela_ncs)}</b></div>'
-        f'<div class="et-kpi"><span>Idade média</span><b class="num">{idade_media} dias</b></div>'
-        f'<div class="et-kpi"><span>Mais antigo</span><b class="num">{idade_max} dias</b></div>'
+        f'<div class="et-kpi"><span>Idade média</span><b class="num">{idade_media} <small class="et-unit">dias</small></b></div>'
+        f'<div class="et-kpi"><span>Mais antigo</span><b class="num">{idade_max} <small class="et-unit">dias</small></b></div>'
         f'<div class="et-action"><button type="button" class="btn-excel btn-excel-lg" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Baixar relatório detalhado de créditos por NC em planilha Excel"><span class="btn-excel-ic">📥</span> Baixar Relatório NC em Excel</button></div>'
         f'<div class="et-meta">Posição {esc(posicao)}<br><span class="rh-delay">⏱ dados com ~24h de defasagem</span></div></div>'
         '<p class="sec-nota">Relação dos <b>créditos disponíveis por Nota de Crédito (NC)</b> com descrição completa do objeto e <b>dias em tela</b> (desde o lançamento da NC). '
@@ -2702,9 +2708,12 @@ h1 {
   gap: 3px;
   min-width: 140px;
   box-shadow: var(--shadow);
+  transition: transform .2s var(--ease-spring), border-color .2s ease;
 }
+.et-kpi:hover { transform: translateY(-2px); border-color: var(--border-strong); }
 .et-kpi span { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
-.et-kpi b { font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+.et-kpi b { font-size: 1.25rem; font-weight: 700; color: var(--ink); display: flex; align-items: baseline; }
+.et-unit { font-size: 0.8125rem; font-weight: 500; font-family: var(--sans); color: var(--ink-muted); margin-left: 5px; }
 .et-hero { background: var(--hero-soft); border-left: 4px solid var(--success); }
 .et-hero b { font-size: 1.5rem; color: var(--success-strong); }
 .et-action { display: flex; align-items: center; }
