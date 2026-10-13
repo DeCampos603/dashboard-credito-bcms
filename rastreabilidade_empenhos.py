@@ -1235,6 +1235,41 @@ CSS_RASTREIO = r"""
   color: #059669;
   text-decoration: underline;
 }
+
+/* ==========================================================================
+   ADAPTAÇÃO MOBILE - RASTREABILIDADE DE EMPENHOS (BCMS)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .sub-ne-wrap {
+    padding: 12px 10px;
+    margin: 6px 0;
+  }
+  .sub-ne-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .rank-item {
+    padding: 8px 10px;
+  }
+  .rank-info {
+    max-width: 55%;
+  }
+  .kpi-bar-wrap {
+    width: min(90px, 25vw);
+  }
+  .btn-exp-ne {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+  .btn-excel, .btn-excel-lg {
+    min-height: 44px;
+    padding: 8px 12px;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 """
 
 JS_RASTREIO = r"""

@@ -1939,7 +1939,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
     histdata_json = json.dumps(histdata, ensure_ascii=False).replace("</", "<\\/")
     empenhosdata_json = json.dumps(empenhos_data, ensure_ascii=False).replace("</", "<\\/") if empenhos_data else "{}"
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="Painel de Crédito Disponível das OMDS da Base de Apoio Logístico do Exército — SIAFI / Tesouro Gerencial">
 <title>Crédito Disponível — OMDS Ba Ap Log Ex</title>
@@ -3407,13 +3407,105 @@ select option:checked, .flt option:checked, .hist-select option:checked {
 }
 
 @media (max-width: 640px) {
-  .wrap { padding: 0 16px 48px; }
-  .topbar { padding: 12px 16px; flex-wrap: wrap; }
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .wrap {
+    padding-left: max(14px, env(safe-area-inset-left, 14px));
+    padding-right: max(14px, env(safe-area-inset-right, 14px));
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 48px));
+  }
+  .topbar {
+    padding: 12px max(14px, env(safe-area-inset-left, 14px));
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .topbar .brand {
+    gap: 10px;
+  }
+  .topbar .brand .brasao {
+    width: 40px;
+    height: 40px;
+  }
+  .topbar-r {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  .selo-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
   h1 { font-size: 1.25rem; }
   .subtitle { display: none; }
   .hero-num { font-size: 2.2rem; }
-  .kpis { grid-template-columns: 1fr; }
-  .det td.mono2, .det th:first-child, .det td:first-child { position: sticky; left: 0; background: var(--bg-surface); }
+  .kpis { grid-template-columns: 1fr; gap: 10px; }
+  .kpi { padding: 12px 14px; }
+  .kpi-v { font-size: 1.25rem; }
+
+  /* Prevenção estrita de zoom indesejado no iOS Safari */
+  input, select, .flt, .hist-select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+  .tbl-filtros {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .flt {
+    width: 100%;
+    max-width: none;
+  }
+  .flt-limpa {
+    min-height: 44px;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Tabela sticky com elevação suave */
+  .det th:first-child {
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 15;
+    background: var(--bg-subtle);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
+  }
+  .det td:first-child, .det td.mono2 {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: var(--bg-surface);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Modal em telas pequenas */
+  .modal {
+    padding: 8px;
+  }
+  .modal-panel {
+    border-radius: 14px;
+    max-height: calc(100dvh - 16px);
+  }
+  .modal-x {
+    width: 44px;
+    height: 44px;
+    top: 10px;
+    right: 10px;
+  }
+  .hist-header-card {
+    padding: 16px 14px;
+  }
+  .hist-kpis {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .m-fin-grid, .m-class-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==========================================================================
