@@ -213,9 +213,14 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         if not ne_full or "NE" not in ne_full or ne_full == "-9":
             continue
 
+        try:
+            from gerar_dashboard import restaurar_texto_siafi as _rest_siafi
+        except Exception:
+            _rest_siafi = lambda x: str(x or "").strip()
+
         dia = str(r[2] or "").strip()
         fav_doc = str(r[4] or "").strip().replace("'", "")
-        fav_nome = str(r[5] or "").strip()
+        fav_nome = _rest_siafi(str(r[5] or "").strip())
         val_raw = r[6]
         try:
             val = float(str(val_raw).replace("'", "").strip())
@@ -223,10 +228,10 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
             val = 0.0
 
         nd = str(r[7] or "").strip()
-        nd_desc = str(r[8] or "").strip()
+        nd_desc = _rest_siafi(str(r[8] or "").strip())
         pi = str(r[9] or "").strip()
-        pi_desc = str(r[10] or "").strip()
-        desc = str(r[11] or "").strip()
+        pi_desc = _rest_siafi(str(r[10] or "").strip())
+        desc = _rest_siafi(str(r[11] or "").strip())
 
         # Saldo das contas contábeis
         try: mov_emp = float(str(r[14] or 0).replace("'", "").strip())
@@ -1370,10 +1375,11 @@ function bcmsInitRastreio(){
       uasg_nome: it.fav_nome || '',
       om_sigla: it.om_sigla || '',
       pi: it.pi || '',
-      pi_nome: it.pi_nome || '',
+      pi_nome: it.pi_nome || it.pi_desc || '',
       nd: it.nd || '',
       nd_desc: it.nd_desc || '',
       obj: it.obj || '',
+      search_blob: it.search_blob || '',
       prov: provVal,
       emp: empVal,
       liq: ncLiq,
@@ -1557,7 +1563,7 @@ function bcmsAtualizaKPIsRastreio(omFiltro){
 
 /* ================= SUB-ABA 1: VISÃO TOP-DOWN (NOTAS DE CRÉDITO) ================= */
 function bcmsFiltraRastreioNC(){
-  var q = (document.getElementById('rBuscaNC') ? document.getElementById('rBuscaNC').value : '').toLowerCase().trim();
+  var q = (document.getElementById('rBuscaNC') ? document.getElementById('rBuscaNC').value : '').trim();
   var om = document.getElementById('rSelOM') ? document.getElementById('rSelOM').value : '';
   var nd = document.getElementById('rSelNDNC') ? document.getElementById('rSelNDNC').value : '';
   var fonte = document.getElementById('rSelFonteNC') ? document.getElementById('rSelFonteNC').value : '';
@@ -1569,18 +1575,19 @@ function bcmsFiltraRastreioNC(){
     if(fonte && ((fonte === '160' && it.uasg.indexOf('160') !== 0) || (fonte === '167' && it.uasg.indexOf('167') !== 0))) return false;
     if(qm && it.faixa_queima !== qm) return false;
     if(q){
-      var match = (it.nc && it.nc.toLowerCase().indexOf(q) !== -1) ||
-                  (it.pi && it.pi.toLowerCase().indexOf(q) !== -1) ||
-                  (it.nd && it.nd.toLowerCase().indexOf(q) !== -1) ||
-                  (it.emit_nome && it.emit_nome.toLowerCase().indexOf(q) !== -1) ||
-                  (it.obj && it.obj.toLowerCase().indexOf(q) !== -1);
-      if(!match && it.nes){
+      var neStr = '';
+      if(it.nes && it.nes.length){
+        var neParts = [];
         for(var n = 0; n < it.nes.length; n++){
-          if(it.nes[n].fav.toLowerCase().indexOf(q) !== -1 || it.nes[n].ne.toLowerCase().indexOf(q) !== -1){
-            match = true; break;
-          }
+          neParts.push(it.nes[n].fav || '');
+          neParts.push(it.nes[n].ne || '');
+          neParts.push(it.nes[n].proc || '');
+          neParts.push(it.nes[n].desc || '');
         }
+        neStr = neParts.join(' ');
       }
+      var hay = (it.search_blob || [it.nc, it.pi, it.pi_nome, it.nd, it.nd_desc, it.emit, it.emit_nome, it.uasg, it.om_sigla, it.obj].join(' ')) + ' ' + neStr;
+      var match = (typeof bcmsMatchQuery === 'function') ? bcmsMatchQuery(hay, q) : (hay.toLowerCase().indexOf(q.toLowerCase()) !== -1);
       if(!match) return false;
     }
     return true;
@@ -1655,6 +1662,9 @@ function bcmsRenderRastreioNC(){
   var cont = document.getElementById('rContadorNC');
   if(!tbody) return;
 
+  var qEl = document.getElementById('rBuscaNC');
+  var q = qEl ? qEl.value.trim() : '';
+
   var total = RASTREIO_NC_FILTRADOS.length;
   if(cont){
     cont.textContent = 'Exibindo ' + total.toLocaleString('pt-BR') + ' de ' + RASTREIO_NC_ITEMS.length.toLocaleString('pt-BR') + ' Notas de Crédito';
@@ -1680,12 +1690,17 @@ function bcmsRenderRastreioNC(){
     var queimaCls = it.faixa_queima;
     var queimaFillW = Math.min(100, Math.round(it.taxa_queima));
     var emitCurto = it.emit_nome ? (it.emit_nome.length > 22 ? it.emit_nome.slice(0, 22) + '…' : it.emit_nome) : it.emit;
+    var objSub = '';
+    if(it.obj){
+      var objSnip = (typeof bcmsSmartSnippet === 'function') ? bcmsSmartSnippet(it.obj, q, 72, '') : bcmsEsc(it.obj.slice(0, 72));
+      objSub = '<div style="font-family:var(--font-sans);font-size:0.7rem;color:var(--ink-muted);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="' + bcmsEsc(it.obj) + '">' + objSnip + '</div>';
+    }
 
     html += '<tr class="cel-row" id="linha-nc-' + it.hid + '" tabindex="0" role="button" onclick="bcmsDetalheNC(\'' + it.hid + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bcmsDetalheNC(\'' + it.hid + '\');}" title="Clique na linha para abrir a ficha cadastral completa da NC ' + bcmsEsc(it.nc) + '">' +
       '<td style="text-align:center;">' +
         (temNE ? '<button type="button" class="btn-exp-ne" id="btn-exp-' + it.hid + '" onclick="event.stopPropagation();bcmsToggleAcordeaoNC(\'' + it.hid + '\')" title="Expandir ' + it.nes.length + ' empenhos emitidos">▼ ' + it.nes.length + '</button>' : '<span style="color:var(--ink-soft);font-size:0.75rem;">—</span>') +
       '</td>' +
-      '<td class="mono2"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + it.hid + '\')" class="link-drill" title="Abrir ficha cadastral da NC">' + bcmsEsc(it.nc) + '</a></td>' +
+      '<td class="mono2"><a href="javascript:void(0)" onclick="event.stopPropagation();bcmsDetalheNC(\'' + it.hid + '\')" class="link-drill" title="Abrir ficha cadastral da NC">' + bcmsEsc(it.nc) + '</a>' + objSub + '</td>' +
       '<td class="mono2">' + bcmsEsc(it.dia || '—') + '</td>' +
       '<td title="' + bcmsEsc(it.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(it.emit) + '</span> <small>' + bcmsEsc(emitCurto) + '</small></td>' +
       '<td><span class="ug-pill fav">' + bcmsEsc(it.uasg) + '</span> <b>' + bcmsEsc(it.om_sigla) + '</b></td>' +
@@ -1805,7 +1820,7 @@ function bcmsLimpaFiltrosRastreioNC(){
 
 /* ================= SUB-ABA 2: RELAÇÃO DE EMPENHOS (BOTTOM-UP) ================= */
 function bcmsFiltraRastreioNE(){
-  var q = (document.getElementById('rBuscaNE') ? document.getElementById('rBuscaNE').value : '').toLowerCase().trim();
+  var q = (document.getElementById('rBuscaNE') ? document.getElementById('rBuscaNE').value : '').trim();
   var om = document.getElementById('rSelOMNE') ? document.getElementById('rSelOMNE').value : '';
   var acao = document.getElementById('rSelAcaoNE') ? document.getElementById('rSelAcaoNE').value : '';
   var nd = document.getElementById('rSelNDNE') ? document.getElementById('rSelNDNE').value : '';
@@ -1817,13 +1832,8 @@ function bcmsFiltraRastreioNE(){
     if(nd && it.nd !== nd) return false;
     if(prova && it.prova_slug !== prova) return false;
     if(q){
-      var match = (it.ne && it.ne.toLowerCase().indexOf(q) !== -1) ||
-                  (it.fav && it.fav.toLowerCase().indexOf(q) !== -1) ||
-                  (it.doc && it.doc.indexOf(q) !== -1) ||
-                  (it.nc && it.nc.toLowerCase().indexOf(q) !== -1) ||
-                  (it.proc && it.proc.toLowerCase().indexOf(q) !== -1) ||
-                  (it.acao && it.acao.toLowerCase().indexOf(q) !== -1) ||
-                  (it.desc && it.desc.toLowerCase().indexOf(q) !== -1);
+      var hay = [it.ne, it.ne_full, it.fav, it.doc, it.nc, it.proc, it.acao, it.pi, it.pi_desc, it.nd, it.nd_desc, it.desc, it.ug, it.om_sigla].join(' ');
+      var match = (typeof bcmsMatchQuery === 'function') ? bcmsMatchQuery(hay, q) : (hay.toLowerCase().indexOf(q.toLowerCase()) !== -1);
       if(!match) return false;
     }
     return true;
@@ -1958,7 +1968,7 @@ function bcmsLimpaFiltrosRastreioNE(){
 
 /* ================= SUB-ABA 3: RAIO-X FORNECEDORES & PREGÕES ================= */
 function bcmsFiltraForn(){
-  var q = (document.getElementById('rBuscaForn') ? document.getElementById('rBuscaForn').value : '').toLowerCase().trim();
+  var q = (document.getElementById('rBuscaForn') ? document.getElementById('rBuscaForn').value : '').trim();
   var om = document.getElementById('rSelOMForn') ? document.getElementById('rSelOMForn').value : '';
   var nd = document.getElementById('rSelNDForn') ? document.getElementById('rSelNDForn').value : '';
 
@@ -1970,9 +1980,8 @@ function bcmsFiltraForn(){
     if(om && !bcmsMatchOM(it.om_sigla, it.ug, om)) continue;
     if(nd && it.nd !== nd) continue;
     if(q){
-      var match = (it.fav && it.fav.toLowerCase().indexOf(q) !== -1) ||
-                  (it.doc && it.doc.indexOf(q) !== -1) ||
-                  (it.proc && it.proc.toLowerCase().indexOf(q) !== -1);
+      var hay = [it.fav, it.doc, it.proc, it.desc, it.nd, it.pi].join(' ');
+      var match = (typeof bcmsMatchQuery === 'function') ? bcmsMatchQuery(hay, q) : (hay.toLowerCase().indexOf(q.toLowerCase()) !== -1);
       if(!match) continue;
     }
 
@@ -2056,7 +2065,7 @@ function bcmsLimpaFiltrosForn(){
 
 /* ================= SUB-ABA 4: PROVA REAL & AUDITORIA ================= */
 function bcmsFiltraProva(){
-  var q = (document.getElementById('rBuscaProva') ? document.getElementById('rBuscaProva').value : '').toLowerCase().trim();
+  var q = (document.getElementById('rBuscaProva') ? document.getElementById('rBuscaProva').value : '').trim();
   var om = document.getElementById('rSelOMProva') ? document.getElementById('rSelOMProva').value : '';
   var statusSel = document.getElementById('rSelStatusProva') ? document.getElementById('rSelStatusProva').value : '';
 
@@ -2065,11 +2074,8 @@ function bcmsFiltraProva(){
     if(om && !bcmsMatchOM(it.om_sigla, it.ug, om)) return false;
     if(statusSel && it.status_slug !== statusSel) return false;
     if(q){
-      var match = (it.ne && it.ne.toLowerCase().indexOf(q) !== -1) ||
-                  (it.fav && it.fav.toLowerCase().indexOf(q) !== -1) ||
-                  (it.nc_citada && it.nc_citada.toLowerCase().indexOf(q) !== -1) ||
-                  (it.motivo && it.motivo.toLowerCase().indexOf(q) !== -1) ||
-                  (it.pi_ne && it.pi_ne.toLowerCase().indexOf(q) !== -1);
+      var hay = [it.ne, it.fav, it.nc_citada, it.motivo, it.pi_ne, it.nd_ne, it.ug, it.om_sigla, it.status_prova].join(' ');
+      var match = (typeof bcmsMatchQuery === 'function') ? bcmsMatchQuery(hay, q) : (hay.toLowerCase().indexOf(q.toLowerCase()) !== -1);
       if(!match) return false;
     }
     return true;
@@ -2120,7 +2126,7 @@ function bcmsLimpaFiltrosProva(){
 
 /* ================= SUB-ABA 5: CRÉDITOS PARADOS (RISCO) ================= */
 function bcmsFiltraRisco(){
-  var q = (document.getElementById('rBuscaRisco') ? document.getElementById('rBuscaRisco').value : '').toLowerCase().trim();
+  var q = (document.getElementById('rBuscaRisco') ? document.getElementById('rBuscaRisco').value : '').trim();
   var om = document.getElementById('rSelOMRisco') ? document.getElementById('rSelOMRisco').value : '';
   var faixa = document.getElementById('rSelFaixaRisco') ? document.getElementById('rSelFaixaRisco').value : '';
 
@@ -2136,11 +2142,8 @@ function bcmsFiltraRisco(){
     if(!emRisco) return false;
     if(om && !bcmsMatchOM(x.om_sigla, x.uasg, om)) return false;
     if(q){
-      var match = (x.nc && x.nc.toLowerCase().indexOf(q) !== -1) ||
-                  (x.emit_nome && x.emit_nome.toLowerCase().indexOf(q) !== -1) ||
-                  (x.pi && x.pi.toLowerCase().indexOf(q) !== -1) ||
-                  (x.nd && x.nd.toLowerCase().indexOf(q) !== -1) ||
-                  (x.obj && x.obj.toLowerCase().indexOf(q) !== -1);
+      var hay = x.search_blob || [x.nc, x.emit_nome, x.pi, x.nd, x.obj, x.uasg, x.om_sigla].join(' ');
+      var match = (typeof bcmsMatchQuery === 'function') ? bcmsMatchQuery(hay, q) : (hay.toLowerCase().indexOf(q.toLowerCase()) !== -1);
       if(!match) return false;
     }
     return true;

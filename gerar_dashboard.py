@@ -69,9 +69,183 @@ def to_num(v):
         try: return float(s.replace(".", "").replace(",", "."))
         except ValueError: return 0.0
 
+_SIAFI_CAO_RE = re.compile(
+    r'\b(AQUISI|DESCENTRALIZA|INDENIZA|LEGISLA|LIQUIDA|PRESTA|SELE|CONTRATA|MANUTEN|OPERA|ADEQUA|INSTALA|'
+    r'CONSTRU|INSTRU|PROTE|LOCA|CALIBRA|INSPE|EXECU|ADMINISTRA|ALIMENTA|MUNI|EMBARCA|REFEI|APLICA|ORIENTA|'
+    r'SOLICITA|AUTORIZA|REGULARIZA|ATUALIZA|UTILIZA|CLASSIFICA|ESPECIFICA|IDENTIFICA|VERIFICA|PARTICIPA|'
+    r'CAPACITA|HABILITA|DESTINA|PROGRAMA|DOTA|MOVIMENTA|ANULA|LIBERA|APROVA|HOMOLOGA|PUBLICA|DIVULGA|'
+    r'REALIZA|ORGANIZA|MODERNIZA|PADRONIZA|CENTRALIZA|FISCALIZA|AVALIA|CONCILIA|COMPENSA|RESTITUI|SUBSTITUI|'
+    r'DISTRIBUI|CONTRIBUI|ATRIBUI|CONSTITUI|INSTITUI|REDU|PRODU|TRADU|CONDU|DEDU|INDU|SE|RECEP|EXCE|CONCE|'
+    r'PERCEP|DESCRI|INSCRI|PRESCRI|SUBSCRI|TRANSCRI|PROPOR|RELA|SITU|ATU|CONTINU|FLUTU|PONTU|ACENTU|EFETU)\s{1,3}O\b',
+    re.IGNORECASE
+)
+_SIAFI_COES_RE = re.compile(
+    r'\b(INSTALA|OPERA|CONTRATA|MANUTEN|ADEQUA|CONSTRU|INSTRU|EMBARCA|REFEI|APLICA|ORIENTA|SOLICITA|AUTORIZA|'
+    r'ESPECIFICA|OBRIGA|CONDI|POSI|DISPOSI|PROPOSI|EXPOSI|COMPOSI|REPOSI|IMPOSI|OPOSI|TRANSPOSI|RELA|SITU|'
+    r'LIQUIDA|ANULA|MOVIMENTA|ALTERA|DOTA|PRESTA|INDENIZA|AQUISI|PUBLICA|COMUNICA|TELECOMUNICA)\s{1,3}ES\b',
+    re.IGNORECASE
+)
+_SIAFI_SUBS = [
+    (re.compile(r'\bSERVI\s{1,2}OS\b', re.IGNORECASE), 'SERVIÇOS'),
+    (re.compile(r'\bSERVI\s{1,2}O\b', re.IGNORECASE), 'SERVIÇO'),
+    (re.compile(r'\bONCOL\s{1,2}GICOS\b', re.IGNORECASE), 'ONCOLÓGICOS'),
+    (re.compile(r'\bONCOL\s{1,2}GICO\b', re.IGNORECASE), 'ONCOLÓGICO'),
+    (re.compile(r'(^|(?<=[\s_.,;/(-]))PRA\s{1,2}AS\b', re.IGNORECASE), 'PRAÇAS'),
+    (re.compile(r'(^|(?<=[\s_.,;/(-]))PRA\s{1,2}A\b', re.IGNORECASE), 'PRAÇA'),
+    (re.compile(r'\bCOMISS\s{1,2}O\b', re.IGNORECASE), 'COMISSÃO'),
+    (re.compile(r'\bMISS\s{1,2}O\b', re.IGNORECASE), 'MISSÃO'),
+    (re.compile(r'\bCONCESS\s{1,2}O\b', re.IGNORECASE), 'CONCESSÃO'),
+    (re.compile(r'\bEMISS\s{1,2}O\b', re.IGNORECASE), 'EMISSÃO'),
+    (re.compile(r'\bTRANSMISS\s{1,2}O\b', re.IGNORECASE), 'TRANSMISSÃO'),
+    (re.compile(r'\bREVIS\s{1,2}O\b', re.IGNORECASE), 'REVISÃO'),
+    (re.compile(r'\bDIVIS\s{1,2}O\b', re.IGNORECASE), 'DIVISÃO'),
+    (re.compile(r'\bPREVIS\s{1,2}O\b', re.IGNORECASE), 'PREVISÃO'),
+    (re.compile(r'\bPROVIS\s{1,2}O\b', re.IGNORECASE), 'PROVISÃO'),
+    (re.compile(r'\bSUPERVIS\s{1,2}O\b', re.IGNORECASE), 'SUPERVISÃO'),
+    (re.compile(r'\bADES\s{1,2}O\b', re.IGNORECASE), 'ADESÃO'),
+    (re.compile(r'\bUNI\s{1,2}O\b', re.IGNORECASE), 'UNIÃO'),
+    (re.compile(r'\bREGI\s{1,2}O\b', re.IGNORECASE), 'REGIÃO'),
+    (re.compile(r'\bREUNI\s{1,2}O\b', re.IGNORECASE), 'REUNIÃO'),
+    (re.compile(r'\bCAMINH\s{1,2}O\b', re.IGNORECASE), 'CAMINHÃO'),
+    (re.compile(r'\bAVI\s{1,2}O\b', re.IGNORECASE), 'AVIÃO'),
+    (re.compile(r'\bBATALH\s{1,2}O\b', re.IGNORECASE), 'BATALHÃO'),
+    (re.compile(r'\bESQUADR\s{1,2}O\b', re.IGNORECASE), 'ESQUADRÃO'),
+    (re.compile(r'\bPELOT\s{1,2}O\b', re.IGNORECASE), 'PELOTÃO'),
+    (re.compile(r'\bESCAL\s{1,2}O\b', re.IGNORECASE), 'ESCALÃO'),
+    (re.compile(r'\b[OÓ]RG\s{1,2}O\b', re.IGNORECASE), 'ÓRGÃO'),
+    (re.compile(r'\bM\s{1,2}O\b', re.IGNORECASE), 'MÃO'),
+    (re.compile(r'\bP\s{1,2}O\b', re.IGNORECASE), 'PÃO'),
+    (re.compile(r'\bN\s{1,3}O\b', re.IGNORECASE), 'NÃO'),
+    (re.compile(r'\bMAR\s{1,2}O\b', re.IGNORECASE), 'MARÇO'),
+    (re.compile(r'\bFRAN\s{1,2}A\b', re.IGNORECASE), 'FRANÇA'),
+    (re.compile(r'\bLICEN\s{1,2}A\b', re.IGNORECASE), 'LICENÇA'),
+    (re.compile(r'\bSEGURAN\s{1,2}A\b', re.IGNORECASE), 'SEGURANÇA'),
+    (re.compile(r'\bMUDAN\s{1,2}A\b', re.IGNORECASE), 'MUDANÇA'),
+    (re.compile(r'\bPE\s{1,2}AS\b', re.IGNORECASE), 'PEÇAS'),
+    (re.compile(r'\bPE\s{1,2}A\b', re.IGNORECASE), 'PEÇA'),
+    (re.compile(r'\bFOR\s{1,2}A\b', re.IGNORECASE), 'FORÇA'),
+    (re.compile(r'\bTER\s{1,2}A\b', re.IGNORECASE), 'TERÇA'),
+    (re.compile(r'\bCABE\s{1,2}A\b', re.IGNORECASE), 'CABEÇA'),
+    (re.compile(r'\bBALAN\s{1,2}A\b', re.IGNORECASE), 'BALANÇA'),
+    (re.compile(r'\bCOBRAN\s{1,2}A\b', re.IGNORECASE), 'COBRANÇA'),
+    (re.compile(r'\bDESEMBARA\s{1,2}O\b', re.IGNORECASE), 'DESEMBARAÇO'),
+    (re.compile(r'\bESPA\s{1,2}O\b', re.IGNORECASE), 'ESPAÇO'),
+    (re.compile(r'\bPRE\s{1,2}OS\b', re.IGNORECASE), 'PREÇOS'),
+    (re.compile(r'\bPRE\s{1,2}O\b', re.IGNORECASE), 'PREÇO'),
+    (re.compile(r'\bENDERE\s{1,2}O\b', re.IGNORECASE), 'ENDEREÇO'),
+    (re.compile(r'\bREFOR\s{1,2}O\b', re.IGNORECASE), 'REFORÇO'),
+    (re.compile(r'\bALMO\s{1,2}O\b', re.IGNORECASE), 'ALMOÇO'),
+    (re.compile(r'\bPO\s{1,2}O\b', re.IGNORECASE), 'POÇO'),
+    (re.compile(r'\bAT\s{2,}(?=\d|JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ|FINAL|FIM)', re.IGNORECASE), 'ATÉ '),
+    (re.compile(r'\b(EMPENHAR|EMPENHO|EMP\.?|LIQUIDAR|PAGAR|VIGENCIA|VALIDADE)\s+AT\s+(?=\d|JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ)', re.IGNORECASE), r'\1 ATÉ '),
+    (re.compile(r'\b([123])\s{2,}(SGT|TEN|CAP|MAJ|CEL|GEN|CB|SD)\b', re.IGNORECASE), r'\1º \2'),
+    (re.compile(r'\b([1-9])\s{2,}(PARCELA|COTA|CIA|RM|BDA|DE|BEC|BIS|BIL|BPE|BTL|RCC|RCM|GAC)\b', re.IGNORECASE), r'\1ª \2'),
+    (re.compile(r'\b([1-4])\s{2,}(SEM|TRI|BIM|ESC|ESQD|PEL|D\s*SUP)\b', re.IGNORECASE), r'\1º \2'),
+    (re.compile(r'\bDIEX\s+N\s{2,}(?=\d)', re.IGNORECASE), 'DIEX Nº '),
+    (re.compile(r'\bJ\s+LIO\b', re.IGNORECASE), 'JÚLIO'),
+    (re.compile(r'\bV\s+TOR\b', re.IGNORECASE), 'VÍTOR'),
+    (re.compile(r'\bHIL\s+RIO\b', re.IGNORECASE), 'HILÁRIO'),
+    (re.compile(r'\bJES\s+S\b', re.IGNORECASE), 'JESUS'),
+    (re.compile(r'\bJOS\s{2,}(?=[A-Z])', re.IGNORECASE), 'JOSÉ '),
+    (re.compile(r'\bJO\s+O\b', re.IGNORECASE), 'JOÃO'),
+    (re.compile(r'\bBRAND\s+O\b', re.IGNORECASE), 'BRANDÃO'),
+    (re.compile(r'\bBULC\s+O\b', re.IGNORECASE), 'BULCÃO'),
+    (re.compile(r'\bUCH\s+A\b', re.IGNORECASE), 'UCHÔA'),
+    (re.compile(r'\bCORR\s+A\b', re.IGNORECASE), 'CORRÊA'),
+    (re.compile(r'\bDORM\s+A\b', re.IGNORECASE), 'DORMÊA'),
+    (re.compile(r'\bPR\s+PRIOS\b', re.IGNORECASE), 'PRÓPRIOS'),
+    (re.compile(r'\bPR\s+PRIO\b', re.IGNORECASE), 'PRÓPRIO'),
+    (re.compile(r'\bPR\s+PRIA\b', re.IGNORECASE), 'PRÓPRIA'),
+    (re.compile(r'\bTR\s+NSITO\b', re.IGNORECASE), 'TRÂNSITO'),
+    (re.compile(r'\bSA\s+DE\b', re.IGNORECASE), 'SAÚDE'),
+    (re.compile(r'\bEL\s+TRIC([OA]S?)\b', re.IGNORECASE), r'ELÉTRIC\1'),
+    (re.compile(r'\bM\s+DIC([OA]S?)\b', re.IGNORECASE), r'MÉDIC\1'),
+    (re.compile(r'\bT\s+CNIC([OA]S?)\b', re.IGNORECASE), r'TÉCNIC\1'),
+    (re.compile(r'\bLOG\s+STIC([OA]S?)\b', re.IGNORECASE), r'LOGÍSTIC\1'),
+    (re.compile(r'\bOR\s+AMENT\s*RI([OA]S?)\b', re.IGNORECASE), r'ORÇAMENTÁRI\1'),
+    (re.compile(r'\bSANIT\s+RI([OA]S?)\b', re.IGNORECASE), r'SANITÁRI\1'),
+    (re.compile(r'\bDI\s+RI([OA]S?)\b', re.IGNORECASE), r'DIÁRI\1'),
+    (re.compile(r'\bVE\s+CUL(OS?)\b', re.IGNORECASE), r'VEÍCUL\1'),
+    (re.compile(r'\bCOMBUST\s+VE(L|IS)\b', re.IGNORECASE), r'COMBUSTÍVE\1'),
+    (re.compile(r'\bM\s+S\b', re.IGNORECASE), 'MÊS'),
+    (re.compile(r'\bEM\s{2,}PENHO\b', re.IGNORECASE), 'EMPENHO'),
+    (re.compile(r'\bCOL\s{2,}OG\b', re.IGNORECASE), 'COLOG'),
+]
+
+def restaurar_texto_siafi(s):
+    """Restaura palavras corrompidas na exportação do SIAFI onde letras acentuadas viraram espaços."""
+    if not s:
+        return ""
+    s = str(s)
+    s = _SIAFI_CAO_RE.sub(r'\1ÇÃO', s)
+    s = _SIAFI_COES_RE.sub(r'\1ÇÕES', s)
+    for pat, rep in _SIAFI_SUBS:
+        s = pat.sub(rep, s)
+    return re.sub(r'\s{2,}', ' ', s).strip()
+
 def disp(v):
     s = "" if v is None else str(v).strip().replace("'", "")
-    return "" if s in ("-9", "NAO SE APLICA", "NÃO SE APLICA") else s
+    if s in ("-9", "NAO SE APLICA", "NÃO SE APLICA"):
+        return ""
+    return restaurar_texto_siafi(s)
+
+def carregar_resumos_extras():
+    """Carrega resumos curados (data/resumos_nc.json) e descrições de PDFs locais (se existirem) para enriquecer a busca."""
+    extras = {}
+    res_path = os.path.join(DATA, "resumos_nc.json")
+    if os.path.exists(res_path):
+        try:
+            with open(res_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            for k, v in raw.items():
+                if isinstance(v, dict):
+                    txt = f"{v.get('finalidade', '')} {v.get('prazo', '')}".strip()
+                    if txt:
+                        extras[k] = txt
+                        m = re.search(r'(202\dNC\d{6})', k, re.IGNORECASE)
+                        if m:
+                            extras[m.group(1).upper()] = txt
+        except Exception:
+            pass
+    pdf_json = os.path.join(os.path.dirname(HERE), "Requisicoes-Empenho-BCMS", "dados", "ncs.json")
+    if os.path.exists(pdf_json):
+        try:
+            with open(pdf_json, "r", encoding="utf-8") as f:
+                raw_pdf = json.load(f).get("ncs", {})
+            items = raw_pdf.values() if isinstance(raw_pdf, dict) else raw_pdf
+            for p in items:
+                if not isinstance(p, dict):
+                    continue
+                desc_p = restaurar_texto_siafi(p.get("descricao", ""))
+                chave_p = str(p.get("chave", "")).upper()
+                ug_p = str(p.get("ug_emitente", "")).strip()
+                if desc_p and chave_p:
+                    extras.setdefault(chave_p, desc_p)
+                    if ug_p:
+                        extras[f"{ug_p}:{chave_p}"] = desc_p
+        except Exception:
+            pass
+    return extras
+
+RESUMOS_NC_EXTRA = {}
+
+def obter_extra_nc(nc_full, emit=""):
+    if not RESUMOS_NC_EXTRA:
+        RESUMOS_NC_EXTRA.update(carregar_resumos_extras())
+    nc_s = str(nc_full or "").strip()
+    if not nc_s:
+        return ""
+    partes = []
+    if nc_s in RESUMOS_NC_EXTRA:
+        partes.append(RESUMOS_NC_EXTRA[nc_s])
+    m = re.search(r'(202\dNC\d{6})', nc_s, re.IGNORECASE)
+    if m:
+        ch = m.group(1).upper()
+        if emit and f"{emit}:{ch}" in RESUMOS_NC_EXTRA:
+            partes.append(RESUMOS_NC_EXTRA[f"{emit}:{ch}"])
+        if ch in RESUMOS_NC_EXTRA:
+            partes.append(RESUMOS_NC_EXTRA[ch])
+    return " · ".join(dict.fromkeys(p for p in partes if p))
 
 def baixar(file_id):
     url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
@@ -91,15 +265,20 @@ def _dt_br(s):
     except Exception:
         return None
 
+def _eh_troca_nd(txt):
+    t = norm(str(txt or ""))
+    return any(k in t for k in ("MUDANCA DE ND", "ALTERACAO DE ND", "TROCA DE ND", "DETALHAMENTO DE ND", "REMANEJAMENTO DE ND"))
+
 def anotar_trocas_nd(res):
     """Identifica as TROCAS INTERNAS DE ND ("mudança/alteração de ND") e rastreia a NC de ORIGEM.
 
     Como a planilha não traz o vínculo, ele é deduzido da ESTRUTURA (validado em 100% dos
     261 casos de AGO/2026): uma troca de ND é uma mesma NC que, dentro da MESMA Ação+PI,
     lança valores opostos que se anulam — sai da ND antiga (linha negativa) e entra na ND
-    nova (linha positiva). A NC de origem é então a que trouxe o crédito para a célula da
-    ND antiga; se essa também for uma troca, sobe-se a cadeia até a DESCENTRALIZAÇÃO
-    original (a que carrega o objeto real). Anota em cada linha positiva:
+    nova (linha positiva, cujo crédito original é cred + emp caso já tenha sido empenhado).
+    A NC de origem é então a que trouxe o crédito para a célula da ND antiga; se essa também
+    for uma troca, sobe-se a cadeia até a DESCENTRALIZAÇÃO original (a que carrega o objeto real).
+    Anota em cada linha positiva:
         L["nd_de"]     -> ND de onde o crédito veio
         L["nc_origem"] -> {nc, obj, dia, emit, op} da NC que originou o crédito
     """
@@ -118,17 +297,20 @@ def anotar_trocas_nd(res):
             for L in ls:
                 grupos.setdefault((L["acao"], L["pi"]), []).append(L)
             for k, gl in grupos.items():
-                pos = [x for x in gl if x["cred"] > 0.005]
+                pos = [x for x in gl if (x["cred"] + x.get("emp", 0.0)) > 0.005 and x["cred"] >= -0.005]
                 neg = [x for x in gl if x["cred"] < -0.005]
-                if pos and neg and abs(sum(x["cred"] for x in gl)) <= 0.05:
-                    trocas.setdefault(nc, {})[k] = (neg[0]["nd"], pos[0]["nd"], pos[0]["cred"])
+                if pos and neg and abs(sum(x["cred"] + x.get("emp", 0.0) for x in gl)) <= 0.05:
+                    val_pos = pos[0]["cred"] + pos[0].get("emp", 0.0)
+                    trocas.setdefault(nc, {})[k] = (neg[0]["nd"], pos[0]["nd"], val_pos)
         if not trocas:
             continue
         # entradas de crédito por célula (candidatas a origem)
         entradas = {}
+        entradas_acao_pi = {}
         for L in linhas:
-            if L["cred"] > 0.005 and L["nc"]:
+            if (L["cred"] > 0.005 or L.get("prov", 0.0) > 0.005 or (L["cred"] + L.get("emp", 0.0)) > 0.005) and L["nc"]:
                 entradas.setdefault((L["acao"], L["pi"], L["nd"]), []).append(L)
+                entradas_acao_pi.setdefault((L["acao"], L["pi"]), []).append(L)
 
         def rastrear(nc_alt, acao, pi, nd_org, valor, prof=0, visto=None):
             if visto is None:
@@ -137,16 +319,26 @@ def anotar_trocas_nd(res):
                 return None
             visto.add(nc_alt)
             dt_alt = None
-            for L in por_nc.get(nc_alt, []):
-                dt_alt = _dt_br(L["dia"])
-                if dt_alt:
-                    break
+            citadas = set()
+            for L_alt in por_nc.get(nc_alt, []):
+                if not dt_alt:
+                    dt_alt = _dt_br(L_alt["dia"])
+                for m_cit in re.finditer(r'(?:202\d)?NC\s*(\d{6})', str(L_alt.get("obj") or ""), re.IGNORECASE):
+                    citadas.add("NC" + m_cit.group(1))
             cands = [L for L in entradas.get((acao, pi, nd_org), [])
                      if L["nc"] != nc_alt
                      and (_dt_br(L["dia"]) or datetime.date.min) <= (dt_alt or datetime.date.max)]
+            if not cands and citadas:
+                cands = [L for L in entradas_acao_pi.get((acao, pi), [])
+                         if L["nc"] != nc_alt and any(str(L["nc"]).upper().endswith(cit) for cit in citadas)]
             if not cands:
                 return None
-            exatos = [c for c in cands if abs(c["cred"] - valor) < 0.05]
+            # Prioridade 1: NC explicitamente citada no texto da mudança de ND
+            if citadas:
+                cit_matches = [c for c in cands if any(str(c["nc"]).upper().endswith(cit) for cit in citadas)]
+                if cit_matches:
+                    cands = cit_matches
+            exatos = [c for c in cands if abs((c.get("prov") or c["cred"]) - valor) < 0.05 or abs(c["cred"] - valor) < 0.05]
             cands = exatos or sorted(cands, key=lambda c: (_dt_br(c["dia"]) or datetime.date.min), reverse=True)
             orig = cands[0]
             t = trocas.get(orig["nc"], {}).get((acao, pi))
@@ -160,7 +352,7 @@ def anotar_trocas_nd(res):
             for (acao, pi), (nd_org, nd_dst, val) in mp.items():
                 orig = rastrear(nc, acao, pi, nd_org, val)
                 for L in por_nc.get(nc, []):
-                    if L["acao"] == acao and L["pi"] == pi and L["cred"] > 0.005:
+                    if L["acao"] == acao and L["pi"] == pi and (L["cred"] > 0.005 or (L["cred"] + L.get("emp", 0.0)) > 0.005):
                         L["nd_de"] = nd_org
                         if orig:
                             L["nc_origem"] = {"nc": orig["nc"], "obj": orig["obj"], "dia": orig["dia"],
@@ -614,7 +806,8 @@ def tabela_html(tid, celulas, com_fonte, ativo):
     n_com_saldo = sum(1 for c in celulas if c["cred"] > 0.005)
     n_zeradas   = len(celulas) - n_com_saldo
     for c in celulas:
-        fonte = f'<td><span class="pill-fonte">{esc(FONTE_CURTA.get(c.get("uasg",""),""))}</span></td>' if com_fonte else ''
+        fonte_curta = FONTE_CURTA.get(c.get("uasg", ""), "")
+        fonte = f'<td><span class="pill-fonte">{esc(fonte_curta)}</span></td>' if com_fonte else ''
         aplic = c.get("nd_nome") or c.get("pi_nome") or ""
         cid = esc(c.get("cid", ""))
         is_zerada = c["cred"] <= 0.005
@@ -623,12 +816,14 @@ def tabela_html(tid, celulas, com_fonte, ativo):
         cred_disp_html = (f'{esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>'
                           if not is_zerada else
                           f'<span class="pill-100" title="Crédito 100% empenhado no exercício">100% Empenhado</span> {esc(brl(c["cred"]))}<i class="chev" aria-hidden="true">›</i>')
+        search_cel = f'{c.get("uasg","")} {fonte_curta} {c["acao"]} {c["pi"]} {c.get("pi_nome","")} {c["nd"]} {c.get("nd_nome","")} {c.get("ncs_search","")}'
         body.append(
             f'<tr class="cel-row{" cel-zerada" if is_zerada else ""}" tabindex="0" role="button" data-cel="{cid}" data-cred="{c["cred"]:.2f}" '
+            f'data-search="{esc(search_cel)}" '
             f'title="Ver as notas de crédito desta célula (descrição completa)" '
             f'onclick="bcmsCel(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsCel(this)}}">'
             f'{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
-            f'<td class="obj" title="{esc(aplic)}">{esc(aplic[:60])}</td>'
+            f'<td class="obj" title="{esc(aplic)}" data-full-desc="{esc(aplic)}">{esc(aplic[:60])}</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
             f'<td class="num" data-sort="{liq_val:.2f}">{liq_fmt}</td>'
@@ -645,7 +840,7 @@ def tabela_html(tid, celulas, com_fonte, ativo):
                 f'Ocultar 100% empenhadas ({n_zeradas})</label>' if n_zeradas > 0 else '')
     return (f'<div class="tabpanel" id="{tid}" role="tabpanel"{disp_style}>'
             f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
-            f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND ou aplicação…" oninput="bcmsSearch(this,\'{tid}\')">'
+            f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por ação, PI, ND, aplicação ou palavras das NCs da célula…" oninput="bcmsSearch(this,\'{tid}\')">'
             f'{tgl_zero}'
             f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'creditos_exercicio_{tid}\')" title="Baixar dados em planilha formatada para Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
             f'<span class="tbl-count" id="cnt-{tid}" data-unit="célula(s)" aria-live="polite">{len(celulas)} células ({n_com_saldo} com saldo)</span></div>'
@@ -705,7 +900,9 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
             cid_seq[0] += 1
             cid = "%s_c%d" % (sfx, cid_seq[0])
             cid_map[key] = cid
-            ncs = sorted(([L["nc"], L["op"], round(L.get("prov") or L.get("cred", 0.0), 2), L["obj"], L.get("emit", ""), L.get("dia", "")]
+            ncs = sorted(([L["nc"], L["op"], round(L.get("prov") or L.get("cred", 0.0), 2),
+                           (L.get("nc_origem", {}) or {}).get("obj") or L["obj"],
+                           L.get("emit", ""), L.get("dia", "")]
                           for L in lin_idx.get(key, []) if L.get("nc") and str(L["nc"]).strip() != '-9'), key=lambda x: -x[2])
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
@@ -714,6 +911,10 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
                             "r": round(c["aloc"], 2), "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
                             "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2), "ncs": ncs}
         c["cid"] = cid
+        c["ncs_search"] = " ".join(
+            f'{n[0]} {n[1]} {n[3]} {n[4]} {obter_extra_nc(n[0], n[4])}'
+            for n in celdata[cid].get("ncs", [])
+        )
         return cid
     def celulas_todas(cod):
         cl = [c for c in res[cod]["celulas"].values() if c["aloc"] > 0.005 or c["cred"] > 0.005]
@@ -772,20 +973,26 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
 
     def mov_row(m):
         neg = ' cell-neg' if m["cred"] < 0 else ''
-        return (f'<tr class="cel-row" tabindex="0" role="button" data-nc="{esc(m["nid"])}" title="Detalhar a NC" '
+        org_m = m.get("nc_origem") or {}
+        obj_m = org_m.get("obj") or m.get("obj") or ""
+        extra_m = obter_extra_nc(m["nc"], m.get("emit", ""))
+        search_m = f'{m["nc"]} {m["uasg"]} {FONTE_CURTA.get(m["uasg"],"")} {m["acao"]} {m.get("pi","")} {m.get("pi_nome","")} {m["nd"]} {m.get("nd_desc","")} {m["op"]} {m.get("emit","")} {m.get("obj","")} {org_m.get("nc","")} {org_m.get("obj","")} {extra_m}'
+        op_title = f'{m["op"]} — {obj_m}' if obj_m else m["op"]
+        sub_obj = f'<div style="font-size:0.74rem;color:var(--ink-muted);margin-top:2px;font-weight:400;">{esc(obj_m[:85]) + ("…" if len(obj_m) > 85 else "")}</div>' if obj_m else ''
+        return (f'<tr class="cel-row" tabindex="0" role="button" data-nc="{esc(m["nid"])}" data-search="{esc(search_m)}" title="Detalhar a NC" '
                 f'onclick="bcmsNC(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsNC(this)}}">'
                 f'<td class="mono2">{esc(m["nc"])}</td><td><span class="pill-fonte">{esc(FONTE_CURTA[m["uasg"]])}</span></td>'
                 f'<td>{esc(m["acao"])}</td><td class="mono2">{esc(m["nd"])}</td>'
-                f'<td class="obj" title="{esc(m["op"])}">{esc(m["op"][:28])}</td>'
+                f'<td class="obj" title="{esc(op_title)}" data-full-desc="{esc(op_title)}"><div>{esc(m["op"][:32])}</div>{sub_obj}</td>'
                 f'<td class="num anchor{neg}" data-sort="{m["cred"]:.2f}">{esc(brl(m["cred"]))}<i class="chev" aria-hidden="true">›</i></td></tr>')
 
     def mov_tabela(tid, lst):
         if not lst:
             return '<p class="vazio">Sem movimentação de NC neste período.</p>'
-        ths = _th("NC", False) + _th("Fonte", False) + _th("Ação", False) + _th("ND", False) + _th("Operação", False) + _th("Valor", True)
+        ths = _th("NC", False) + _th("Fonte", False) + _th("Ação", False) + _th("ND", False) + _th("Operação / Objeto", False) + _th("Valor", True)
         body = "".join(mov_row(m) for m in lst)
         return (f'<div class="tbl-tools"><label class="visually-hidden" for="q-{tid}">Buscar</label>'
-                f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, ação, ND ou operação…" oninput="bcmsSearch(this,\'{tid}\')">'
+                f'<input type="search" id="q-{tid}" class="tbl-search" placeholder="Buscar por NC, ação, PI, ND, operação ou palavras da descrição…" oninput="bcmsSearch(this,\'{tid}\')">'
                 f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'{tid}\',\'movimentacao_{tid}\')" title="Baixar movimentação em Excel"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
                 f'<span class="tbl-count" id="cnt-{tid}" data-unit="NC(s)" aria-live="polite">{len(lst)} NC(s)</span></div>'
                 f'<div class="tbl-scroll" id="{tid}"><table class="det"><thead><tr>{ths}</tr></thead><tbody>{body}</tbody></table></div>')
@@ -926,13 +1133,20 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         refd = c["dt"].strftime("%d/%m/%y") if c["dt"] else "—"
         cid = esc(c.get("cid", ""))
         # Troca de ND: a descrição própria ("MUDANÇA DE ND", "DETALHAMENTO…") não diz o objeto.
-        # Mostra o objeto REAL da NC de origem, sinalizando a troca.
+        # Mostra o objeto REAL da NC de origem, sinalizando a troca, mas preserva ambos para busca.
         org = c.get("nc_origem")
+        own_obj = c.get("obj", "") or ""
         if org and org.get("obj"):
-            desc_completa = esc(org["obj"])
+            org_obj = org["obj"]
+            if own_obj and own_obj != org_obj and not _eh_troca_nd(own_obj):
+                raw_desc_completa = f"{org_obj} [{own_obj}]"
+            else:
+                raw_desc_completa = org_obj
+            desc_completa = esc(raw_desc_completa)
             selo = f'<span class="tag-nd" title="Crédito recebido por mudança de ND (de {esc(c.get("nd_de",""))} para {esc(c["nd"])}) — objeto herdado da NC de origem {esc(org["nc"])}">↪ ND {esc(c.get("nd_de",""))}</span> '
         else:
-            desc_completa = esc(c.get("obj", ""))
+            raw_desc_completa = own_obj
+            desc_completa = esc(raw_desc_completa)
             selo = ""
         desc_resumo = desc_completa[:118] + ("…" if len(desc_completa) > 118 else "")
         desc_resumo = selo + desc_resumo
@@ -945,14 +1159,23 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
             nc_lbl = f'<span class="nc-num">{esc(nc_full)}</span>'
         tid = esc(c.get("tid", ""))
         faixa = "none" if dias is None else ("r" if dias > 60 else ("a" if dias > 30 else "v"))
+        extra_txt = obter_extra_nc(nc_full, c.get("emit", ""))
+        search_blob = (
+            f'{nc_full} {c.get("uasg","")} {c.get("fonte","")} {c.get("acao","")} '
+            f'{c.get("pi","")} {c.get("pi_nome","")} {c.get("nd","")} {c.get("nd_nome","")} '
+            f'{c.get("op","")} {c.get("emit","")} {c.get("dia","")} {own_obj} '
+            f'{org.get("nc","") if org else ""} {org.get("obj","") if org else ""} '
+            f'{c.get("nd_de","")} {extra_txt}'
+        )
         return (f'<tr class="cel-row" tabindex="0" role="button" data-tela="{tid}" data-cel="{cid}" '
                 f'data-fonte="{esc(c.get("fonte",""))}" data-acao="{esc(c["acao"])}" data-nd="{esc(c["nd"])}" '
-                f'data-faixa="{faixa}" data-val="{c["cred"]:.2f}" title="Clique para ver o que está em tela desta NC" '
+                f'data-faixa="{faixa}" data-val="{c["cred"]:.2f}" data-search="{esc(search_blob)}" '
+                f'title="Clique para ver o que está em tela desta NC" '
                 f'onclick="bcmsTela(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();bcmsTela(this)}}">'
                 f'<td><span class="pill-fonte">{esc(c["fonte"])}</span></td>'
                 f'<td class="mono2" title="{esc(nc_full)}">{nc_lbl}</td>'
                 f'<td class="mono2">{esc(acao_nd)}</td>'
-                f'<td class="obj" title="{desc_completa}" data-full-desc="{desc_completa}">{desc_resumo}</td>'
+                f'<td class="obj" title="{desc_completa}" data-full-desc="{desc_completa}" data-selo-html="{esc(selo)}">{desc_resumo}</td>'
                 f'<td class="mono2">{esc(refd)}</td>'
                 f'<td class="num anchor" data-sort="{c["cred"]:.2f}">{esc(brl(c["cred"]))}</td>'
                 f'<td class="num" data-sort="{dsort}"><span class="{dcls}">{dtxt}</span><i class="chev" aria-hidden="true">›</i></td></tr>')
@@ -997,7 +1220,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         '<p class="sec-nota">Relação dos <b>créditos disponíveis por Nota de Crédito (NC)</b> com descrição completa do objeto e <b>dias em tela</b> (desde o lançamento da NC). '
         '<b>Clique em uma linha</b> para abrir a ficha completa. Legenda de idade: <span class="badge-age age-green">≤30d</span> recente · <span class="badge-age age-amber">31–60d</span> atenção · <span class="badge-age age-red">&gt;60d</span> crítico.</p>'
         f'<div class="tbl-tools"><label class="visually-hidden" for="q-tab-emtela-{sfx}">Buscar</label>'
-        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, ND ou palavras na descrição completa…" oninput="{_cb}">'
+        f'<input type="search" id="q-tab-emtela-{sfx}" class="tbl-search" placeholder="Buscar por NC, Ação, PI, ND ou qualquer palavra da descrição completa (com ou sem acento)…" oninput="{_cb}">'
         f'<button type="button" class="btn-excel" onclick="bcmsExportTable(this,\'tab-emtela-{sfx}\',\'creditos_em_tela_nc_{sfx}\')" title="Exporta exatamente as linhas visíveis, conforme os filtros aplicados"><span class="btn-excel-ic">📊</span> Exportar Excel</button>'
         f'<span class="tbl-count" id="cnt-tab-emtela-{sfx}" data-unit="NC(s) em tela" aria-live="polite">{len(emtela_ncs)} NC(s) em tela</span></div>'
         f'<div class="tbl-filtros" id="flt-{sfx}" role="group" aria-label="Filtros da lista de créditos em tela">'
@@ -1010,6 +1233,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
         '<option value="a">31 a 60 dias</option><option value="r">&gt; 60 dias</option></select>'
         f'<button type="button" class="flt-limpa" onclick="{_cbl}" title="Limpar todos os filtros">✕ Limpar</button>'
         f'<span class="flt-resumo" id="flt-res-{sfx}" aria-live="polite"></span></div>'
+        f'<div id="et-hist-bridge-{sfx}" class="et-hist-bridge" style="display:none" aria-live="polite"></div>'
         f'<div class="tbl-scroll" id="tab-emtela-{sfx}"><table class="det det-compact"><thead><tr>{et_ths}</tr></thead>'
         f'<tbody>{"".join(et_row(c) for c in emtela_ncs)}</tbody>'
         f'<tfoot><tr><td colspan="5">TOTAL · {len(emtela_ncs)} Nota(s) de Crédito em tela</td><td class="num anchor">{esc(brl(tot_emtela))}</td><td>—</td></tr></tfoot></table></div></section>'
@@ -1554,11 +1778,18 @@ def secao_historico_ncs(res, hist, data_str, periodo):
                     "nd_desc": L.get("nd_desc") or "",
                     "op": L.get("op") or "",
                     "obj": L.get("obj") or "",
+                    "objs": [],
+                    "nds": [],
+                    "pis": [],
+                    "acoes": [],
+                    "nc_origem": None,
+                    "nd_de": "",
                     "prov": 0.0, "cred_calc": 0.0, "emp_calc": 0.0,
                     "liq": 0.0, "pag": 0.0, "conc": 0.0,
                     "linhas": []
                 }
             it = todas_ncs[key]
+            it["linhas"].append(L)
             # Provisão recebida descentralizada (não inflar com saldo de detalhamentos internos)
             val = L.get("prov", 0.0)
             it["prov"] += val
@@ -1566,9 +1797,27 @@ def secao_historico_ncs(res, hist, data_str, periodo):
             it["pag"]  += L.get("pag", 0.0)
             it["conc"] += L.get("conc", 0.0)
             if not it["dia"] and L.get("dia"): it["dia"] = L["dia"]
-            if not it["obj"] and L.get("obj"): it["obj"] = L["obj"]
+            if L.get("obj") and L["obj"] not in it["objs"]:
+                it["objs"].append(L["obj"])
+            if not it["obj"] and L.get("obj"):
+                it["obj"] = L["obj"]
+            elif L.get("obj") and _eh_troca_nd(it["obj"]) and not _eh_troca_nd(L["obj"]):
+                it["obj"] = L["obj"]
+            if L.get("nd") and L["nd"] not in it["nds"]:
+                it["nds"].append(L["nd"])
+            if L.get("nd") and (not it["nd"] or (it["nd"].endswith("00") and not L["nd"].endswith("00")) or L.get("cred", 0.0) > 0):
+                it["nd"] = L["nd"]
+                if L.get("nd_desc"):
+                    it["nd_desc"] = L["nd_desc"]
+            if L.get("pi") and L["pi"] not in it["pis"]:
+                it["pis"].append(L["pi"])
+            if L.get("acao") and L["acao"] not in it["acoes"]:
+                it["acoes"].append(L["acao"])
             if not it["emit"] and L.get("emit"): it["emit"] = L["emit"]
             if not it["emit_nome"] and L.get("emit_nome"): it["emit_nome"] = L["emit_nome"]
+            if L.get("nc_origem") and not it["nc_origem"]:
+                it["nc_origem"] = L["nc_origem"]
+                it["nd_de"] = L.get("nd_de", "")
 
             cel_key = (cod, L.get("acao"), L.get("pi"), L.get("nd"))
             cel_recs.setdefault(cel_key, []).append((key, val, L.get("dia")))
@@ -1638,6 +1887,35 @@ def secao_historico_ncs(res, hist, data_str, periodo):
         if not emit_nome or emit_nome in ("-9", "NAO SE APLICA"):
             emit_nome = UG_NOMES_PADRAO.get(emit_cod, f"UG {emit_cod}" if emit_cod else "Não informado")
 
+        org = it.get("nc_origem") or {}
+        own_obj = it["obj"] or ""
+        extra_txt = obter_extra_nc(nc, emit_cod)
+        if org and org.get("obj"):
+            org_obj = org["obj"]
+            org_nc_short = org.get("nc", "")[-12:]
+            if not own_obj or _eh_troca_nd(own_obj):
+                display_obj = f"{org_obj} (↪ Ref. {org_nc_short}: {own_obj})" if own_obj else org_obj
+            elif org_obj not in own_obj:
+                display_obj = f"{own_obj} — Origem {org_nc_short}: {org_obj}"
+            else:
+                display_obj = own_obj
+        else:
+            display_obj = own_obj
+
+        if (not display_obj or _eh_troca_nd(display_obj)) and extra_txt:
+            display_obj = f"{display_obj} — {extra_txt}" if display_obj else extra_txt
+
+        all_objs_str = " ".join(it.get("objs", []))
+        all_nds_str = " ".join(it.get("nds", []))
+        all_pis_str = " ".join(it.get("pis", []))
+        all_acoes_str = " ".join(it.get("acoes", []))
+        search_blob = (
+            f"{nc} {it['dia']} {emit_cod} {emit_nome} {cod} {it['fav_nome']} {it['om_sigla']} "
+            f"{it['fonte']} {it['acao']} {all_acoes_str} {it['pi']} {all_pis_str} {it['pi_nome']} "
+            f"{it['nd']} {all_nds_str} {it['nd_desc']} {it['op']} {display_obj} {all_objs_str} "
+            f"{org.get('nc','')} {org.get('obj','')} {it.get('nd_de','')} {extra_txt} {status}"
+        )
+
         item_dict = {
             "hid": hid,
             "nc": nc,
@@ -1660,7 +1938,10 @@ def secao_historico_ncs(res, hist, data_str, periodo):
             "pi": it["pi"],
             "pi_desc": it["pi_nome"],
             "op": it["op"] or "Descentralização de Crédito",
-            "obj": it["obj"] or "(Sem descrição detalhada)",
+            "obj": display_obj or "(Sem descrição detalhada)",
+            "nc_origem": ({"nc": org.get("nc", ""), "obj": org.get("obj", ""), "dia": org.get("dia", ""), "emit": org.get("emit", "")} if org else None),
+            "nd_de": it.get("nd_de", ""),
+            "search_blob": search_blob,
             "prov": round(prov, 2),
             "bloq": 0.0,
             "emp": round(emp, 2),
@@ -1679,6 +1960,7 @@ def secao_historico_ncs(res, hist, data_str, periodo):
                 "prov": round(L.get("prov", 0.0), 2),
                 "emp": round(L.get("emp", 0.0), 2),
                 "cred": round(L.get("cred", 0.0), 2),
+                "val": round(L.get("prov") or L.get("cred", 0.0), 2),
             } for L in it["linhas"]] if len(it["linhas"]) > 1 else []
         }
         histdata[hid] = item_dict
@@ -4095,6 +4377,49 @@ select option:checked, .flt option:checked, .hist-select option:checked {
   color: var(--primary-600);
   border-color: rgba(37,99,235,0.3);
 }
+mark.search-hl {
+  background: rgba(245, 158, 11, 0.28);
+  color: inherit;
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: 4px;
+  box-shadow: inset 0 -1px 0 rgba(217, 119, 6, 0.5);
+}
+.et-hist-bridge {
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--primary-600);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+.et-hist-bridge-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.et-hist-bridge-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--primary-600);
+  background: var(--bg-surface);
+  color: var(--primary-600);
+  transition: all .15s ease;
+}
+.et-hist-bridge-btn:hover {
+  background: var(--primary-600);
+  color: #FFFFFF;
+}
 """
 
 JS = r"""
@@ -4102,6 +4427,242 @@ JS = r"""
   var s=localStorage.getItem('bcms-theme');
   if(s){ document.documentElement.setAttribute('data-theme',s); }
 })();
+
+/* ==========================================================================
+   MOTOR DE BUSCA INTELIGENTE (Normalização NFD + Abreviações Militares/SIAFI
+   + Busca Multi-Palavra + Snippet com Destaque Automático além de 118 chars)
+   ========================================================================== */
+var BCMS_SYNONYMS = {
+  'aquisicao': ['aqs', 'aq', 'compra', 'fornecimento', 'obtencao'],
+  'manutencao': ['mnt', 'manut', 'conservacao', 'reparo', 'recuperacao'],
+  'viatura': ['vtr', 'vtne', 'vtp', 'vbr', 'veiculo', 'veiculos', 'viaturas', 'automovel', 'caminhao', 'marrua', 'hilux', 'ambulancia'],
+  'veiculo': ['vtr', 'vtne', 'vtp', 'vbr', 'viatura', 'viaturas', 'veiculos', 'automovel', 'caminhao', 'marrua', 'hilux'],
+  'servico': ['sv', 'serv', 'servicos', 'prestacao'],
+  'transporte': ['trnp', 'transp', 'frete', 'locomocao', 'remocao', 'deslocamento', ' bagagem'],
+  'passagem': ['psg', 'passagens', 'bilhete', 'aerea', 'rodoviaria'],
+  'diaria': ['di', 'diarias', 'deslocamento'],
+  'suprimento': ['sup', 'supr', 'abastecimento'],
+  'equipamento': ['eqp', 'equip', 'equipamentos', 'permanente', 'material'],
+  'alimentacao': ['almt', 'alim', 'rancho', 'qr', 'qs', 'etapa', 'generos', 'viveres'],
+  'combustivel': ['comb', 'lubrificante', 'oleo', 'diesel', 'gasolina'],
+  'embarcacao': ['emb', 'fluvial', 'lancha', 'barco', 'empurrador', 'balsa', 'popa'],
+  'blindado': ['bld', 'vbmtp', 'vbc', 'guarani', 'leopard', 'm113'],
+  'armamento': ['armt', 'municao', 'mun', 'fuzil', 'pistola', 'tiro'],
+  'pagamento': ['pgto', 'pg', 'pag', 'quitacao', 'liquidacao'],
+  'recolhimento': ['rclh', 'devolucao', 'anulacao', 'cancelamento', 'estorno'],
+  'indenizacao': ['ind', 'indeniz', 'restituicao', 'ressarcimento'],
+  'obra': ['obras', 'instalacoes', 'reforma', 'adequacao', 'engenharia', 'pavilhao', 'telhado'],
+  'hospitalar': ['hosp', 'medico', 'odontologico', 'laboratorial', 'oncologico', 'farmaceutico', 'saude', 'hmab', 'hce'],
+  'eletrica': ['eletrico', 'energia', 'gerador', 'transformador', 'subestacao', 'iluminacao', 'climatizacao', 'condicionado'],
+  'agua': ['esgoto', 'saneamento', 'cedae', 'aegea', 'aguas']
+};
+
+function bcmsNormText(s){
+  if(!s) return '';
+  var str = String(s);
+  if(typeof str.normalize === 'function'){
+    str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  return str.toLowerCase()
+    .replace(/[º°ª]/g, ' ')
+    .replace(/[,.;:()\[\]\/\\\-_'"“”‘’]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function bcmsExpandToken(tk){
+  var alts = [tk];
+  if(!tk || tk.length < 2) return alts;
+  // Se digitou "nc401667", adiciona também "401667"
+  var mNc = tk.match(/^nc(\d{3,})$/);
+  if(mNc) alts.push(mNc[1]);
+  for(var key in BCMS_SYNONYMS){
+    if(!Object.prototype.hasOwnProperty.call(BCMS_SYNONYMS, key)) continue;
+    var syns = BCMS_SYNONYMS[key];
+    var hitKey = (key === tk) || (tk.length >= 4 && key.indexOf(tk) === 0);
+    var hitSyn = false;
+    for(var i = 0; i < syns.length; i++){
+      if(syns[i] === tk){ hitSyn = true; break; }
+    }
+    if(hitKey || hitSyn){
+      if(alts.indexOf(key) === -1) alts.push(key);
+      for(var j = 0; j < syns.length; j++){
+        if(alts.indexOf(syns[j]) === -1) alts.push(syns[j]);
+      }
+    }
+  }
+  return alts;
+}
+
+function bcmsTokenMatchesHaystack(hayNorm, hayWords, tk){
+  if(!tk) return true;
+  if(tk === 'nc' && hayNorm.indexOf('nc') !== -1) return true;
+  var alts = bcmsExpandToken(tk);
+  for(var i = 0; i < alts.length; i++){
+    var alt = alts[i].trim();
+    if(!alt) continue;
+    if(alt.length <= 3 && alt !== tk){
+      // Abreviações curtas expandidas (ex: sv, di, aq, pg, qr, vtr) exigem palavra inteira
+      if(hayWords.indexOf(alt) !== -1) return true;
+    } else {
+      if(hayNorm.indexOf(alt) !== -1) return true;
+    }
+  }
+  return false;
+}
+
+function bcmsMatchQuery(haystackRaw, queryRaw){
+  if(!queryRaw) return true;
+  var qNorm = bcmsNormText(queryRaw);
+  if(!qNorm) return true;
+  var hayNorm = bcmsNormText(haystackRaw);
+  if(!hayNorm) return false;
+  if(hayNorm.indexOf(qNorm) !== -1) return true;
+  var tokens = qNorm.split(' ');
+  var hayWords = hayNorm.split(' ');
+  for(var i = 0; i < tokens.length; i++){
+    if(!bcmsTokenMatchesHaystack(hayNorm, hayWords, tokens[i])) return false;
+  }
+  return true;
+}
+
+function bcmsFoldChar(ch){
+  if(typeof ch.normalize === 'function'){
+    return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+  return ch.toLowerCase();
+}
+
+function bcmsSmartSnippet(fullDesc, queryRaw, maxLen, seloHtml){
+  var prefix = seloHtml || '';
+  var raw = String(fullDesc || '');
+  var limit = maxLen || 118;
+  if(!queryRaw || !queryRaw.trim()){
+    var base = raw.length > limit ? (raw.substring(0, limit) + '…') : raw;
+    return prefix + bcmsEsc(base);
+  }
+  var qNorm = bcmsNormText(queryRaw);
+  if(!qNorm){
+    var base2 = raw.length > limit ? (raw.substring(0, limit) + '…') : raw;
+    return prefix + bcmsEsc(base2);
+  }
+
+  // Constrói string normalizada char-a-char alinhada aos índices de `raw`
+  var folded = '';
+  for(var c = 0; c < raw.length; c++){
+    var fc = bcmsFoldChar(raw.charAt(c));
+    folded += (fc.length === 1 ? fc : ' ');
+  }
+
+  var tokens = qNorm.split(' ').filter(function(t){ return t && t !== 'nc'; });
+  var terms = [];
+  for(var t = 0; t < tokens.length; t++){
+    var exp = bcmsExpandToken(tokens[t]);
+    for(var e = 0; e < exp.length; e++){
+      var term = exp[e].trim();
+      if(term && term.length >= 2 && terms.indexOf(term) === -1){
+        terms.push(term);
+      }
+    }
+  }
+
+  var firstHit = -1;
+  var firstLen = 0;
+  for(var k = 0; k < terms.length; k++){
+    var tm = terms[k];
+    var pos = folded.indexOf(tm);
+    while(pos !== -1){
+      var isShortSyn = (tm.length <= 3 && tokens.indexOf(tm) === -1);
+      var boundaryOk = true;
+      if(isShortSyn){
+        var prevC = pos > 0 ? folded.charAt(pos - 1) : ' ';
+        var nextC = (pos + tm.length < folded.length) ? folded.charAt(pos + tm.length) : ' ';
+        if(/[a-z0-9]/.test(prevC) || /[a-z0-9]/.test(nextC)) boundaryOk = false;
+      }
+      if(boundaryOk){
+        if(firstHit === -1 || pos < firstHit){
+          firstHit = pos;
+          firstLen = tm.length;
+        }
+        break;
+      }
+      pos = folded.indexOf(tm, pos + 1);
+    }
+  }
+
+  var snippet = '';
+  if(firstHit === -1 || firstHit + firstLen <= limit){
+    snippet = raw.length > limit ? (raw.substring(0, limit) + '…') : raw;
+  } else {
+    // O termo pesquisado está APÓS o caractere 118! Mostra o início + janela centrada no termo encontrado
+    var head = raw.substring(0, 34).trim();
+    var winHalf = Math.floor((limit - 40) / 2);
+    var wStart = Math.max(35, firstHit - winHalf);
+    var wEnd = Math.min(raw.length, wStart + (limit - 38));
+    snippet = head + ' … ' + raw.substring(wStart, wEnd) + (wEnd < raw.length ? '…' : '');
+  }
+
+  // Aplica highlight seguro nos termos encontrados dentro do snippet
+  var snipFolded = '';
+  for(var sc = 0; sc < snippet.length; sc++){
+    var sfc = bcmsFoldChar(snippet.charAt(sc));
+    snipFolded += (sfc.length === 1 ? sfc : ' ');
+  }
+  var mask = new Array(snippet.length);
+  for(var m = 0; m < snippet.length; m++) mask[m] = false;
+  for(var tkIdx = 0; tkIdx < terms.length; tkIdx++){
+    var tm2 = terms[tkIdx];
+    var p2 = snipFolded.indexOf(tm2);
+    while(p2 !== -1){
+      var shortSyn2 = (tm2.length <= 3 && tokens.indexOf(tm2) === -1);
+      var bOk2 = true;
+      if(shortSyn2){
+        var pv = p2 > 0 ? snipFolded.charAt(p2 - 1) : ' ';
+        var nx = (p2 + tm2.length < snipFolded.length) ? snipFolded.charAt(p2 + tm2.length) : ' ';
+        if(/[a-z0-9]/.test(pv) || /[a-z0-9]/.test(nx)) bOk2 = false;
+      }
+      if(bOk2){
+        for(var u = p2; u < p2 + tm2.length && u < mask.length; u++) mask[u] = true;
+      }
+      p2 = snipFolded.indexOf(tm2, p2 + 1);
+    }
+  }
+
+  var out = '';
+  var inMark = false;
+  for(var idx = 0; idx < snippet.length; idx++){
+    if(mask[idx] && !inMark){ out += '<mark class="search-hl">'; inMark = true; }
+    else if(!mask[idx] && inMark){ out += '</mark>'; inMark = false; }
+    out += bcmsEsc(snippet.charAt(idx));
+  }
+  if(inMark) out += '</mark>';
+  return prefix + out;
+}
+
+function bcmsAbrirUHistComBusca(sfx, q){
+  var sec = document.querySelector('.unidade[data-key="' + sfx + '"]');
+  if(!sec) return;
+  var btns = sec.querySelectorAll('.toptab');
+  if(btns && btns.length >= 3){
+    bcmsView(btns[2], 'historico');
+  }
+  var inp = document.getElementById('flt-uhist-busca-' + sfx);
+  if(inp){
+    inp.value = q || '';
+    bcmsFiltraUHist(sfx);
+  }
+}
+
+function bcmsAbrirHistGeralComBusca(q){
+  trocaOMDSPorKey('HISTORICO');
+  var elOm = document.getElementById('flt-hist-om');
+  if(elOm) elOm.value = '';
+  var inp = document.getElementById('flt-hist-busca');
+  if(inp){
+    inp.value = q || '';
+    bcmsFiltraHistorico();
+  }
+}
 
 function bcmsTheme(){
   var h=document.documentElement;
@@ -4212,7 +4773,7 @@ function trocaOMDSPorKey(key){
 })();
 
 function bcmsSearch(inp,tid){
-  var q=(inp.value||'').toLowerCase().trim();
+  var q=(inp.value||'').trim();
   var container=document.getElementById(tid);
   if(!container)return;
   var tb=container.querySelector('tbody');
@@ -4222,7 +4783,7 @@ function bcmsSearch(inp,tid){
   var hideZero = chkZero ? chkZero.checked : false;
   var selRankOM = (tid === 'tab-ranking-det') ? document.getElementById('flt-rank-om') : null;
   var fRankOM = (selRankOM && selRankOM.value) ? selRankOM.value.trim() : '';
-  var n=0;
+  var n=0, totAloc=0, totEmp=0, totLiq=0, totCred=0;
   rows.forEach(function(r){
     var cr = parseFloat(r.getAttribute('data-cred') || '0');
     if(hideZero && cr <= 0.005){
@@ -4233,14 +4794,36 @@ function bcmsSearch(inp,tid){
       r.style.display='none';
       return;
     }
-    var ok=r.textContent.toLowerCase().indexOf(q)>-1;
+    var hay = (r.getAttribute('data-search') || '') + ' ' + r.textContent;
+    var ok = bcmsMatchQuery(hay, q);
     r.style.display=ok?'':'none';
-    if(ok) n++;
+    if(ok){
+      n++;
+      var cells = r.querySelectorAll('td.num');
+      if(cells.length >= 4){
+        totAloc += parseFloat(cells[0].getAttribute('data-sort') || '0') || 0;
+        totEmp += parseFloat(cells[1].getAttribute('data-sort') || '0') || 0;
+        totLiq += parseFloat(cells[2].getAttribute('data-sort') || '0') || 0;
+        totCred += parseFloat(cells[3].getAttribute('data-sort') || (cr + '')) || 0;
+      }
+    }
   });
   var cnt=document.getElementById('cnt-'+tid);
   if(cnt){
     var u=cnt.getAttribute('data-unit')||'linha(s)';
     cnt.textContent=n+' '+u;
+  }
+  var tfLbl = document.getElementById('tf-lbl-' + tid);
+  if(tfLbl){
+    tfLbl.textContent = ((q || hideZero) ? 'FILTRADO · ' : 'TOTAL · ') + n + ' célula(s)' + (hideZero ? ' com saldo disponível' : ' orçamentária(s)');
+    var tfAloc = document.getElementById('tf-aloc-' + tid);
+    if(tfAloc) tfAloc.textContent = bcmsBRL(totAloc);
+    var tfEmp = document.getElementById('tf-emp-' + tid);
+    if(tfEmp) tfEmp.textContent = bcmsBRL(totEmp);
+    var tfLiq = document.getElementById('tf-liq-' + tid);
+    if(tfLiq) tfLiq.textContent = bcmsBRL(totLiq);
+    var tfCred = document.getElementById('tf-cred-' + tid);
+    if(tfCred) tfCred.textContent = bcmsBRL(totCred);
   }
 }
 
@@ -4249,13 +4832,13 @@ function bcmsFiltraRankingOM(sel){
   var tab = document.getElementById('tab-ranking-det');
   if(!tab) return;
   var qInput = document.getElementById('q-tab-ranking-det');
-  var q = qInput ? qInput.value.toLowerCase().trim() : '';
+  var q = qInput ? qInput.value.trim() : '';
   var rows = tab.querySelectorAll('tbody tr');
   var visCount = 0;
   rows.forEach(function(r){
     var rOm = r.getAttribute('data-om') || '';
     var matchOm = !om || rOm === om;
-    var matchQ = !q || r.textContent.toLowerCase().indexOf(q) > -1;
+    var matchQ = !q || bcmsMatchQuery(r.textContent, q);
     if(matchOm && matchQ){
       r.style.display = '';
       visCount++;
@@ -4273,13 +4856,14 @@ function bcmsToggleZero(chk, tid){
   var panel = document.getElementById(tid);
   if(!panel) return;
   var qInput = document.getElementById('q-' + tid);
-  var q = qInput ? qInput.value.toLowerCase().trim() : '';
+  var q = qInput ? qInput.value.trim() : '';
   var rows = panel.querySelectorAll('tbody tr.cel-row');
   var hide = chk.checked;
   var totAloc = 0, totEmp = 0, totLiq = 0, totCred = 0, visCount = 0;
   rows.forEach(function(r){
     var cr = parseFloat(r.getAttribute('data-cred') || '0');
-    var matchSearch = !q || r.textContent.toLowerCase().indexOf(q) > -1;
+    var hay = (r.getAttribute('data-search') || '') + ' ' + r.textContent;
+    var matchSearch = !q || bcmsMatchQuery(hay, q);
     if((hide && cr <= 0.005) || !matchSearch){
       r.style.display = 'none';
     } else {
@@ -4304,7 +4888,7 @@ function bcmsToggleZero(chk, tid){
   }
   var tfLbl = document.getElementById('tf-lbl-' + tid);
   if(tfLbl){
-    tfLbl.textContent = 'TOTAL · ' + visCount + ' célula(s)' + (hide ? ' com saldo disponível' : ' orçamentária(s)');
+    tfLbl.textContent = ((q || hide) ? 'FILTRADO · ' : 'TOTAL · ') + visCount + ' célula(s)' + (hide ? ' com saldo disponível' : ' orçamentária(s)');
   }
   var tfAloc = document.getElementById('tf-aloc-' + tid);
   if(tfAloc) tfAloc.textContent = bcmsBRL(totAloc);
@@ -4437,18 +5021,32 @@ function bcmsFiltra(sfx){
   var cont=document.getElementById(tid); if(!cont) return;
   var tb=cont.querySelector('tbody'); if(!tb) return;
   var v=function(id){var e=document.getElementById(id+'-'+sfx); return e?e.value:'';};
-  var q=(v('q-tab-emtela')||'').toLowerCase();
+  var q=(v('q-tab-emtela')||'').trim();
   var fFonte=v('f-fonte'), fAcao=v('f-acao'), fNd=v('f-nd'), fId=v('f-idade');
   var n=0, soma=0;
   tb.querySelectorAll('tr').forEach(function(r){
     var ok=true;
+    var tdObj = r.querySelector('td.obj');
+    var fullDesc = tdObj ? (tdObj.getAttribute('data-full-desc') || tdObj.getAttribute('title') || '') : '';
+    var seloHtml = tdObj ? (tdObj.getAttribute('data-selo-html') || '') : '';
     if(fFonte && r.getAttribute('data-fonte')!==fFonte) ok=false;
     if(ok&&fAcao && r.getAttribute('data-acao')!==fAcao) ok=false;
     if(ok&&fNd && r.getAttribute('data-nd')!==fNd) ok=false;
     if(ok&&fId && r.getAttribute('data-faixa')!==fId) ok=false;
-    if(ok&&q && r.textContent.toLowerCase().indexOf(q)===-1) ok=false;
+    if(ok&&q){
+      var hay = (r.getAttribute('data-search') || '') + ' ' + fullDesc + ' ' + r.textContent;
+      if(!bcmsMatchQuery(hay, q)) ok=false;
+    }
     r.style.display=ok?'':'none';
-    if(ok){n++; soma+=parseFloat(r.getAttribute('data-val')||'0')||0;}
+    if(ok){
+      n++;
+      soma+=parseFloat(r.getAttribute('data-val')||'0')||0;
+      if(tdObj && fullDesc){
+        tdObj.innerHTML = bcmsSmartSnippet(fullDesc, q, 118, seloHtml);
+      }
+    } else if(tdObj && fullDesc && !q){
+      tdObj.innerHTML = bcmsSmartSnippet(fullDesc, '', 118, seloHtml);
+    }
   });
   var cnt=document.getElementById('cnt-'+tid);
   if(cnt){var u=cnt.getAttribute('data-unit')||'linha(s)'; cnt.textContent=n+' '+u;}
@@ -4470,6 +5068,53 @@ function bcmsFiltra(sfx){
     if(q)pk.push('“'+q+'”');
     res.textContent=pk.length?(pk.join(' · ')+' — '+bcmsBRL(soma)):'';
     res.className='flt-resumo'+(pk.length?' on':'');
+  }
+  /* Ponte com o Histórico Completo (quando a NC buscada já foi 100% empenhada/recolhida ou é de outra OMDS) */
+  var bridge = document.getElementById('et-hist-bridge-' + sfx);
+  if(bridge){
+    if(q && q.length >= 2 && typeof HISTDATA !== 'undefined' && HISTDATA && HISTDATA.items){
+      var uInfo = (typeof UNIDADES !== 'undefined' && UNIDADES[sfx]) ? UNIDADES[sfx] : null;
+      var unitExecCount = 0;
+      var unitAllCount = 0;
+      var otherOmCount = 0;
+      for(var hi = 0; hi < HISTDATA.items.length; hi++){
+        var hIt = HISTDATA.items[hi];
+        var hHay = hIt.search_blob || (hIt.nc + ' ' + hIt.obj + ' ' + hIt.pi + ' ' + hIt.nd + ' ' + hIt.emit_nome);
+        if(bcmsMatchQuery(hHay, q)){
+          var isThisUnit = uInfo && (hIt.fav_cod === uInfo.ogu || hIt.fav_cod === uInfo.fex);
+          if(isThisUnit){
+            unitAllCount++;
+            if(hIt.cred <= 0.01) unitExecCount++;
+          } else {
+            otherOmCount++;
+          }
+        }
+      }
+      if((n === 0 && (unitAllCount > 0 || otherOmCount > 0)) || (unitExecCount > 0)){
+        var qEscJs = bcmsEsc(q).replace(/'/g, "\\'");
+        var msgParts = [];
+        var btnParts = [];
+        if(unitExecCount > 0){
+          msgParts.push('<b>' + unitExecCount + ' NC(s) já executada(s)/zerada(s)</b> no Histórico de <b>' + (uInfo ? bcmsEsc(uInfo.sigla) : sfx) + '</b>');
+          btnParts.push('<button type="button" class="et-hist-bridge-btn" onclick="bcmsAbrirUHistComBusca(\'' + sfx + '\',\'' + qEscJs + '\')">📜 Ver no Histórico da Unidade (' + unitAllCount + ')</button>');
+        } else if(unitAllCount > 0 && n === 0){
+          msgParts.push('<b>' + unitAllCount + ' NC(s)</b> no Histórico de <b>' + (uInfo ? bcmsEsc(uInfo.sigla) : sfx) + '</b>');
+          btnParts.push('<button type="button" class="et-hist-bridge-btn" onclick="bcmsAbrirUHistComBusca(\'' + sfx + '\',\'' + qEscJs + '\')">📜 Ver no Histórico da Unidade (' + unitAllCount + ')</button>');
+        }
+        if(otherOmCount > 0){
+          msgParts.push('<b>' + otherOmCount + ' NC(s)</b> em outras OMDS do Comando');
+          btnParts.push('<button type="button" class="et-hist-bridge-btn" onclick="bcmsAbrirHistGeralComBusca(\'' + qEscJs + '\')">🌐 Ver no Histórico Geral (' + (unitAllCount + otherOmCount) + ')</button>');
+        }
+        bridge.innerHTML = '<div>💡 Também encontramos para <b>“' + bcmsEsc(q) + '”</b>: ' + msgParts.join(' e ') + '.</div><div class="et-hist-bridge-actions">' + btnParts.join('') + '</div>';
+        bridge.style.display = 'flex';
+      } else {
+        bridge.style.display = 'none';
+        bridge.innerHTML = '';
+      }
+    } else {
+      bridge.style.display = 'none';
+      bridge.innerHTML = '';
+    }
   }
 }
 function bcmsLimpaFiltros(sfx){
@@ -5161,7 +5806,7 @@ function bcmsFiltraHistorico(){
   var fFonte = v('flt-hist-fonte');
   var fPtres = v('flt-hist-ptres');
   var fFaixa = v('flt-hist-faixa');
-  var q = (v('flt-hist-busca') || '').toLowerCase();
+  var q = v('flt-hist-busca') || '';
 
   HIST_FILTERED = raw.filter(function(it){
     if(fOm){
@@ -5184,18 +5829,8 @@ function bcmsFiltraHistorico(){
       if(fFaixa === 'canc' && it.status_slug !== 'canc') return false;
     }
     if(q){
-      var match = (it.nc && it.nc.toLowerCase().indexOf(q) > -1) ||
-                  (it.obj && it.obj.toLowerCase().indexOf(q) > -1) ||
-                  (it.pi && it.pi.toLowerCase().indexOf(q) > -1) ||
-                  (it.pi_desc && it.pi_desc.toLowerCase().indexOf(q) > -1) ||
-                  (it.fav_nome && it.fav_nome.toLowerCase().indexOf(q) > -1) ||
-                  (it.om_sigla && it.om_sigla.toLowerCase().indexOf(q) > -1) ||
-                  (it.emit_nome && it.emit_nome.toLowerCase().indexOf(q) > -1) ||
-                  (it.emit_cod && String(it.emit_cod).indexOf(q) > -1) ||
-                  (it.fav_cod && String(it.fav_cod).indexOf(q) > -1) ||
-                  (it.ptres && it.ptres.toLowerCase().indexOf(q) > -1) ||
-                  (it.nd && it.nd.toLowerCase().indexOf(q) > -1);
-      if(!match) return false;
+      var hay = it.search_blob || [it.nc, it.obj, it.pi, it.pi_desc, it.fav_nome, it.om_sigla, it.emit_nome, it.emit_cod, it.fav_cod, it.ptres, it.nd, it.nd_desc, it.op].join(' ');
+      if(!bcmsMatchQuery(hay, q)) return false;
     }
     return true;
   });
@@ -5293,6 +5928,9 @@ function bcmsRenderHistorico(page){
   var tbody = document.getElementById('tbody-hist-ncs');
   if(!tbody) return;
 
+  var qEl = document.getElementById('flt-hist-busca');
+  var q = qEl ? qEl.value.trim() : '';
+
   if(pageItems.length === 0){
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:48px 16px;color:var(--ink-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="flt-limpa" style="margin-top:12px;" onclick="bcmsLimpaFiltrosHistorico()">✕ Limpar Filtros</button></td></tr>';
   } else {
@@ -5302,7 +5940,7 @@ function bcmsRenderHistorico(page){
       var statusCls = 'status-' + item.status_slug;
       var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 22) ? item.emit_nome.substring(0, 22) + '…' : (item.emit_nome || '—');
       var descCompleta = item.obj || '';
-      var descResumo = descCompleta.length > 118 ? (descCompleta.substring(0, 118) + '…') : descCompleta;
+      var descHtml = bcmsSmartSnippet(descCompleta, q, 118, '');
       var ncFull = String(item.nc || '');
       var mNc = ncFull.match(/NC(\d+)$/);
       var ncLbl = mNc ? ('<span class="nc-num">NC ' + mNc[1] + '</span> <span class="nc-ug">· ' + bcmsEsc(ncFull.substring(0,6)) + '</span>') : ('<span class="nc-num">' + bcmsEsc(ncFull) + '</span>');
@@ -5315,7 +5953,7 @@ function bcmsRenderHistorico(page){
         + '<td class="mono2" title="' + bcmsEsc(ncFull) + '">' + ncLbl + '</td>'
         + '<td title="' + bcmsEsc(item.fav_nome) + '"><span class="ug-pill fav">' + bcmsEsc(item.fav_cod) + '</span> <b>' + bcmsEsc(item.om_sigla) + '</b></td>'
         + '<td class="mono2">' + bcmsEsc(acaoNd) + '</td>'
-        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + bcmsEsc(descResumo) + '</td>'
+        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + descHtml + '</td>'
         + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
         + '<td class="mono2">' + bcmsEsc(item.dia || '—') + '</td>'
         + '<td class="num" data-sort="' + item.prov.toFixed(2) + '">' + bcmsBRL(item.prov) + '</td>'
@@ -5815,7 +6453,7 @@ function bcmsFiltraUHist(sfx){
   var fFonte = v('flt-uhist-fonte');
   var fPtres = v('flt-uhist-ptres');
   var fFaixa = v('flt-uhist-faixa');
-  var q = (v('flt-uhist-busca') || '').toLowerCase();
+  var q = v('flt-uhist-busca') || '';
 
   st.filtered = raw.filter(function(it){
     if(fPer){
@@ -5834,15 +6472,8 @@ function bcmsFiltraUHist(sfx){
       if(fFaixa === 'canc' && it.status_slug !== 'canc') return false;
     }
     if(q){
-      var match = (it.nc && it.nc.toLowerCase().indexOf(q) > -1) ||
-                  (it.obj && it.obj.toLowerCase().indexOf(q) > -1) ||
-                  (it.pi && it.pi.toLowerCase().indexOf(q) > -1) ||
-                  (it.pi_desc && it.pi_desc.toLowerCase().indexOf(q) > -1) ||
-                  (it.emit_nome && it.emit_nome.toLowerCase().indexOf(q) > -1) ||
-                  (it.emit_cod && String(it.emit_cod).indexOf(q) > -1) ||
-                  (it.ptres && it.ptres.toLowerCase().indexOf(q) > -1) ||
-                  (it.nd && it.nd.toLowerCase().indexOf(q) > -1);
-      if(!match) return false;
+      var hay = it.search_blob || [it.nc, it.obj, it.pi, it.pi_desc, it.emit_nome, it.emit_cod, it.ptres, it.nd, it.nd_desc, it.op].join(' ');
+      if(!bcmsMatchQuery(hay, q)) return false;
     }
     return true;
   });
@@ -5995,6 +6626,9 @@ function bcmsRenderUHist(sfx, page){
   var tbody = document.getElementById('tbody-uhist-ncs-' + sfx);
   if(!tbody) return;
 
+  var qEl = document.getElementById('flt-uhist-busca-' + sfx);
+  var q = qEl ? qEl.value.trim() : '';
+
   if(pageItems.length === 0){
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:48px 16px;color:var(--ink-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">🔍</span>Nenhuma Nota de Crédito encontrada para os filtros selecionados.<br><button type="button" class="flt-limpa" style="margin-top:12px;" onclick="bcmsLimpaFiltrosUHist(\'' + sfx + '\')">✕ Limpar Filtros</button></td></tr>';
   } else {
@@ -6004,7 +6638,7 @@ function bcmsRenderUHist(sfx, page){
       var statusCls = 'status-' + item.status_slug;
       var emitNomeCurto = (item.emit_nome && item.emit_nome.length > 22) ? item.emit_nome.substring(0, 22) + '…' : (item.emit_nome || '—');
       var descCompleta = item.obj || '';
-      var descResumo = descCompleta.length > 118 ? (descCompleta.substring(0, 118) + '…') : descCompleta;
+      var descHtml = bcmsSmartSnippet(descCompleta, q, 118, '');
       var ncFull = String(item.nc || '');
       var mNc = ncFull.match(/NC(\d+)$/);
       var ncLbl = mNc ? ('<span class="nc-num">NC ' + mNc[1] + '</span> <span class="nc-ug">· ' + bcmsEsc(ncFull.substring(0,6)) + '</span>') : ('<span class="nc-num">' + bcmsEsc(ncFull) + '</span>');
@@ -6016,7 +6650,7 @@ function bcmsRenderUHist(sfx, page){
         + '<td><span class="pill-fonte">' + bcmsEsc(item.fonte) + '</span></td>'
         + '<td class="mono2" title="' + bcmsEsc(ncFull) + '">' + ncLbl + '</td>'
         + '<td class="mono2">' + bcmsEsc(acaoNd) + '</td>'
-        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + bcmsEsc(descResumo) + '</td>'
+        + '<td class="obj" title="' + bcmsEsc(descCompleta) + '" data-full-desc="' + bcmsEsc(descCompleta) + '">' + descHtml + '</td>'
         + '<td title="' + bcmsEsc(item.emit_nome) + '"><span class="ug-pill emit">' + bcmsEsc(item.emit_cod) + '</span> <small>' + bcmsEsc(emitNomeCurto) + '</small></td>'
         + '<td class="mono2">' + bcmsEsc(item.dia || '—') + '</td>'
         + '<td class="num" data-sort="' + item.prov.toFixed(2) + '">' + bcmsBRL(item.prov) + '</td>'
