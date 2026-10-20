@@ -43,7 +43,11 @@ jobs:
           # Opcional: defina o secret DRIVE_FILE_ID nas configurações do repo.
           # Se ficar vazio, o script usa o ID padrão embutido.
           DRIVE_FILE_ID: ${{ secrets.DRIVE_FILE_ID }}
-        run: python gerar_dashboard.py
+        run: |
+          python gerar_dashboard.py
+          if [ -f "build_dashboard_v2.py" ]; then
+            python build_dashboard_v2.py
+          fi
 
       - name: Salvar histórico (commit se mudou)
         continue-on-error: true   # se faltar permissão de escrita, não derruba a publicação
