@@ -808,7 +808,12 @@ def tabela_html(tid, celulas, com_fonte, ativo):
     for c in celulas:
         fonte_curta = FONTE_CURTA.get(c.get("uasg", ""), "")
         fonte = f'<td><span class="pill-fonte">{esc(fonte_curta)}</span></td>' if com_fonte else ''
-        aplic = c.get("nd_nome") or c.get("pi_nome") or ""
+        pi_desc = c.get("pinome") or c.get("pi_nome") or ""
+        nd_desc = c.get("ndnome") or c.get("nd_nome") or ""
+        if pi_desc and ("CONSUMO" in nd_desc.upper() or "SERVICOS" in nd_desc.upper() or "APLICACOES" in nd_desc.upper() or "PERMANENTE" in nd_desc.upper()):
+            aplic = f'{nd_desc} · {pi_desc}'
+        else:
+            aplic = nd_desc or pi_desc or "—"
         cid = esc(c.get("cid", ""))
         is_zerada = c["cred"] <= 0.005
         liq_val = c.get("liq", 0.0)
@@ -1116,7 +1121,12 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
     idade_max = max(idades) if idades else 0
 
     def et_row(c):
-        aplic = c.get("nd_nome") or c.get("pi_nome") or ""
+        pi_desc = c.get("pinome") or c.get("pi_nome") or ""
+        nd_desc = c.get("ndnome") or c.get("nd_nome") or ""
+        if pi_desc and ("CONSUMO" in nd_desc.upper() or "SERVICOS" in nd_desc.upper() or "APLICACOES" in nd_desc.upper() or "PERMANENTE" in nd_desc.upper()):
+            aplic = f'{nd_desc} · {pi_desc}'
+        else:
+            aplic = nd_desc or pi_desc or "—"
         acao_nd = f'{c["acao"]} · {c["nd"]}'
         dias = c["dias"]
         if dias is None:
@@ -2220,6 +2230,26 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
     teladata_json = json.dumps(TELA, ensure_ascii=False).replace("</", "<\\/")
     histdata_json = json.dumps(histdata, ensure_ascii=False).replace("</", "<\\/")
     empenhosdata_json = json.dumps(empenhos_data, ensure_ascii=False).replace("</", "<\\/") if empenhos_data else "{}"
+    
+    # Salva dados atualizados em data/data.json e site/data/data.json
+    full_data_payload = {
+        "metadata": {"gerado_em": ger, "periodo": posicao},
+        "unidades": UNIDADES,
+        "celulas": CEL,
+        "ncdata": NCD,
+        "daydata": DAY,
+        "teladata": TELA,
+        "histdata": histdata,
+        "empenhodata": empenhos_data or {}
+    }
+    for d_target in [os.path.join(DATA, "data.json"), os.path.join(SITE, "data", "data.json")]:
+        try:
+            os.makedirs(os.path.dirname(d_target), exist_ok=True)
+            with open(d_target, "w", encoding="utf-8") as f_dtarget:
+                json.dump(full_data_payload, f_dtarget, ensure_ascii=False)
+        except Exception as _e_save:
+            print("[AVISO] Falha ao gravar data.json:", _e_save)
+
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
@@ -4434,6 +4464,9 @@ JS = r"""
    ========================================================================== */
 var BCMS_SYNONYMS = {
   'aquisicao': ['aqs', 'aq', 'compra', 'fornecimento', 'obtencao'],
+  'armario': ['armarios', 'armario', 'confeccao', 'fabricacao', 'marcenaria', 'madeira', 'compensado', 'insumos'],
+  'confeccao': ['fabricacao', 'producao', 'armarios', 'insumos', 'montagem'],
+  'blindado': ['bld', 'vbmtp', 'vbc', 'guarani', 'leopard', 'm113', 'motomecaniz', 'e5mbpdrdege'],
   'manutencao': ['mnt', 'manut', 'conservacao', 'reparo', 'recuperacao'],
   'viatura': ['vtr', 'vtne', 'vtp', 'vbr', 'veiculo', 'veiculos', 'viaturas', 'automovel', 'caminhao', 'marrua', 'hilux', 'ambulancia'],
   'veiculo': ['vtr', 'vtne', 'vtp', 'vbr', 'viatura', 'viaturas', 'veiculos', 'automovel', 'caminhao', 'marrua', 'hilux'],
