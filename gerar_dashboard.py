@@ -2843,7 +2843,13 @@ h1 {
   gap: 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.omds-nav-in::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .omds {
   flex: none;

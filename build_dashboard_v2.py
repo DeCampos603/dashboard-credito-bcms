@@ -117,7 +117,7 @@ body.modal-open {
 
 /* Banner de Defasagem de Dados & Contingência */
 .staleness-banner {
-  display: flex !important;
+  display: none !important;
   align-items: center !important;
   gap: 0.75rem !important;
   padding: 0.85rem 1.25rem !important;
@@ -130,6 +130,23 @@ body.modal-open {
   border: 1px solid rgba(239, 68, 68, 0.45) !important;
   color: #FCA5A5 !important;
   box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15) !important;
+}
+.staleness-banner.show {
+  display: flex !important;
+}
+
+/* Ocultação global e elegante de barras de rolagem nativas no Desktop */
+.omds-nav-in, .toptabs, .tabs, .tbl-wrap {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.omds-nav-in::-webkit-scrollbar,
+.toptabs::-webkit-scrollbar,
+.tabs::-webkit-scrollbar,
+.tbl-wrap::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .staleness-banner.staleness-cache {
   background: rgba(245, 158, 11, 0.14) !important;
@@ -337,7 +354,13 @@ button[aria-busy="true"], .btn[aria-busy="true"] {
   display: flex !important;
   align-items: center !important;
   gap: 0.65rem !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
+}
+@media (max-width: 1024px) {
+  .topbar-actions {
+    flex-wrap: wrap !important;
+  }
 }
 
 .status-live-pill {
@@ -800,20 +823,26 @@ table.det tbody tr.cel-row:focus-visible {
       var meta = (typeof RAW_METADATA !== 'undefined' ? RAW_METADATA : null);
       var b = document.getElementById('stalenessBanner');
       var txt = document.getElementById('stalenessText');
-      if (!b || !txt || !meta) return;
+      if (!b || !txt) return;
+      if (!meta) {
+        b.classList.remove('show');
+        b.style.display = 'none';
+        return;
+      }
       var iso = meta.gerado_em_iso;
       var usandoCache = meta.usando_cache;
       var agora = new Date();
       var dt = iso ? new Date(iso) : null;
       var diffHoras = dt ? (agora - dt) / (1000 * 3600) : 0;
       if (usandoCache) {
-        b.className = 'staleness-banner staleness-cache';
-        b.style.display = 'flex';
+        b.className = 'staleness-banner staleness-cache show';
         txt.innerHTML = '<strong>ATENÇÃO (MODO DE CONTINGÊNCIA / CACHE OFFLINE):</strong> O download do Google Drive não respondeu. Exibindo dados locais offline gerados em <b>' + (meta.gerado_em || 'data anterior') + '</b>. Novas notas emitidas recentemente podem não constar.';
       } else if (diffHoras > 24) {
-        b.className = 'staleness-banner';
-        b.style.display = 'flex';
+        b.className = 'staleness-banner show';
         txt.innerHTML = '<strong>ALERTA DE DEFASAGEM ORÇAMENTÁRIA:</strong> Base de dados gerada há mais de ' + Math.floor(diffHoras) + ' horas (' + (meta.gerado_em || '') + '). Verifique se o Google Drive foi abastecido com o último relatório do SIAFI / Tesouro Gerencial.';
+      } else {
+        b.classList.remove('show');
+        b.style.display = 'none';
       }
     })();
 """
