@@ -27,6 +27,10 @@ Uso:
     python gerar_dashboard.py --date 2026-07-14  # força a data do snapshot (default: hoje)
 """
 import os, sys, json, argparse, datetime, urllib.request, tempfile, html, math, re, shutil
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import openpyxl
 from rastreabilidade_empenhos import (
     DEFAULT_EMPENHOS_URL, baixar_empenhos, etl_empenhos,
@@ -248,14 +252,60 @@ def obter_extra_nc(nc_full, emit=""):
     return " · ".join(dict.fromkeys(p for p in partes if p))
 
 def baixar(file_id):
-    url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (dashboard-bcms)"})
+    cache_path = os.path.join(DATA, "credito_disp_cache.xlsx")
     tmp = os.path.join(tempfile.gettempdir(), "credito_disp_download.xlsx")
-    with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
-        f.write(r.read())
-    if os.path.getsize(tmp) < 1000:
-        raise SystemExit("Download muito pequeno — verifique o compartilhamento público do arquivo.")
-    return tmp
+    
+    urls = [
+        f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx",
+        f"https://drive.google.com/uc?export=download&id={file_id}",
+        f"https://docs.google.com/spreadsheets/u/0/d/{file_id}/export?format=xlsx"
+    ]
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*"
+    }
+
+    print(f"[DOWNLOAD] Baixando planilha de Créditos do Google Drive (File ID: {file_id})...")
+    import time
+    for attempt in range(1, 4):
+        for u in urls:
+            try:
+                req = urllib.request.Request(u, headers=headers)
+                with urllib.request.urlopen(req, timeout=45) as r:
+                    content = r.read()
+                    if len(content) > 4000 and content.startswith(b"PK\x03\x04"):
+                        with open(tmp, "wb") as f:
+                            f.write(content)
+                        try:
+                            os.makedirs(DATA, exist_ok=True)
+                            with open(cache_path, "wb") as f_cache:
+                                f_cache.write(content)
+                        except Exception as e_c:
+                            print("[AVISO] Falha ao salvar cache:", e_c)
+                        print(f"[OK] Download de créditos concluído com sucesso ({len(content):,} bytes).")
+                        return tmp, False
+                    elif b"<html" in content[:300].lower() or b"<!doctype" in content[:300].lower():
+                        print(f"[AVISO] Tentativa {attempt} em {u} retornou HTML (possível captcha/rate-limit).")
+            except Exception as e:
+                print(f"[AVISO] Tentativa {attempt} falhou ({u}): {e}")
+        time.sleep(2 * attempt)
+    
+    if os.path.exists(cache_path) and os.path.getsize(cache_path) > 4000:
+        try:
+            with open(cache_path, "rb") as f_cache:
+                header = f_cache.read(4)
+            if header == b"PK\x03\x04":
+                shutil.copyfile(cache_path, tmp)
+                print(f"\n[CONTINGÊNCIA ATIVADA] Download do Drive indisponível. Utilizando cache persistente ({cache_path}).")
+                return tmp, True
+        except Exception as e_cf:
+            print("[AVISO] Falha ao ler cache persistente:", e_cf)
+
+    raise SystemExit(
+        f"[ERRO CRÍTICO] Falha no download do Google Drive (ID: {file_id}) e nenhum cache válido encontrado.\n"
+        "Verifique o compartilhamento público do arquivo ou a conectividade da rede."
+    )
 
 # ---------------- ETL ----------------
 def _dt_br(s):
@@ -905,16 +955,27 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
             cid_seq[0] += 1
             cid = "%s_c%d" % (sfx, cid_seq[0])
             cid_map[key] = cid
-            ncs = sorted(([L["nc"], L["op"], round(L.get("prov") or L.get("cred", 0.0), 2),
-                           (L.get("nc_origem", {}) or {}).get("obj") or L["obj"],
-                           L.get("emit", ""), L.get("dia", "")]
-                          for L in lin_idx.get(key, []) if L.get("nc") and str(L["nc"]).strip() != '-9'), key=lambda x: -x[2])
+            linhas_cel = lin_idx.get(key, [])
+            ncs = []
+            soma_centavos = 0.0
+            for L in linhas_cel:
+                if not L.get("nc") or str(L["nc"]).strip() == '-9':
+                    continue
+                v_nc = round(L.get("prov") or L.get("cred", 0.0), 2)
+                op_nome = L["op"]
+                if v_nc < 0 and abs(v_nc) < 1.00:
+                    soma_centavos += v_nc
+                    op_nome = "AJUSTE TÉCNICO DE CENTAVOS"
+                obj_nc = (L.get("nc_origem", {}) or {}).get("obj") or L["obj"]
+                ncs.append([L["nc"], op_nome, v_nc, obj_nc, L.get("emit", ""), L.get("dia", "")])
+            ncs.sort(key=lambda x: -x[2])
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
                             "acao": c["acao"], "pi": c["pi"], "pinome": c.get("pi_nome", ""),
                             "nd": c["nd"], "ndnome": c.get("nd_nome", ""),
                             "r": round(c["aloc"], 2), "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
-                            "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2), "ncs": ncs}
+                            "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2),
+                            "ajuste_centavos": round(soma_centavos, 2), "ncs": ncs}
         c["cid"] = cid
         c["ncs_search"] = " ".join(
             f'{n[0]} {n[1]} {n[3]} {n[4]} {obter_extra_nc(n[0], n[4])}'
@@ -2170,7 +2231,7 @@ def secao_historico_ncs(res, hist, data_str, periodo):
     return frag, histdata_payload
 
 # ---------------- shell da página (multi-OMDS) ----------------
-def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data=None):
+def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data=None, usando_cache=False):
     hist_frag, histdata = secao_historico_ncs(res, hist, data_str, periodo)
 
     frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
@@ -2233,7 +2294,12 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
     
     # Salva dados atualizados em data/data.json e site/data/data.json
     full_data_payload = {
-        "metadata": {"gerado_em": ger, "periodo": posicao},
+        "metadata": {
+            "gerado_em": ger,
+            "gerado_em_iso": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "periodo": posicao,
+            "usando_cache": usando_cache
+        },
         "unidades": UNIDADES,
         "celulas": CEL,
         "ncdata": NCD,
@@ -2249,6 +2315,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
                 json.dump(full_data_payload, f_dtarget, ensure_ascii=False)
         except Exception as _e_save:
             print("[AVISO] Falha ao gravar data.json:", _e_save)
+    meta_json = json.dumps(full_data_payload["metadata"], ensure_ascii=False).replace("</", "<\\/")
 
     return f"""<!doctype html><html lang="pt-BR" style="--accent:{u0['accent']}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -2292,7 +2359,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
   <p><b>Metodologia:</b> Crédito Disponível = Provisão Recebida − Provisão Concedida − Despesas Empenhadas (saldo líquido não empenhado no Tesouro Gerencial / SIAFI). O detalhe é o saldo real por célula orçamentária (Ação · PI · ND). A soma das células reconcilia com exatidão matemática com o total consolidado de cada OM.</p>
   <p>Fonte: CRÉDITO DISP.xlsx & EMPENHOS EMITIDOS (Google Drive / Tesouro Gerencial) · <b>⏱ Dados com defasagem de aproximadamente 24 horas.</b> · Painel atualizado em {esc(ger)}</p>
 </footer>
-<script>var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};var HISTDATA={histdata_json};var EMPENHODATA={empenhosdata_json};</script>
+<script>var RAW_METADATA={meta_json};var CELDATA={celdata_json};var NCDATA={ncdata_json};var DAYDATA={daydata_json};var TELADATA={teladata_json};var UNIDADES={ujs};var HISTDATA={histdata_json};var EMPENHODATA={empenhosdata_json};</script>
 <script>{JS}
 {JS_RASTREIO}</script>
 </body></html>"""
@@ -4813,6 +4880,9 @@ function bcmsSearch(inp,tid){
   if(!tb)return;
   var rows=tb.querySelectorAll('tr');
   var chkZero = document.getElementById('chk-zero-' + tid);
+  if(q.length >= 3 && chkZero && chkZero.checked){
+    chkZero.checked = false;
+  }
   var hideZero = chkZero ? chkZero.checked : false;
   var selRankOM = (tid === 'tab-ranking-det') ? document.getElementById('flt-rank-om') : null;
   var fRankOM = (selRankOM && selRankOM.value) ? selRankOM.value.trim() : '';
@@ -6808,8 +6878,12 @@ def main():
     args = ap.parse_args()
 
     data_str = args.date or datetime.date.today().isoformat()
-    path = args.local if args.local else baixar(args.file_id)
-    print("Fonte Créditos:", path)
+    usando_cache = False
+    if args.local:
+        path = args.local
+    else:
+        path, usando_cache = baixar(args.file_id)
+    print("Fonte Créditos:", path, "(Modo Contingência / Cache)" if usando_cache else "")
     res, periodo, alertas = etl(path)
 
     # Empenhos
@@ -6825,7 +6899,7 @@ def main():
     for a in alertas:
         print("[ALERTA]", a)
     hist = atualizar_historico(res, data_str)
-    html_out = montar_pagina(res, hist, data_str, periodo, alertas, empenhos_data=emp_data)
+    html_out = montar_pagina(res, hist, data_str, periodo, alertas, empenhos_data=emp_data, usando_cache=usando_cache)
 
     os.makedirs(SITE, exist_ok=True)
     os.makedirs(os.path.join(SITE, "data"), exist_ok=True)
@@ -6845,8 +6919,30 @@ def main():
         json.dump(hist, f, ensure_ascii=False, indent=1)
 
     tot = {k: sum(res[c][k] for c, _ in ALVOS) for k in ("prov", "cred", "emp", "liq", "pag")}
-    print(f"OK -> {os.path.join(SITE,'index.html')}")
+    print(f"OK Base V1 -> {os.path.join(SITE,'index.html')}")
     print(f"Periodo={periodo} | Credito Disp total={brl(tot['cred'])} | historico {len(hist)} dia(s)")
+
+    # 1. Compilação do Dashboard V2 Pro (Unificação do Pipeline)
+    print("\n[PIPELINE UNIFICADO] Compilando Dashboard V2 Pro...")
+    try:
+        import build_dashboard_v2
+        build_dashboard_v2.build()
+    except Exception as e_v2:
+        print(f"[ERRO PIPELINE] Falha ao compilar Dashboard V2 Pro: {e_v2}")
+        sys.exit(1)
+
+    # 2. Sentinela de Integridade Multi-OMDS
+    print("\n[PIPELINE UNIFICADO] Executando auditoria sentinela multi-OMDS...")
+    try:
+        from scripts.pipeline_sentinel import auditar_pipeline
+        auditar_pipeline()
+    except Exception as e_sentinel:
+        print(f"[ERRO PIPELINE] Falha na auditoria sentinela: {e_sentinel}")
+        sys.exit(1)
+
+    print("\n==================================================================")
+    print("  ✓ PIPELINE UNIFICADO CONCLUÍDO (ETL + V2 PRO + SENTINELA 6 OMDS)")
+    print("==================================================================")
 
 if __name__ == "__main__":
     main()

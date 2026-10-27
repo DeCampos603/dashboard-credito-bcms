@@ -38,27 +38,22 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Gerar o dashboard (baixa do Drive)
+      - name: Gerar o dashboard unificado (Drive + V2 Pro + Sentinela Multi-OMDS)
         env:
-          # Opcional: defina o secret DRIVE_FILE_ID nas configurações do repo.
-          # Se ficar vazio, o script usa o ID padrão embutido.
           DRIVE_FILE_ID: ${{ secrets.DRIVE_FILE_ID }}
         run: |
           python gerar_dashboard.py
-          if [ -f "build_dashboard_v2.py" ]; then
-            python build_dashboard_v2.py
-          fi
 
-      - name: Salvar histórico (commit se mudou)
+      - name: Salvar histórico e cache persistente (commit se mudou)
         continue-on-error: true   # se faltar permissão de escrita, não derruba a publicação
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history.json
+          git add data/history.json data/data.json data/credito_disp_cache.xlsx
           if git diff --staged --quiet; then
-            echo "Sem mudança no histórico."
+            echo "Sem mudança no histórico ou cache."
           else
-            git commit -m "Atualiza histórico diário [skip ci]"
+            git commit -m "Atualiza histórico diário e cache persistente [skip ci]"
             git push
           fi
 

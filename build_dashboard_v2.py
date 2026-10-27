@@ -115,6 +115,39 @@ body.modal-open {
   vertical-align: middle !important;
 }
 
+/* Banner de Defasagem de Dados & Contingência */
+.staleness-banner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.85rem 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+  border-radius: var(--radius-lg, 12px) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  color: #FCA5A5 !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15) !important;
+}
+.staleness-banner.staleness-cache {
+  background: rgba(245, 158, 11, 0.14) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  color: #FCD34D !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15) !important;
+}
+.badge-ajuste-centavos {
+  background: rgba(148, 163, 184, 0.15) !important;
+  color: #94A3B8 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  margin-left: 6px !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+}
+
 /* CARDS, PAINÉIS & CONTAINERS COM DESIGN TOKENS FIGMA */
 .card, .kpi, .painel, .ranking-podium, .tab-pane {
   background: var(--figma-bg-card, #111827) !important;
@@ -707,6 +740,7 @@ table.det tbody tr.cel-row:focus-visible {
 
     # Serialize datasets
     print("3. Serializando variáveis de dados para o bundle...")
+    embedded_metadata = json.dumps(raw_data.get("metadata", {}), ensure_ascii=False)
     embedded_celdata = json.dumps(raw_data["celulas"], ensure_ascii=False)
     embedded_ncdata = json.dumps(raw_data["ncdata"], ensure_ascii=False)
     embedded_daydata = json.dumps(raw_data["daydata"], ensure_ascii=False)
@@ -760,6 +794,28 @@ table.det tbody tr.cel-row:focus-visible {
         }
       }
     });
+
+    // 4. Verificação de Defasagem de Dados e Alerta de Validade
+    (function(){
+      var meta = (typeof RAW_METADATA !== 'undefined' ? RAW_METADATA : null);
+      var b = document.getElementById('stalenessBanner');
+      var txt = document.getElementById('stalenessText');
+      if (!b || !txt || !meta) return;
+      var iso = meta.gerado_em_iso;
+      var usandoCache = meta.usando_cache;
+      var agora = new Date();
+      var dt = iso ? new Date(iso) : null;
+      var diffHoras = dt ? (agora - dt) / (1000 * 3600) : 0;
+      if (usandoCache) {
+        b.className = 'staleness-banner staleness-cache';
+        b.style.display = 'flex';
+        txt.innerHTML = '<strong>ATENÇÃO (MODO DE CONTINGÊNCIA / CACHE OFFLINE):</strong> O download do Google Drive não respondeu. Exibindo dados locais offline gerados em <b>' + (meta.gerado_em || 'data anterior') + '</b>. Novas notas emitidas recentemente podem não constar.';
+      } else if (diffHoras > 24) {
+        b.className = 'staleness-banner';
+        b.style.display = 'flex';
+        txt.innerHTML = '<strong>ALERTA DE DEFASAGEM ORÇAMENTÁRIA:</strong> Base de dados gerada há mais de ' + Math.floor(diffHoras) + ' horas (' + (meta.gerado_em || '') + '). Verifique se o Google Drive foi abastecido com o último relatório do SIAFI / Tesouro Gerencial.';
+      }
+    })();
 """
 
     print("4. Montando HTML final unificado...")
@@ -786,10 +842,15 @@ table.det tbody tr.cel-row:focus-visible {
 <body>
   <div class="bcms-bar" aria-hidden="true"></div>
   <div class="app-container wrap">
+    <div id="stalenessBanner" class="staleness-banner" style="display:none;" role="alert">
+      <svg class="figma-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div id="stalenessText"></div>
+    </div>
 {body_inner}
   </div>
 
   <script>
+    var RAW_METADATA = {embedded_metadata};
     var CELDATA = {embedded_celdata};
     var NCDATA = {embedded_ncdata};
     var DAYDATA = {embedded_daydata};
