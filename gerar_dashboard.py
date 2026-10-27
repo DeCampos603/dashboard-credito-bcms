@@ -2343,7 +2343,17 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
     </button>
   </div>
 </header>
-<nav class="omds-nav" aria-label="Trocar de organização militar"><div class="omds-nav-in">{omds}</div></nav>
+<nav class="omds-nav" aria-label="Trocar de organização militar">
+  <div class="omds-nav-wrap">
+    <button type="button" class="omds-scroll-btn omds-scroll-prev hidden" id="omdsScrollPrev" aria-label="Rolar para esquerda" onclick="bcmsScrollOMDS(-1)" title="Rolar para esquerda">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="omds-nav-in" id="omdsNavIn" onscroll="bcmsUpdateOMDSScrollButtons()">{omds}</div>
+    <button type="button" class="omds-scroll-btn omds-scroll-next" id="omdsScrollNext" aria-label="Rolar para direita" onclick="bcmsScrollOMDS(1)" title="Rolar para direita">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</nav>
 <main class="wrap">
   {banner}
   {"".join(frags)}
@@ -2835,10 +2845,17 @@ h1 {
   position: relative;
   z-index: 30;
 }
-.omds-nav-in {
+.omds-nav-wrap {
+  position: relative;
   max-width: min(98vw, 1860px);
   margin: 0 auto;
-  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+}
+.omds-nav-in {
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 42px;
   display: flex;
   gap: 10px;
   overflow-x: auto;
@@ -2846,6 +2863,41 @@ h1 {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+.omds-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 35;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--bg-card, #1E293B);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+  color: var(--ink, #F8FAFC);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity .2s ease, transform .2s ease, background-color .2s ease;
+  opacity: 0.88;
+}
+.omds-scroll-btn:hover {
+  opacity: 1;
+  background: var(--surface, #2D3748);
+  transform: translateY(-50%) scale(1.08);
+}
+.omds-scroll-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.omds-scroll-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.omds-scroll-prev { left: 6px; }
+.omds-scroll-next { right: 6px; }
 .omds-nav-in::-webkit-scrollbar {
   display: none;
   width: 0;
@@ -4877,6 +4929,41 @@ function trocaOMDSPorKey(key){
     }
   }, 100);
 })();
+
+
+function bcmsScrollOMDS(direction) {
+  var el = document.getElementById('omdsNavIn') || document.querySelector('.omds-nav-in');
+  if (!el) return;
+  var step = Math.max(220, Math.floor(el.clientWidth * 0.65));
+  el.scrollBy({ left: direction * step, behavior: 'smooth' });
+}
+
+function bcmsUpdateOMDSScrollButtons() {
+  var el = document.getElementById('omdsNavIn') || document.querySelector('.omds-nav-in');
+  var prev = document.getElementById('omdsScrollPrev');
+  var next = document.getElementById('omdsScrollNext');
+  if (!el || !prev || !next) return;
+  var maxScroll = el.scrollWidth - el.clientWidth;
+  if (maxScroll <= 8) {
+    prev.classList.add('hidden');
+    next.classList.add('hidden');
+    return;
+  }
+  if (el.scrollLeft <= 8) {
+    prev.classList.add('hidden');
+  } else {
+    prev.classList.remove('hidden');
+  }
+  if (el.scrollLeft >= maxScroll - 8) {
+    next.classList.add('hidden');
+  } else {
+    next.classList.remove('hidden');
+  }
+}
+window.addEventListener('resize', bcmsUpdateOMDSScrollButtons);
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(bcmsUpdateOMDSScrollButtons, 150);
+});
 
 function bcmsSearch(inp,tid){
   var q=(inp.value||'').trim();

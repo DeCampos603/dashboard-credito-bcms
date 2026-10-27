@@ -135,6 +135,54 @@ body.modal-open {
   display: flex !important;
 }
 
+/* Botões de navegação lateral discretos para OMDS */
+.omds-nav-wrap {
+  position: relative !important;
+  max-width: min(98vw, 1860px) !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.omds-nav-in {
+  width: 100% !important;
+  padding: 10px 42px !important;
+}
+.omds-scroll-btn {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 40 !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: var(--figma-bg-card, #1E293B) !important;
+  border: 1px solid var(--figma-border-strong, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--figma-text-primary, #F8FAFC) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: opacity .18s ease, transform .18s ease, background-color .18s ease !important;
+  opacity: 0.9 !important;
+}
+.omds-scroll-btn:hover {
+  opacity: 1 !important;
+  background: var(--surface, #334155) !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+.omds-scroll-btn:active {
+  transform: translateY(-50%) scale(0.94) !important;
+}
+.omds-scroll-btn.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.omds-scroll-prev { left: 8px !important; }
+.omds-scroll-next { right: 8px !important; }
+
 /* Ocultação global e elegante de barras de rolagem nativas no Desktop */
 .omds-nav-in, .toptabs, .tabs, .tbl-wrap {
   scrollbar-width: none !important;
@@ -817,6 +865,41 @@ table.det tbody tr.cel-row:focus-visible {
         }
       }
     });
+
+    // 5. Navegação lateral com setas discretas da barra OMDS
+    window.bcmsScrollOMDS = function(direction) {
+      var el = document.getElementById('omdsNavIn') || document.querySelector('.omds-nav-in');
+      if (!el) return;
+      var step = Math.max(220, Math.floor(el.clientWidth * 0.65));
+      el.scrollBy({ left: direction * step, behavior: 'smooth' });
+    };
+
+    window.bcmsUpdateOMDSScrollButtons = function() {
+      var el = document.getElementById('omdsNavIn') || document.querySelector('.omds-nav-in');
+      var prev = document.getElementById('omdsScrollPrev');
+      var next = document.getElementById('omdsScrollNext');
+      if (!el || !prev || !next) return;
+      var maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 8) {
+        prev.classList.add('hidden');
+        next.classList.add('hidden');
+        return;
+      }
+      if (el.scrollLeft <= 8) {
+        prev.classList.add('hidden');
+      } else {
+        prev.classList.remove('hidden');
+      }
+      if (el.scrollLeft >= maxScroll - 8) {
+        next.classList.add('hidden');
+      } else {
+        next.classList.remove('hidden');
+      }
+    };
+
+    window.addEventListener('resize', window.bcmsUpdateOMDSScrollButtons);
+    setTimeout(window.bcmsUpdateOMDSScrollButtons, 120);
+    setTimeout(window.bcmsUpdateOMDSScrollButtons, 600);
 
     // 4. Verificação de Defasagem de Dados e Alerta de Validade
     (function(){
