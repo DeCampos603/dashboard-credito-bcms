@@ -135,6 +135,43 @@ body.modal-open {
   display: flex !important;
 }
 
+/* Chips de Contagem Regressiva e Prazos de Empenho (OAA/2026) */
+.chip-prazo {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1px 7px !important;
+  border-radius: 999px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  margin-left: 6px !important;
+  vertical-align: middle !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+}
+.chip-prazo-critica {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #F87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.25) !important;
+}
+.chip-prazo-atencao {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #FBBF24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+}
+.chip-prazo-normal {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34D399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+.chip-prazo-vencido {
+  background: rgba(148, 163, 184, 0.15) !important;
+  color: #94A3B8 !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+}
+
 /* Botões de navegação lateral discretos para OMDS */
 .omds-nav-wrap {
   position: relative !important;

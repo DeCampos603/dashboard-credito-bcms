@@ -315,6 +315,74 @@ def _dt_br(s):
     except Exception:
         return None
 
+
+_MESES_BR = {
+    'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6,
+    'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
+}
+_RE_PRAZO_DATA = re.compile(
+    r'(?:EMPENH(?:AR|O)?|EMPH|RECOLH(?:ER|IMENTO)?|PRAZO|LIMITE|VENCIMENTO).*?'
+    r'(?:AT[ÉE]|ATE)\s+(\d{1,2})\s*(?:DE|\/)?\s*([A-Z]{3}|\d{1,2})\s*(?:DE|\/)?\s*(\d{2,4})?',
+    re.IGNORECASE
+)
+_RE_PRAZO_IMEDIATO = re.compile(
+    r'\b(?:EMPENH(?:AR|O)?|EMPH|RECOLH(?:ER|IMENTO)?)\s+(?:IMEDIATO|IMTO|URGENTE)\b',
+    re.IGNORECASE
+)
+
+def extrair_prazo_empenho(obj_texto, ref_date=None):
+    if not obj_texto:
+        return None
+    if ref_date is None:
+        ref_date = datetime.date.today()
+    t = str(obj_texto).upper()
+    if _RE_PRAZO_IMEDIATO.search(t) or 'EMPENHO IMEDIATO' in t or 'EMPH IMTO' in t or 'EMPH IMEDIATO' in t:
+        return {
+            'tipo': 'imediato',
+            'txt': 'EMPENHO IMEDIATO',
+            'data': None,
+            'dias': 0,
+            'urgencia': 'critica'
+        }
+    m = _RE_PRAZO_DATA.search(t)
+    if m:
+        try:
+            dia = int(m.group(1))
+            mes_s = m.group(2).upper()
+            mes = int(mes_s) if mes_s.isdigit() else _MESES_BR.get(mes_s[:3])
+            if not mes:
+                return None
+            ano = int(m.group(3)) if m.group(3) else 2026
+            if ano < 100:
+                ano += 2000
+            dt = datetime.date(ano, mes, dia)
+            dias = (dt - ref_date).days
+            if dias < 0:
+                urg = 'vencido'
+                txt = f'Vencido em {dia:02d}/{mes:02d}'
+            elif dias == 0:
+                urg = 'critica'
+                txt = 'Vence HOJE'
+            elif dias <= 5:
+                urg = 'critica'
+                txt = f'Empenho até {dia:02d}/{mes:02d} ({dias}d)'
+            elif dias <= 15:
+                urg = 'atencao'
+                txt = f'Empenho até {dia:02d}/{mes:02d} ({dias}d)'
+            else:
+                urg = 'normal'
+                txt = f'Empenho até {dia:02d}/{mes:02d}'
+            return {
+                'tipo': 'data',
+                'txt': txt,
+                'data': dt.isoformat(),
+                'dias': dias,
+                'urgencia': urg
+            }
+        except Exception:
+            return None
+    return None
+
 def _eh_troca_nd(txt):
     t = norm(str(txt or ""))
     return any(k in t for k in ("MUDANCA DE ND", "ALTERACAO DE ND", "TROCA DE ND", "DETALHAMENTO DE ND", "REMANEJAMENTO DE ND"))
@@ -878,7 +946,7 @@ def tabela_html(tid, celulas, com_fonte, ativo):
             f'title="Ver as notas de crédito desta célula (descrição completa)" '
             f'onclick="bcmsCel(this)" onkeydown="if(event.key==\'Enter\'||event.key==\' \'){{event.preventDefault();bcmsCel(this)}}">'
             f'{fonte}<td>{esc(c["acao"])}</td><td class="mono2">{esc(c["pi"])}</td><td class="mono2">{esc(c["nd"])}</td>'
-            f'<td class="obj" title="{esc(aplic)}" data-full-desc="{esc(aplic)}">{esc(aplic[:60])}</td>'
+            f'<td class="obj" title="{esc(aplic)}" data-full-desc="{esc(aplic)}">{esc(aplic[:60])}' + (f' <span class="chip-prazo chip-prazo-{c["prazo_urgente"]["urgencia"]}">{esc(c["prazo_urgente"]["txt"])}</span>' if (c.get("prazo_urgente") and not is_zerada) else '') + '</td>'
             f'<td class="num" data-sort="{c["aloc"]:.2f}">{esc(brl(c["aloc"]))}</td>'
             f'<td class="num" data-sort="{c["emp"]:.2f}">{esc(brl(c["emp"]))}</td>'
             f'<td class="num" data-sort="{liq_val:.2f}">{liq_fmt}</td>'
@@ -958,6 +1026,7 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
             linhas_cel = lin_idx.get(key, [])
             ncs = []
             soma_centavos = 0.0
+            prazos_positivos = []
             for L in linhas_cel:
                 if not L.get("nc") or str(L["nc"]).strip() == '-9':
                     continue
@@ -967,15 +1036,32 @@ def conteudo_unidade(res, hist, data_str, periodo, u, u_hist_items=None):
                     soma_centavos += v_nc
                     op_nome = "AJUSTE TÉCNICO DE CENTAVOS"
                 obj_nc = (L.get("nc_origem", {}) or {}).get("obj") or L["obj"]
-                ncs.append([L["nc"], op_nome, v_nc, obj_nc, L.get("emit", ""), L.get("dia", "")])
+                p_nc = extrair_prazo_empenho(obj_nc)
+                if v_nc > 0 and p_nc and p_nc.get("urgencia") in ("critica", "atencao", "normal"):
+                    prazos_positivos.append(p_nc)
+                ncs.append([L["nc"], op_nome, v_nc, obj_nc, L.get("emit", ""), L.get("dia", ""), p_nc])
             ncs.sort(key=lambda x: -x[2])
+
+            prazo_urgente = None
+            if c["cred"] > 0.005 and prazos_positivos:
+                criticos = [p for p in prazos_positivos if p["urgencia"] == "critica"]
+                atencao = [p for p in prazos_positivos if p["urgencia"] == "atencao"]
+                normais = [p for p in prazos_positivos if p["urgencia"] == "normal"]
+                if criticos:
+                    prazo_urgente = criticos[0]
+                elif atencao:
+                    prazo_urgente = atencao[0]
+                elif normais:
+                    prazo_urgente = normais[0]
+            c["prazo_urgente"] = prazo_urgente
+
             celdata[cid] = {"t": f'{c["acao"]} · PI {c["pi"]} · ND {c["nd"]}', "nome": c.get("nd_nome", ""),
                             "u": FONTE_CURTA.get(uasg, ""), "uasg": uasg,
                             "acao": c["acao"], "pi": c["pi"], "pinome": c.get("pi_nome", ""),
                             "nd": c["nd"], "ndnome": c.get("nd_nome", ""),
                             "r": round(c["aloc"], 2), "e": round(c["emp"], 2), "l": round(c.get("liq", 0.0), 2),
                             "p": round(c.get("pag", 0.0), 2), "d": round(c["cred"], 2),
-                            "ajuste_centavos": round(soma_centavos, 2), "ncs": ncs}
+                            "ajuste_centavos": round(soma_centavos, 2), "prazo_urgente": prazo_urgente, "ncs": ncs}
         c["cid"] = cid
         c["ncs_search"] = " ".join(
             f'{n[0]} {n[1]} {n[3]} {n[4]} {obter_extra_nc(n[0], n[4])}'
@@ -5709,7 +5795,11 @@ function bcmsCel(row){
       }
     }
 
-    itens+='<div class="m-nc" style="margin-bottom:8px;"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+linkNC+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
+    var badgePrazoNC = '';
+    if(n[6] && n[6].txt){
+      badgePrazoNC = ' <span class="chip-prazo chip-prazo-' + n[6].urgencia + '" style="font-size:0.65rem;padding:1px 6px;">' + bcmsEsc(n[6].txt) + '</span>';
+    }
+    itens+='<div class="m-nc" style="margin-bottom:8px;"><div class="m-nc-h"><span class="m-nc-num">'+bcmsEsc(n[0])+linkNC+badgePrazoNC+'</span><span class="m-nc-val'+(neg?' neg':'')+'">'+bcmsBRL(n[2])+'</span></div>';
     if(meta.length) itens+='<div class="m-nc-op">'+meta.join(' · ')+'</div>';
     if(n[3]) itens+='<div class="m-nc-desc">'+bcmsEsc(n[3])+'</div>';
     itens+='</div>';
