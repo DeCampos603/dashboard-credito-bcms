@@ -2839,7 +2839,8 @@ body {
 /* Topbar & Header */
 .bcms-bar {
   height: 4px;
-  background: linear-gradient(to right, var(--accent, #CE2B2B) 0%, var(--accent, #CE2B2B) 65%, var(--primary-600) 65%, var(--primary-600) 100%);
+  background: var(--accent, #DC2626);
+  transition: background-color var(--tr-smooth, 250ms ease);
 }
 .topbar {
   position: sticky;

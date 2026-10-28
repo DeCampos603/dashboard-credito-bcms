@@ -45,6 +45,8 @@ def build():
     if not body_match:
         raise ValueError("Falha ao extrair body da matriz.")
     body_inner = body_match.group(1)
+    # Remove qualquer barra bcms-bar residual de dentro do body_inner para evitar duplicidade de elementos
+    body_inner = re.sub(r'<div class="bcms-bar"[^>]*></div>\s*', '', body_inner)
 
     script_m = re.search(r'<script>\s*var\s+CELDATA\s*=', v1_html)
     script_start = script_m.start() if script_m else v1_html.find("<script")
@@ -377,6 +379,14 @@ button[aria-busy="true"], .btn[aria-busy="true"] {
   background: var(--bg-subtle) !important;
   color: var(--ink) !important;
   min-height: 38px !important;
+}
+
+/* LINHA SUPERIOR DE TEMA DA PÁGINA (Segue estritamente o tema da unidade ou parâmetro da tela) */
+.bcms-bar {
+  height: 4px !important;
+  width: 100% !important;
+  background: var(--accent, #DC2626) !important;
+  transition: background-color 250ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 /* TOPBAR EXECUTIVA MODERNIZADA */
