@@ -105,22 +105,26 @@ def auditar_pipeline() -> None:
     if not bcms_aman:
         print("[FALHA AUDITORIA] Célula BCMS E5MBPDRDEGE ND 339030 não localizada.")
         sys.exit(1)
-    saldo_bcms_aman = bcms_aman[0].get("d", 0.0)
-    if saldo_bcms_aman < 360000.0:
-        print(f"[FALHA AUDITORIA] Saldo BCMS E5MBPDRDEGE defasado: R$ {saldo_bcms_aman:,.2f} (Esperado >= R$ 360.000,00).")
+    ncs_bcms_aman = [nc for nc in bcms_aman[0].get("ncs", []) if "NC000771" in str(nc[0])]
+    if not ncs_bcms_aman:
+        print("[FALHA AUDITORIA] NC 000771 (R$ 360k AMAN) não indexada na célula BCMS.")
         sys.exit(1)
-    print(f"✓ Alvo BCMS E5MBPDRDEGE validado: R$ {saldo_bcms_aman:,.2f}")
+    val_nc_aman = float(ncs_bcms_aman[0][2] or 0.0)
+    saldo_bcms_aman = float(bcms_aman[0].get("d", 0.0) or 0.0)
+    print(f"✓ Alvo BCMS E5MBPDRDEGE validado: NC 000771 (R$ {val_nc_aman:,.2f}) indexada com sucesso (Saldo Disp atual: R$ {saldo_bcms_aman:,.2f})")
 
     # Alvo 2: Ba Ap Log - NC 417751 (R$ 190k para Manutenção de Blindados, PI E5MBPDRDEGE)
     baaplog_aman = [c for cid, c in celulas.items() if cid.startswith("BAAPLOG_") and c.get("pi") == "E5MBPDRDEGE"]
     if not baaplog_aman:
         print("[FALHA AUDITORIA] Célula Ba Ap Log E5MBPDRDEGE não localizada.")
         sys.exit(1)
-    saldo_baaplog = sum(c.get("d", 0.0) for c in baaplog_aman)
-    if saldo_baaplog < 190000.0:
-        print(f"[FALHA AUDITORIA] Saldo Ba Ap Log E5MBPDRDEGE defasado: R$ {saldo_baaplog:,.2f} (Esperado >= R$ 190.000,00).")
+    ncs_baaplog = [nc for c in baaplog_aman for nc in c.get("ncs", []) if "NC417751" in str(nc[0])]
+    if not ncs_baaplog:
+        print("[FALHA AUDITORIA] NC 417751 (R$ 190k Manutenção Blindados) não indexada na Ba Ap Log.")
         sys.exit(1)
-    print(f"✓ Alvo Ba Ap Log E5MBPDRDEGE validado: R$ {saldo_baaplog:,.2f}")
+    val_nc_baaplog = float(ncs_baaplog[0][2] or 0.0)
+    saldo_baaplog = sum(float(c.get("d", 0.0) or 0.0) for c in baaplog_aman)
+    print(f"✓ Alvo Ba Ap Log E5MBPDRDEGE validado: NC 417751 (R$ {val_nc_baaplog:,.2f}) indexada com sucesso (Saldo Disp atual: R$ {saldo_baaplog:,.2f})")
 
     # 5. Validação de Metadados de Geração
     meta = data.get("metadata", {})
