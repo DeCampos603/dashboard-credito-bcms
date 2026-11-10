@@ -202,14 +202,39 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         if not any(x["ne"] == item["ne"] for x in lst):
             lst.append(item)
 
+    row2 = [str(c or "").strip() for c in (rows[2] if len(rows) > 2 else [])]
+    has_sistema = any("SISTEMA" in h.upper() for h in row2)
+    if has_sistema:
+        col_ne, col_fav_doc, col_fav_nome, col_val = 4, 5, 6, 7
+        col_nd, col_nd_desc, col_pi, col_pi_desc = 8, 9, 10, 11
+        col_desc = 20
+        col_mov_emp, col_a_liquidar, col_liquidado_pago = 25, 27, 28
+    else:
+        col_ne, col_fav_doc, col_fav_nome, col_val = 3, 4, 5, 6
+        col_nd, col_nd_desc, col_pi, col_pi_desc = 7, 8, 9, 10
+        col_desc = 11
+        col_mov_emp, col_a_liquidar, col_liquidado_pago = 14, 15, 21
+
+    def _to_clean_num(v):
+        if v is None: return 0.0
+        if isinstance(v, (int, float)): return float(v)
+        s = str(v).strip().replace("'", "")
+        try:
+            return float(s.replace(".", "").replace(",", "."))
+        except Exception:
+            return 0.0
+
+    cur_dia = ""
     for r in rows[5:]:
         if not r: continue
         if r[0] is not None and str(r[0]).strip() != "":
             ug_cur = str(r[0]).strip().replace("'", "")
         if r[1] is not None and str(r[1]).strip() != "":
             ug_nome_cur = str(r[1]).strip().replace("'", "")
+        if r[2] is not None and str(r[2]).strip() != "":
+            cur_dia = str(r[2]).strip()
 
-        ne_full = str(r[3] or "").strip().replace("'", "")
+        ne_full = str(r[col_ne] or "").strip().replace("'", "")
         if not ne_full or "NE" not in ne_full or ne_full == "-9":
             continue
 
@@ -218,28 +243,21 @@ def etl_empenhos(path, res_credito, todas_ncs_dict=None):
         except Exception:
             _rest_siafi = lambda x: str(x or "").strip()
 
-        dia = str(r[2] or "").strip()
-        fav_doc = str(r[4] or "").strip().replace("'", "")
-        fav_nome = _rest_siafi(str(r[5] or "").strip())
-        val_raw = r[6]
-        try:
-            val = float(str(val_raw).replace("'", "").strip())
-        except Exception:
-            val = 0.0
+        dia = cur_dia
+        fav_doc = str(r[col_fav_doc] or "").strip().replace("'", "")
+        fav_nome = _rest_siafi(str(r[col_fav_nome] or "").strip())
+        val = _to_clean_num(r[col_val])
 
-        nd = str(r[7] or "").strip()
-        nd_desc = _rest_siafi(str(r[8] or "").strip())
-        pi = str(r[9] or "").strip()
-        pi_desc = _rest_siafi(str(r[10] or "").strip())
-        desc = _rest_siafi(str(r[11] or "").strip())
+        nd = str(r[col_nd] or "").strip()
+        nd_desc = _rest_siafi(str(r[col_nd_desc] or "").strip())
+        pi = str(r[col_pi] or "").strip()
+        pi_desc = _rest_siafi(str(r[col_pi_desc] or "").strip())
+        desc = _rest_siafi(str(r[col_desc] or "").strip())
 
         # Saldo das contas contábeis
-        try: mov_emp = float(str(r[14] or 0).replace("'", "").strip())
-        except Exception: mov_emp = 0.0
-        try: a_liquidar = float(str(r[15] or 0).replace("'", "").strip())
-        except Exception: a_liquidar = 0.0
-        try: liquidado_pago = float(str(r[21] or 0).replace("'", "").strip())
-        except Exception: liquidado_pago = 0.0
+        mov_emp = _to_clean_num(r[col_mov_emp] if len(r) > col_mov_emp else 0)
+        a_liquidar = _to_clean_num(r[col_a_liquidar] if len(r) > col_a_liquidar else 0)
+        liquidado_pago = _to_clean_num(r[col_liquidado_pago] if len(r) > col_liquidado_pago else 0)
 
         # Identificação da Liquidação na Célula Contábil do SIAFI
         nd_elem = nd[:4] + "00" if len(nd) >= 6 else nd

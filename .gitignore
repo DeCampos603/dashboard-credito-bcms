@@ -1,5 +1,6 @@
-# Artefato de build (o site é gerado a cada execução do Actions)
-site/
+# Arquivos HTML legados e dados brutos redundantes no site
+site/legacy_*.html
+site/data/
 
 # Saídas geradas (planilhas .xlsx dos relatórios)
 relatorios/

@@ -18,10 +18,10 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # Caminhos canônicos do workspace
 ROOT_DIR = pathlib.Path(__file__).parent
-V1_HTML_PATH = ROOT_DIR / "site" / "index.html"
+V1_HTML_PATH = ROOT_DIR / "site" / "legacy_v1.html"
 DATA_JSON_PATH = ROOT_DIR / "data" / "data.json"
 HIST_JSON_PATH = ROOT_DIR / "data" / "history.json"
-OUT_HTML_PATH = ROOT_DIR / "site" / "index.html"
+OUT_HTML_PATH = ROOT_DIR / "site" / "legacy_v2.html"
 
 def build():
     print("==================================================================")

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SICOF 3.0 — Sistema Integrado de Inteligência Orçamentária</title>
+  
+  <!-- Fontes Oficiais de Alta Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css?v=3.7">
+</head>
+<body>
+
+  <!-- Barra de Leitura Superior (CSS Scroll-Driven Animations) -->
+  <div class="reading-bar" aria-hidden="true"></div>
+
+  <!-- Fundo Animado WebGL (Shader GLSL Fluido 60fps) -->
+  <canvas id="motion-canvas" aria-hidden="true"></canvas>
+
+  <div class="app-container">
+    
+    <!-- 1. HEADER EXECUTIVO -->
+    <header class="executive-header">
+      <div class="header-branding">
+        <div class="brand-badge">3.0</div>
+        <div class="brand-title">
+          <h1>SICOF 3.0 • Sistema Integrado de Controle Orçamentário e Financeiro</h1>
+          <p>Base de Apoio Logístico & OMDS Subordinadas</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Botão Alternador de Tema Branco / Alto Contraste -->
+        <button id="btn-toggle-theme" class="btn-theme-toggle" title="Alternar entre Modo Escuro e Tema Branco de Alto Contraste (WCAG AAA)" aria-label="Alternar tema de contraste">
+          <span id="theme-btn-icon" style="font-size: 1.1rem;">☀️</span>
+          <span id="theme-btn-text" style="font-weight: 700;">Tema Branco (Alto Contraste)</span>
+        </button>
+
+        <!-- Controle do Fundo Animado -->
+        <button id="btn-toggle-shader" class="btn-secondary" title="Alternar animação do fundo para economizar energia">
+          <span>✨ Shader 60fps</span>
+        </button>
+
+        <!-- Botão Exportação em Planilha Excel (.xlsx) -->
+        <button id="btn-export" class="btn-secondary btn-export-excel" title="Exportar dados completos em Planilha Excel (.xlsx) com múltiplas abas formatadas">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span style="font-weight: 700;">📊 Exportar Excel (.xlsx)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. VITRINE INICIAL DE LOGOS DAS UNIDADES (HERO HERÁLDICO) -->
+    <section class="omds-showcase-section" aria-label="Selecione uma Organização Militar">
+      <div class="showcase-header">
+        <div>
+          <h2>Organizações Militares Subordinadas</h2>
+          <p>Selecione o brasão da unidade para carregar os dados e a visão geral correspondente</p>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-emerald); font-weight: 600;">
+          ● Posição 29/10/2026 • 52 dias para o encerramento do exercício
+        </div>
+      </div>
+
+      <!-- Grid com as 7 opções (Consolidado + 6 OMs com Brasões Oficiais) -->
+      <div id="omds-logos-grid" class="logos-grid">
+        <!-- Injetado dinamicamente via dashboard-app.js -->
+      </div>
+    </section>
+
+    <!-- 3. BANNER DA UNIDADE SELECIONADA (LOGO ABAIXO DAS LOGOS) -->
+    <section class="unit-overview-banner" aria-label="Resumo da Unidade Selecionada">
+      <div class="unit-banner-left">
+        <div id="unit-banner-logo" class="unit-banner-logo-wrap">
+          <!-- Logo em destaque da OM -->
+        </div>
+        <div class="unit-banner-info">
+          <h2 id="unit-banner-nome">Carregando unidade...</h2>
+          <p id="unit-banner-desc">—</p>
+          <div id="unit-banner-tags" class="unit-tags-row">
+            <!-- Tags de UGs e status -->
+          </div>
+        </div>
+      </div>
+
+      <div class="unit-banner-right">
+        <!-- Seletor de Gestão Ordinário vs Fundo de Saúde -->
+        <div class="unit-sub-filters">
+          <button class="sub-filter-btn is-active" data-filter="all">Todas as Gestões</button>
+          <button class="sub-filter-btn" data-filter="ordinario">UG 160 (Ordinário)</button>
+          <button class="sub-filter-btn" data-filter="saude">UG 167 (Saúde)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. NAVEGAÇÃO POR ABAS DO SICOF (CRÉDITOS EM TELA COMO ABA PRINCIPAL) -->
+    <nav class="sicof-tabs-nav" aria-label="Navegação do Painel">
+      <button class="tab-nav-btn is-active" data-tab="tab-creditos-tela">
+        <span>🖥️ Créditos em Tela (Principal)</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-ranqueamento">
+        <span>🏆 Ranqueamento das Unidades</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-resumo-diario">
+        <span>📅 Resumo Diário</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-visao-geral">
+        <span>📊 Visão Geral & Velocidade</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-rastreabilidade">
+        <span>🔗 Rastreabilidade Crédito ➔ Empenho</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-empenhos">
+        <span>🔍 Auditoria de Empenhos (Bottom-Up)</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-fornecedores">
+        <span>🏢 Raio-X de Fornecedores & Pregões</span>
+      </button>
+      <button class="tab-nav-btn" data-tab="tab-riscos">
+        <span>⚠️ Monitor de Riscos Orçamentários</span>
+      </button>
+    </nav>
+
+    <!-- ====================================================================
+         ABA 1 (PRINCIPAL): CRÉDITOS EM TELA (NOTAS ATIVAS, PRAZOS E UGS 160/167)
+         ==================================================================== -->
+    <main id="tab-creditos-tela" class="tab-pane is-active">
+      <div class="table-panel">
+        <div class="table-toolbar">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              <span>Notas de Crédito em Tela</span>
+              <span id="tela-count-badge" class="badge-pill badge-cyan">0 itens</span>
+            </h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">
+              Créditos orçamentários disponíveis para empenho com identificação da UG (160 ou 167), prazos e dias em tela
+            </p>
+          </div>
+
+          <!-- Filtro rápido de UG e campo de busca -->
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <div class="ug-pill-filters" style="display: flex; gap: 0.35rem; background: rgba(0,0,0,0.3); padding: 0.25rem; border-radius: 10px; border: 1px solid var(--border-subtle);">
+              <button class="ug-filter-btn is-active" data-ug-filter="all">Todas as UGs</button>
+              <button class="ug-filter-btn" data-ug-filter="160">UG 160 (Ordinário)</button>
+              <button class="ug-filter-btn" data-ug-filter="167">UG 167 (Saúde)</button>
+            </div>
+
+            <div class="search-input-wrap">
+              <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="search-tela-input" class="search-input" placeholder="Buscar por NC, ND, PI ou objeto...">
+            </div>
+
+            <button id="btn-export-tela-tab" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.85rem; font-size: 0.78rem; font-weight: 700;" title="Exportar Créditos em Tela para Microsoft Excel (.xlsx formatado com ordenação)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Exportar Excel (.xlsx)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Totalizadores rápidos da tela -->
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">
+          <div>Total Disponível em Tela: <strong id="tela-total-val" style="color: var(--text-emerald); font-family: var(--font-mono);">R$ 0,00</strong></div>
+          <div>Média de Dias em Tela: <strong id="tela-dias-media" style="color: var(--text-amber); font-family: var(--font-mono);">0 dias</strong></div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable-th" data-table="tela" data-sort="nc" title="Ordenar por Nota de Crédito">Nota de Crédito <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="u" title="Ordenar por UG Gestora">UG Gestora <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="prazo" data-type="date" title="Ordenar por Prazo Limite">Prazo Limite <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="dias" data-type="number" title="Ordenar por Dias em Tela (Idade)">Dias em Tela <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="nd" title="Ordenar por Natureza de Despesa">Natureza de Despesa (ND) <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="pi" title="Ordenar por Plano Interno">Plano Interno (PI) <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="tela" data-sort="obj" title="Ordenar por Objeto/Finalidade">Objeto / Finalidade <span class="sort-icon">↕</span></th>
+                <th class="sortable-th is-active" data-table="tela" data-sort="v" data-type="number" style="text-align: right;" title="Ordenar por Saldo em Tela (Valor)">Saldo em Tela <span class="sort-icon">▼</span></th>
+              </tr>
+            </thead>
+            <tbody id="tela-table-body">
+              <!-- Injetado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ====================================================================
+         ABA: RANQUEAMENTO & PLACAR COMPARATIVO DAS OMDS SUBORDINADAS
+         ==================================================================== -->
+    <section id="tab-ranqueamento" class="tab-pane">
+      <div class="ranking-tab-content">
+        <!-- Topo do Ranqueamento com Título Executivo e Filtros de Critério -->
+        <div class="ranking-header-card">
+          <div class="ranking-brand">
+            <div class="ranking-trophy-badge" aria-hidden="true">🏆</div>
+            <div>
+              <div class="ranking-title-row">
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+                  Placar & Ranqueamento de Desempenho Orçamentário
+                </h3>
+                <span class="ranking-meta-pill">6 OMDS Subordinadas</span>
+              </div>
+              <p class="ranking-subtitle" style="margin: 0.35rem 0 0 0; font-size: 0.825rem; color: var(--text-muted);">
+                Classificação comparativa de eficiência orçamentária, comprometimento da dotação, liquidação e disponibilidade financeira entre as unidades.
+              </p>
+            </div>
+          </div>
+
+          <div class="ranking-controls">
+            <div class="ranking-criteria-buttons">
+              <span class="criteria-label">Critério de Classificação:</span>
+              <button class="rank-crit-btn is-active" data-crit="taxaEmpenho" title="Ordenar por Taxa de Comprometimento da Dotação">⚡ % Comprometido</button>
+              <button class="rank-crit-btn" data-crit="taxaLiquidacao" title="Ordenar por Taxa de Liquidação (Atesto)">📦 % Liquidado</button>
+              <button class="rank-crit-btn" data-crit="cred" title="Ordenar por Menor Saldo Remanescente">🛡️ Menor Saldo</button>
+              <button class="rank-crit-btn" data-crit="prov" title="Ordenar por Volume Total de Dotação">📊 Maior Volume</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaderboard com os 6 Cards das Unidades -->
+        <div id="ranking-items-container" class="ranking-leaderboard-grid">
+          <!-- Renderizado dinamicamente via dashboard-app.js -->
+        </div>
+
+        <!-- Tabela Comparativa Detalhada no Pé da Aba de Ranqueamento -->
+        <div class="table-panel" style="margin-top: 1.5rem;">
+          <div class="table-toolbar">
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <span>Quadro Comparativo Consolidado das Organizações Militares</span>
+                <span class="badge-pill badge-cyan">Exercício 2026</span>
+              </h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted);">
+                Visão tabular completa com cruzamento de dotação recebida, empenho, liquidação e saldo disponível por OM.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 75px; text-align: center;">Posição</th>
+                  <th>Organização Militar (OM)</th>
+                  <th style="text-align: right;">Dotação Recebida</th>
+                  <th style="text-align: right;">Empenhado</th>
+                  <th style="text-align: right;">Saldo Disponível</th>
+                  <th style="text-align: right;">Liquidado</th>
+                  <th style="text-align: right;">% Comprometido</th>
+                  <th style="text-align: right;">% Liquidado</th>
+                  <th style="text-align: center;">Navegar</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-table-body">
+                <!-- Injetado dinamicamente via renderRankingCard() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ABA 2: RESUMO DIÁRIO DE MOVIMENTAÇÕES (O QUE ACONTECEU NAS UNIDADES)
+         ==================================================================== -->
+    <section id="tab-resumo-diario" class="tab-pane">
+      <div class="table-panel">
+        <div class="viz-header">
+          <div>
+            <h3>Resumo Diário de Movimentações</h3>
+            <p>Registro cronológico diário de novos aportes, reduções/estornos e saldo líquido da unidade</p>
+          </div>
+        </div>
+
+        <div id="resumo-diario-container">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ABA 3: VISÃO GERAL & VELOCIDADE (BENTO HERO + GRÁFICO SVG)
+         ==================================================================== -->
+    <section id="tab-visao-geral" class="tab-pane">
+      
+      <!-- Bento Hero Grid: 6 KPIs Reais -->
+      <section class="bento-hero-grid" aria-label="Indicadores Financeiros Chave">
+        
+        <!-- Card 1: Provisionado -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Dotação Recebida</span>
+            <span class="card-icon" style="color: #94a3b8;">📊</span>
+          </div>
+          <div class="card-value" id="kpi-prov-val">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Aporte Total Alocado</span>
+            <span class="badge-pill" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">100% Base</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" style="width: 100%; background: #94a3b8;"></div>
+          </div>
+        </article>
+
+        <!-- Card 2: Empenhado -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Crédito Comprometido</span>
+            <span class="card-icon" style="color: #38bdf8;">⚡</span>
+          </div>
+          <div class="card-value" id="kpi-emp-val" style="color: var(--text-accent);">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Comprometimento da Dotação</span>
+            <span class="badge-pill badge-cyan" id="kpi-emp-pct">0,00%</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" id="kpi-emp-bar" style="width: 0%; background: var(--text-accent);"></div>
+          </div>
+        </article>
+
+        <!-- Card 3: Saldo Disponível -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Saldo Disponível</span>
+            <span class="card-icon" style="color: #34d399;">🛡️</span>
+          </div>
+          <div class="card-value" id="kpi-cred-val" style="color: var(--text-emerald);">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Saldo Remanescente</span>
+            <span class="badge-pill badge-emerald" id="kpi-cred-pct">0,00%</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" id="kpi-cred-bar" style="width: 0%; background: var(--text-emerald);"></div>
+          </div>
+        </article>
+
+        <!-- Card 4: Liquidado -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Despesa Liquidada</span>
+            <span class="card-icon" style="color: #fbbf24;">📦</span>
+          </div>
+          <div class="card-value" id="kpi-liq-val" style="color: var(--text-amber);">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Atesto dos Fornecedores</span>
+            <span class="badge-pill badge-amber" id="kpi-liq-pct">0,00%</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" id="kpi-liq-bar" style="width: 0%; background: var(--text-amber);"></div>
+          </div>
+        </article>
+
+        <!-- Card 5: Pago -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Pagamento Efetivado</span>
+            <span class="card-icon" style="color: #a78bfa;">💳</span>
+          </div>
+          <div class="card-value" id="kpi-pag-val">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Ordem Bancária (OB)</span>
+            <span class="badge-pill" style="background: rgba(167, 139, 250, 0.15); color: #a78bfa;">Conta Única</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" style="width: 98%; background: #a78bfa;"></div>
+          </div>
+        </article>
+
+        <!-- Card 6: Concedido -->
+        <article class="bento-card">
+          <div class="card-header-flex">
+            <span class="card-label">Crédito Concedido</span>
+            <span class="card-icon" style="color: #f472b6;">🔄</span>
+          </div>
+          <div class="card-value" id="kpi-conc-val">R$ 0,00</div>
+          <div class="card-meta-bar">
+            <span>Descentralizações</span>
+            <span class="badge-pill" style="background: rgba(244, 114, 182, 0.15); color: #f472b6;">NC Emitida</span>
+          </div>
+          <div class="mini-progress-track">
+            <div class="mini-progress-fill" style="width: 100%; background: #f472b6;"></div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Gráfico de Aceleração Orçamentária -->
+      <section class="viz-panel" style="margin-bottom: 2rem;">
+        <div class="viz-header">
+          <div>
+            <h3>Curva de Aceleração Orçamentária (Julho a Outubro/2026)</h3>
+            <p>Evolução comparativa entre Dotação, Empenhos emitidos e Liquidação no exercício corrente</p>
+          </div>
+          <div style="display: flex; gap: 0.85rem; font-size: 0.75rem;">
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: #94a3b8;"><span style="width: 8px; height: 8px; background: #94a3b8; border-radius: 50%;"></span> Provisionado</span>
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: #38bdf8;"><span style="width: 8px; height: 8px; background: #38bdf8; border-radius: 50%;"></span> Empenhado</span>
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: #10b981;"><span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span> Liquidado</span>
+          </div>
+        </div>
+
+        <div id="chart-container" class="chart-container-box">
+          <!-- SVG dinâmico -->
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ====================================================================
+         ABA 4: RASTREABILIDADE CRÉDITO ➔ EMPENHO (TOP-DOWN)
+         ==================================================================== -->
+    <section id="tab-rastreabilidade" class="tab-pane">
+      <div class="table-panel">
+        <div class="table-toolbar">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700;">Rastreabilidade de Notas de Crédito (Top-Down)</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">Clique em qualquer linha para abrir a gaveta com o detalhamento completo dos empenhos</p>
+          </div>
+          <div class="search-input-wrap">
+            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="global-search-input" class="search-input" placeholder="Filtrar por NC, ND, finalidade ou valor...">
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable-th" data-table="nc" data-sort="nc" title="Ordenar por Nota de Crédito">Nota de Crédito <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="nc" data-sort="om" title="Ordenar por Unidade">Unidade (OMDS) <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="nc" data-sort="nd" title="Ordenar por Natureza de Despesa">ND <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="nc" data-sort="obj" title="Ordenar por Finalidade do Recurso">Finalidade do Recurso <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="nc" data-sort="prov" data-type="number" title="Ordenar por Dotação Alocada">Dotação <span class="sort-icon">↕</span></th>
+                <th class="sortable-th is-active" data-table="nc" data-sort="saldo" data-type="number" title="Ordenar por Saldo Disponível">Saldo Disponível <span class="sort-icon">▼</span></th>
+                <th class="sortable-th" data-table="nc" data-sort="taxa" data-type="number" title="Ordenar por % Executado">% Executado <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="nc-table-body">
+              <!-- Injetado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ABA 5: AUDITORIA DE EMPENHOS (BOTTOM-UP)
+         ==================================================================== -->
+    <section id="tab-empenhos" class="tab-pane">
+      <div class="table-panel">
+        <div class="table-toolbar">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              <span>Auditoria de Notas de Empenho (Bottom-Up)</span>
+              <span id="ne-count-badge" class="badge-pill badge-cyan">3.014 NEs</span>
+            </h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">Base consolidada das Notas de Empenho emitidas com identificação de credores, CNPJ e processos</p>
+          </div>
+          <div class="search-input-wrap">
+            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="search-ne-input" class="search-input" placeholder="Buscar por NE, credor, CNPJ ou processo...">
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable-th" data-table="ne" data-sort="ne" title="Ordenar por Nota de Empenho">Nota de Empenho <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="ne" data-sort="omSigla" title="Ordenar por Unidade">Unidade <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="ne" data-sort="credor" title="Ordenar por Credor / Fornecedor">Credor (Razão Social / CNPJ) <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="ne" data-sort="processo" title="Ordenar por Processo Licitatório">Processo Licitatório <span class="sort-icon">↕</span></th>
+                <th class="sortable-th" data-table="ne" data-sort="valor" data-type="number" title="Ordenar por Valor Empenhado">Valor Empenhado <span class="sort-icon">↕</span></th>
+                <th class="sortable-th is-active" data-table="ne" data-sort="data" data-type="date" title="Ordenar por Data de Emissão">Emissão <span class="sort-icon">▼</span></th>
+                <th class="sortable-th" data-table="ne" data-sort="status" title="Ordenar por Status">Status <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="ne-table-body">
+              <!-- Injetado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ABA 6: RAIO-X DE FORNECEDORES & PREGÕES
+         ==================================================================== -->
+    <section id="tab-fornecedores" class="tab-pane">
+      <div class="data-viz-section">
+        <div class="viz-panel">
+          <div class="viz-header">
+            <div>
+              <h3>Ranking dos Principais Fornecedores Contratados</h3>
+              <p>Maiores volumes de recursos comprometidos no exercício</p>
+            </div>
+          </div>
+          <div id="fornecedores-list">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+
+        <div class="viz-panel">
+          <div class="viz-header">
+            <div>
+              <h3>Principais Processos & Pregões Eletrônicos</h3>
+              <p>Processos licitatórios que mais movimentam recursos</p>
+            </div>
+          </div>
+          <div id="processos-list">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ABA 7: MONITOR DE RISCOS ORÇAMENTÁRIOS (SEPARADO POR UNIDADE)
+         ==================================================================== -->
+    <section id="tab-riscos" class="tab-pane">
+      <div class="table-panel">
+        <div class="viz-header">
+          <div>
+            <h3 id="riscos-header-title">Monitor de Riscos Orçamentários</h3>
+            <p>Análise preventiva de créditos parados, prazos críticos e risco de estorno no encerramento (52 dias)</p>
+          </div>
+        </div>
+
+        <div id="riscos-list">
+          <!-- Injetado dinamicamente estritamente por unidade -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ====================================================================
+       GAVETA LATERAL (DRAWER MODAL DE NC)
+       ==================================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <aside class="drawer-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+        <div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-accent); font-weight: 700;">Raio-X de Nota de Crédito</span>
+          <h2 id="drawer-nc-title" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 800;">160329...</h2>
+        </div>
+        <button id="drawer-close-btn" class="drawer-close-btn" aria-label="Fechar gaveta">✕</button>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Órgão Concedente:</span>
+            <strong id="drawer-concedente-name" style="font-size: 0.85rem; color: var(--text-accent);">—</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Unidade Gestora:</span>
+            <strong id="drawer-omds-name" style="font-size: 0.85rem;">—</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Tipo de Operação:</span>
+            <span id="drawer-op-badge" class="badge-pill badge-cyan">—</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Natureza de Despesa (ND):</span>
+            <span id="drawer-nd-val" style="font-family: var(--font-mono); font-weight: 700; color: var(--text-accent);">—</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Plano Interno (PI) & Ação:</span>
+            <span id="drawer-pi-val" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-primary);">—</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Prazo de Vigência:</span>
+            <span id="drawer-prazo-val" style="font-weight: 700; color: var(--text-amber); font-size: 0.85rem;">—</span>
+          </div>
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06);">
+            <span style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">Finalidade Registrada (DIEX / SIAFI):</span>
+            <p id="drawer-finalidade-text" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;"></p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Dotação Total</span>
+            <div id="drawer-prov-val" style="font-size: 1.1rem; font-weight: 800; font-family: var(--font-mono);">R$ 0,00</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Empenhado</span>
+            <div id="drawer-emp-val" style="font-size: 1.1rem; font-weight: 800; font-family: var(--font-mono); color: var(--text-accent);">R$ 0,00</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Saldo Disponível</span>
+            <div id="drawer-saldo-val" style="font-size: 1.1rem; font-weight: 800; font-family: var(--font-mono); color: var(--text-emerald);">R$ 0,00</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Taxa de Execução</span>
+            <div id="drawer-execucao-val" style="font-size: 1.1rem; font-weight: 800; font-family: var(--font-mono); color: var(--text-amber);">0,00%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico de Movimentações da NC -->
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.75rem;">
+          Histórico de Movimentações Registradas
+        </h4>
+        <div id="drawer-movimentacoes-list">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.75rem;">Notas de Empenho Vinculadas</h4>
+        <div id="drawer-empenhos-list">
+          <!-- Empenhos injetados dinamicamente -->
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Scripts -->
+  <script src="exceljs.min.js"></script>
+  <script src="xlsx.full.min.js"></script>
+  <script src="dashboard-data.js?v=3.7"></script>
+  <script src="motion-background.js?v=3.7"></script>
+  <script src="dashboard-app.js?v=3.7"></script>
+</body>
+</html>

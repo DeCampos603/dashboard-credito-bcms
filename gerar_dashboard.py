@@ -7097,22 +7097,30 @@ def main():
                     shutil.copyfile(os.path.join(src_logos, fn), os.path.join(dst_logos, fn))
                 except Exception as e:
                     print("[AVISO] não copiei", fn, ":", e)
-    with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(SITE, "legacy_v1.html"), "w", encoding="utf-8") as f:
         f.write(html_out)
     with open(os.path.join(SITE, "data", "history.json"), "w", encoding="utf-8") as f:
         json.dump(hist, f, ensure_ascii=False, indent=1)
 
     tot = {k: sum(res[c][k] for c, _ in ALVOS) for k in ("prov", "cred", "emp", "liq", "pag")}
-    print(f"OK Base V1 -> {os.path.join(SITE,'index.html')}")
+    print(f"OK Base V1 Legado -> {os.path.join(SITE,'legacy_v1.html')}")
     print(f"Periodo={periodo} | Credito Disp total={brl(tot['cred'])} | historico {len(hist)} dia(s)")
 
-    # 1. Compilação do Dashboard V2 Pro (Unificação do Pipeline)
-    print("\n[PIPELINE UNIFICADO] Compilando Dashboard V2 Pro...")
+    # 1. Compilação do Dashboard V2 Pro (Legado arquivado em legacy_v2.html)
+    print("\n[PIPELINE UNIFICADO] Compilando Dashboard V2 Pro Legado...")
     try:
         import build_dashboard_v2
         build_dashboard_v2.build()
     except Exception as e_v2:
-        print(f"[ERRO PIPELINE] Falha ao compilar Dashboard V2 Pro: {e_v2}")
+        print(f"[AVISO PIPELINE] Falha não impeditiva no gerador legado V2: {e_v2}")
+
+    # 2. Compilação do Data Bundle V3 (SICOF 3.0 Modular para site/index.html)
+    print("\n[PIPELINE UNIFICADO] Compilando Data Bundle V3 Modular (SICOF 3.0)...")
+    try:
+        import build_data
+        build_data.build()
+    except Exception as e_v3:
+        print(f"[ERRO PIPELINE] Falha ao compilar Data Bundle V3: {e_v3}")
         sys.exit(1)
 
     # 2. Sentinela de Integridade Multi-OMDS
