@@ -84,9 +84,9 @@ body {
 }
 
 .app-container {
-  max-width: 1540px;
+  max-width: min(98vw, 1860px);
   margin: 0 auto;
-  padding: 1.25rem 2rem 5rem 2rem;
+  padding: 1rem 1.25rem 3.5rem 1.25rem;
   position: relative;
   z-index: 1;
 }
@@ -1142,10 +1142,15 @@ body {
 }
 
 .badge-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .badge-emerald { background: rgba(16, 185, 129, 0.15); color: var(--text-emerald); }
@@ -1244,9 +1249,10 @@ body {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-subtle);
   border-radius: 20px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: var(--glass-shadow);
   margin-bottom: 2rem;
+  overflow: hidden;
 }
 
 .table-toolbar {
@@ -1305,32 +1311,39 @@ body {
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .data-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.825rem;
+  font-size: 0.81rem;
   text-align: left;
 }
 
 .data-table th {
-  padding: 0.75rem 0.9rem;
+  padding: 0.65rem 0.6rem;
   background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  overflow-wrap: break-word;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .data-table td {
-  padding: 0.85rem 0.9rem;
+  padding: 0.75rem 0.6rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   vertical-align: middle;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .data-table tr {
@@ -1338,19 +1351,35 @@ body {
   transition: background var(--motion-duration-snappy) var(--motion-easing-kinetic);
 }
 
+.data-table td button,
+.data-table td a {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 .data-table tr:hover td {
   background: rgba(56, 189, 248, 0.06);
 }
 
 .nc-code-pill {
+  display: inline-block;
+  max-width: 100%;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-accent);
   background: rgba(56, 189, 248, 0.1);
-  padding: 0.2rem 0.45rem;
+  padding: 0.2rem 0.42rem;
   border-radius: 6px;
   border: 1px solid rgba(56, 189, 248, 0.2);
+  white-space: nowrap;
+}
+
+.finalidade-truncate {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.45;
 }
 
 /* Cards do Resumo Diário */
@@ -1461,7 +1490,7 @@ body {
   user-select: none;
   transition: color var(--motion-duration-snappy) var(--motion-easing-kinetic),
               background var(--motion-duration-snappy) var(--motion-easing-kinetic);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .data-table th.sortable-th:hover {
@@ -1501,8 +1530,10 @@ body {
    ========================================================================== */
 .nc-item-clickable {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 0.45rem 1rem;
   font-size: 0.78rem;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
@@ -1512,6 +1543,27 @@ body {
               border-color var(--motion-duration-snappy) var(--motion-easing-kinetic),
               transform var(--motion-duration-snappy) var(--motion-easing-kinetic);
   margin-bottom: 0.25rem;
+}
+
+.nc-item-clickable > div {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.nc-item-clickable > div:last-child {
+  flex: 1 1 280px;
+  justify-content: flex-end;
+}
+
+.nc-item-clickable .nc-resumo-desc {
+  flex: 1 1 200px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.38;
+  color: var(--text-muted);
 }
 
 .nc-item-clickable:hover {
@@ -2126,4 +2178,319 @@ html[data-theme="light"] .ug-filter-btn.is-active {
   color: #ffffff !important;
   border-color: var(--unit-accent) !important;
   font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   TABELAS RESPONSIVAS SEM ROLAGEM HORIZONTAL (DESKTOP + TABLET + MOBILE)
+   ========================================================================== */
+
+/* UG Gestora pode quebrar "(Ordinário)" / "(Saúde)" em 2 linhas como pill compacto */
+#tab-creditos-tela .data-table tbody td:nth-child(2):not([colspan]) .badge-pill {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Larguras proporcionais desktop (>= 1367px) */
+#tab-creditos-tela .data-table thead th:nth-child(1) { width: 15.5%; } /* Nota de Crédito */
+#tab-creditos-tela .data-table thead th:nth-child(2) { width: 9.5%; }  /* UG Gestora */
+#tab-creditos-tela .data-table thead th:nth-child(3) { width: 8%; }    /* Prazo Limite */
+#tab-creditos-tela .data-table thead th:nth-child(4) { width: 7.5%; }  /* Dias em Tela */
+#tab-creditos-tela .data-table thead th:nth-child(5) { width: 13.5%; } /* ND */
+#tab-creditos-tela .data-table thead th:nth-child(6) { width: 9.5%; }  /* PI */
+#tab-creditos-tela .data-table thead th:nth-child(7) { width: 26%; }   /* Objeto / Finalidade */
+#tab-creditos-tela .data-table thead th:nth-child(8) { width: 10.5%; } /* Saldo em Tela */
+
+#tab-ranqueamento .data-table thead th:nth-child(1) { width: 6%; }    /* Posição */
+#tab-ranqueamento .data-table thead th:nth-child(2) { width: 19%; }   /* OM */
+#tab-ranqueamento .data-table thead th:nth-child(3) { width: 12%; }   /* Dotação Recebida */
+#tab-ranqueamento .data-table thead th:nth-child(4) { width: 12%; }   /* Empenhado */
+#tab-ranqueamento .data-table thead th:nth-child(5) { width: 12%; }   /* Saldo Disponível */
+#tab-ranqueamento .data-table thead th:nth-child(6) { width: 12%; }   /* Liquidado */
+#tab-ranqueamento .data-table thead th:nth-child(7) { width: 9.5%; }  /* % Comprometido */
+#tab-ranqueamento .data-table thead th:nth-child(8) { width: 9.5%; }  /* % Liquidado */
+#tab-ranqueamento .data-table thead th:nth-child(9) { width: 8%; }    /* Navegar */
+
+#tab-rastreabilidade .data-table thead th:nth-child(1) { width: 16%; }   /* Nota de Crédito */
+#tab-rastreabilidade .data-table thead th:nth-child(2) { width: 10.5%; } /* Unidade */
+#tab-rastreabilidade .data-table thead th:nth-child(3) { width: 15%; }   /* ND */
+#tab-rastreabilidade .data-table thead th:nth-child(4) { width: 28.5%; } /* Finalidade */
+#tab-rastreabilidade .data-table thead th:nth-child(5) { width: 10.5%; } /* Dotação */
+#tab-rastreabilidade .data-table thead th:nth-child(6) { width: 10.5%; } /* Saldo */
+#tab-rastreabilidade .data-table thead th:nth-child(7) { width: 9%; }    /* % Executado */
+
+#tab-empenhos .data-table thead th:nth-child(1) { width: 16%; }   /* Nota de Empenho */
+#tab-empenhos .data-table thead th:nth-child(2) { width: 10%; }   /* Unidade */
+#tab-empenhos .data-table thead th:nth-child(3) { width: 27%; }   /* Credor */
+#tab-empenhos .data-table thead th:nth-child(4) { width: 15.5%; } /* Processo */
+#tab-empenhos .data-table thead th:nth-child(5) { width: 12%; }   /* Valor Empenhado */
+#tab-empenhos .data-table thead th:nth-child(6) { width: 9.5%; }  /* Emissão */
+#tab-empenhos .data-table thead th:nth-child(7) { width: 10%; }   /* Status */
+
+/* Notebooks e monitores compactos (1024px - 1366px): tudo inteiro na tela sem cortar códigos/valores */
+@media (max-width: 1366px) and (min-width: 900px) {
+  .app-container {
+    max-width: 100%;
+    padding: 0.9rem 0.9rem 3rem 0.9rem;
+  }
+
+  .table-panel {
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+
+  .data-table {
+    font-size: 0.74rem;
+  }
+
+  .data-table th {
+    padding: 0.55rem 0.36rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.02em;
+  }
+
+  .data-table td {
+    padding: 0.6rem 0.36rem;
+  }
+
+  .nc-code-pill {
+    font-size: 0.64rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .badge-pill {
+    font-size: 0.64rem;
+    padding: 0.14rem 0.38rem;
+  }
+
+  #tab-creditos-tela .data-table thead th:nth-child(1) { width: 18.5%; }
+  #tab-creditos-tela .data-table thead th:nth-child(2) { width: 10%; }
+  #tab-creditos-tela .data-table thead th:nth-child(3) { width: 8.5%; }
+  #tab-creditos-tela .data-table thead th:nth-child(4) { width: 8%; }
+  #tab-creditos-tela .data-table thead th:nth-child(5) { width: 13%; }
+  #tab-creditos-tela .data-table thead th:nth-child(6) { width: 10%; }
+  #tab-creditos-tela .data-table thead th:nth-child(7) { width: 19.5%; }
+  #tab-creditos-tela .data-table thead th:nth-child(8) { width: 12.5%; }
+
+  #tab-creditos-tela .data-table tbody td:nth-child(8):not([colspan]),
+  #tab-creditos-tela .data-table tbody td:nth-child(8):not([colspan]) strong,
+  #tab-creditos-tela .data-table tbody td:nth-child(8):not([colspan]) span {
+    font-size: 0.74rem !important;
+    white-space: nowrap;
+  }
+
+  #tab-ranqueamento .data-table thead th:nth-child(1) { width: 5.5%; }
+  #tab-ranqueamento .data-table thead th:nth-child(2) { width: 16%; }
+  #tab-ranqueamento .data-table thead th:nth-child(3) { width: 12.5%; }
+  #tab-ranqueamento .data-table thead th:nth-child(4) { width: 12.5%; }
+  #tab-ranqueamento .data-table thead th:nth-child(5) { width: 12%; }
+  #tab-ranqueamento .data-table thead th:nth-child(6) { width: 12.5%; }
+  #tab-ranqueamento .data-table thead th:nth-child(7) { width: 11%; }
+  #tab-ranqueamento .data-table thead th:nth-child(8) { width: 9.5%; }
+  #tab-ranqueamento .data-table thead th:nth-child(9) { width: 8.5%; }
+
+  #tab-ranqueamento .data-table tbody td:nth-child(n+3):nth-child(-n+8):not([colspan]),
+  #tab-rastreabilidade .data-table tbody td:nth-child(n+5):not([colspan]),
+  #tab-empenhos .data-table tbody td:nth-child(5):not([colspan]),
+  #tab-empenhos .data-table tbody td:nth-child(6):not([colspan]) {
+    white-space: nowrap;
+  }
+
+  #tab-rastreabilidade .data-table thead th:nth-child(1) { width: 18.5%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(2) { width: 10.5%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(3) { width: 14%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(4) { width: 23%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(5) { width: 12%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(6) { width: 12%; }
+  #tab-rastreabilidade .data-table thead th:nth-child(7) { width: 10%; }
+
+  #tab-empenhos .data-table thead th:nth-child(1) { width: 18.5%; }
+  #tab-empenhos .data-table thead th:nth-child(2) { width: 10%; }
+  #tab-empenhos .data-table thead th:nth-child(3) { width: 23%; }
+  #tab-empenhos .data-table thead th:nth-child(4) { width: 15%; }
+  #tab-empenhos .data-table thead th:nth-child(5) { width: 12.5%; }
+  #tab-empenhos .data-table thead th:nth-child(6) { width: 10%; }
+  #tab-empenhos .data-table thead th:nth-child(7) { width: 11%; }
+}
+
+@media (max-width: 1180px) and (min-width: 900px) {
+  #tab-ranqueamento .data-table {
+    font-size: 0.69rem;
+  }
+
+  #tab-ranqueamento .data-table th {
+    font-size: 0.6rem;
+    padding: 0.5rem 0.25rem;
+  }
+
+  #tab-ranqueamento .data-table td {
+    padding: 0.55rem 0.25rem;
+  }
+
+  #tab-ranqueamento .data-table td button {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.4rem;
+  }
+}
+
+/* Tablet e Mobile (< 900px): cards empilhados em grid 2 colunas com rótulos inline */
+@media (max-width: 899px) {
+  .app-container {
+    max-width: 100%;
+    padding: 0.75rem 0.65rem 3rem 0.65rem;
+  }
+
+  .table-panel {
+    padding: 0.85rem;
+    border-radius: 16px;
+  }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.75rem;
+    padding: 0.85rem 0.9rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .data-table tbody td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.2rem;
+    padding: 0;
+    border-bottom: none !important;
+    text-align: left !important;
+    min-width: 0;
+  }
+
+  .data-table tbody td::before {
+    font-size: 0.63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    line-height: 1.2;
+  }
+
+  .data-table tbody td[colspan] {
+    grid-column: 1 / -1;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .data-table tbody td[colspan]::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Colunas longas/chave ocupam largura total do card em ordem DOM (sem células órfãs) */
+  #tab-creditos-tela .data-table tbody td:nth-child(1),
+  #tab-creditos-tela .data-table tbody td:nth-child(5),
+  #tab-creditos-tela .data-table tbody td:nth-child(7),
+  #tab-creditos-tela .data-table tbody td:nth-child(8) {
+    grid-column: 1 / -1;
+  }
+
+  #tab-ranqueamento .data-table tbody td:nth-child(1),
+  #tab-ranqueamento .data-table tbody td:nth-child(2),
+  #tab-ranqueamento .data-table tbody td:nth-child(9) {
+    grid-column: 1 / -1;
+  }
+
+  #tab-rastreabilidade .data-table tbody td:nth-child(1),
+  #tab-rastreabilidade .data-table tbody td:nth-child(4),
+  #tab-rastreabilidade .data-table tbody td:nth-child(7) {
+    grid-column: 1 / -1;
+  }
+
+  #tab-empenhos .data-table tbody td:nth-child(1),
+  #tab-empenhos .data-table tbody td:nth-child(2),
+  #tab-empenhos .data-table tbody td:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  /* Rótulos por coluna */
+  #tab-creditos-tela .data-table tbody td:nth-child(1)::before { content: "Nota de Crédito"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(2)::before { content: "UG Gestora"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(3)::before { content: "Prazo Limite"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(4)::before { content: "Dias em Tela"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(5)::before { content: "Natureza de Despesa (ND)"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(6)::before { content: "Plano Interno (PI)"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(7)::before { content: "Objeto / Finalidade"; }
+  #tab-creditos-tela .data-table tbody td:nth-child(8)::before { content: "Saldo em Tela"; }
+
+  #tab-ranqueamento .data-table tbody td:nth-child(1)::before { content: "Posição"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(2)::before { content: "Organização Militar (OM)"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(3)::before { content: "Dotação Recebida"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(4)::before { content: "Empenhado"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(5)::before { content: "Saldo Disponível"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(6)::before { content: "Liquidado"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(7)::before { content: "% Comprometido"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(8)::before { content: "% Liquidado"; }
+  #tab-ranqueamento .data-table tbody td:nth-child(9)::before { content: "Navegar"; }
+
+  #tab-rastreabilidade .data-table tbody td:nth-child(1)::before { content: "Nota de Crédito"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(2)::before { content: "Unidade (OMDS)"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(3)::before { content: "ND"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(4)::before { content: "Finalidade do Recurso"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(5)::before { content: "Dotação"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(6)::before { content: "Saldo Disponível"; }
+  #tab-rastreabilidade .data-table tbody td:nth-child(7)::before { content: "% Executado"; }
+
+  #tab-empenhos .data-table tbody td:nth-child(1)::before { content: "Nota de Empenho"; }
+  #tab-empenhos .data-table tbody td:nth-child(2)::before { content: "Unidade"; }
+  #tab-empenhos .data-table tbody td:nth-child(3)::before { content: "Credor (Razão Social / CNPJ)"; }
+  #tab-empenhos .data-table tbody td:nth-child(4)::before { content: "Processo Licitatório"; }
+  #tab-empenhos .data-table tbody td:nth-child(5)::before { content: "Valor Empenhado"; }
+  #tab-empenhos .data-table tbody td:nth-child(6)::before { content: "Emissão"; }
+  #tab-empenhos .data-table tbody td:nth-child(7)::before { content: "Status"; }
+
+  .nc-code-pill {
+    font-size: 0.7rem;
+    padding: 0.18rem 0.4rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .nc-item-clickable > div:last-child {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .ranking-controls,
+  .ranking-criteria-buttons {
+    flex-wrap: wrap !important;
+    max-width: 100%;
+    gap: 0.4rem;
+  }
+
+  html[data-theme="light"] .data-table tbody tr {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  }
+
+  html[data-theme="light"] .data-table tbody td {
+    border-bottom: none !important;
+  }
+
+  html[data-theme="light"] .data-table tbody td::before {
+    color: #475569 !important;
+  }
 }

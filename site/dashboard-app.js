@@ -656,8 +656,8 @@ document.addEventListener("DOMContentLoaded", () => {
                           <span class="badge-pill ${nc[1] === '167' ? 'badge-emerald' : 'badge-cyan'}">UG ${nc[1]}</span>
                           <span style="color: var(--text-secondary); font-weight: 600;">${nc[2]}</span>
                         </div>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                          <span style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);" title="${nc[4]}">${nc[4]}</span>
+                        <div style="display: flex; gap: 0.5rem 1rem; align-items: center;">
+                          <span class="nc-resumo-desc" title="${nc[4]}">${nc[4]}</span>
                           <strong style="font-family: var(--font-mono); color: ${nc[3] >= 0 ? 'var(--text-emerald)' : 'var(--text-rose)'};">${formatBRL(nc[3])}</strong>
                           <span class="nc-action-hint">🔍 Ver Detalhes</span>
                         </div>
