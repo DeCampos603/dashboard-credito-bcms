@@ -706,12 +706,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    const diasEnc = (DASHBOARD_DATA.meta && DASHBOARD_DATA.meta.diasAteEncerramento != null)
+      ? DASHBOARD_DATA.meta.diasAteEncerramento
+      : 0;
     let html = `
       <div class="bento-card" style="border-color: rgba(244, 63, 94, 0.3); margin-bottom: 1.5rem;">
         <div style="display: flex; gap: 1rem; align-items: center;">
           <span style="font-size: 2.2rem;">🚨</span>
           <div>
-            <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-rose);">Alerta Institucional: 52 Dias para o Encerramento do Exercício Financeiro</h4>
+            <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-rose);">Alerta Institucional: ${diasEnc} Dias para o Encerramento do Exercício Financeiro</h4>
             <p style="font-size: 0.8rem; color: var(--text-secondary);">
               Créditos orçamentários parados há mais de 45 dias ou sem empenho até a virada do SIAFI serão estornados às autoridades concedentes.
             </p>
@@ -1816,6 +1819,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function updateHeaderMetadata() {
+    const meta = DASHBOARD_DATA.meta || {};
+    const posEl = document.getElementById("header-posicao-meta");
+    if (posEl && meta.posicaoData) {
+      const ultMov = meta.ultimaMovimentacao ? ` (Últ. NC: ${meta.ultimaMovimentacao})` : "";
+      const diasTxt = meta.diasAteEncerramento != null ? ` • ${meta.diasAteEncerramento} dias para o encerramento do exercício` : "";
+      posEl.textContent = `● Posição ${meta.posicaoData}${ultMov}${diasTxt}`;
+    }
+
+    const riscosSubEl = document.getElementById("riscos-subtitle");
+    if (riscosSubEl && meta.diasAteEncerramento != null) {
+      riscosSubEl.textContent = `Análise preventiva de créditos parados, prazos críticos e risco de estorno no encerramento (${meta.diasAteEncerramento} dias)`;
+    }
+
+    const chartTitleEl = document.getElementById("chart-accel-title");
+    if (chartTitleEl && meta.mesAtualNome && meta.exercicio) {
+      chartTitleEl.textContent = `Curva de Aceleração Orçamentária (Julho a ${meta.mesAtualNome}/${meta.exercicio})`;
+    }
+
+    if (neCountBadge) {
+      const totalNes = (DASHBOARD_DATA.todasNEs || []).length;
+      neCountBadge.textContent = `${totalNes.toLocaleString("pt-BR")} NEs`;
+    }
+  }
+
+  updateHeaderMetadata();
   setupSortableHeaders();
   renderLogosShowcase();
   renderRankingCard();

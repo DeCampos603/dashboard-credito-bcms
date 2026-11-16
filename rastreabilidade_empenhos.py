@@ -6,19 +6,34 @@ relacional com as Notas de Crédito (NCs), Prova da Verdade de integridade orça
 geração dos componentes visuais e scripts interativos alinhados 100% ao Design System do Dashboard.
 """
 
-import os, sys, json, re, html, datetime, urllib.request, tempfile
+import os, sys, json, re, html, datetime, urllib.request, tempfile, shutil, time
 import openpyxl
 
 DEFAULT_EMPENHOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTGXyEQ2v4UYga0nkP7ypbyumOZd68m32UZwqVVQhx-bHBACkBSj7v4RiNWZydIQ/pub?output=xlsx"
 
+def _is_valid_xlsx(path_or_bytes):
+    """Verifica se o conteúdo ou arquivo possui tamanho mínimo e assinatura ZIP/XLSX (PK\\x03\\x04)."""
+    if isinstance(path_or_bytes, (bytes, bytearray)):
+        return len(path_or_bytes) > 4000 and bytes(path_or_bytes[:4]) == b"PK\x03\x04"
+    if isinstance(path_or_bytes, str) and os.path.exists(path_or_bytes) and os.path.getsize(path_or_bytes) > 4000:
+        with open(path_or_bytes, "rb") as f:
+            return f.read(4) == b"PK\x03\x04"
+    return False
+
 def baixar_empenhos(url=None):
-    """Baixa o extrato de empenhos emitidos publicado no Google Sheets / Drive com retry e fallback."""
+    """Baixa o extrato de empenhos emitidos publicado no Google Sheets / Drive com retry e fallback para cache persistente."""
     target_url = url or DEFAULT_EMPENHOS_URL
+    cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "empenhos_cache.xlsx")
     tmp = os.path.join(tempfile.gettempdir(), "empenhos_baaplog_download.xlsx")
-    req = urllib.request.Request(target_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*"
+    }
+
+    last_err = None
     for attempt in range(3):
         try:
+            req = urllib.request.Request(target_url, headers=headers)
             with urllib.request.urlopen(req, timeout=120) as r:
                 content = bytearray()
                 while True:
@@ -26,20 +41,35 @@ def baixar_empenhos(url=None):
                     if not chunk:
                         break
                     content.extend(chunk)
-                if len(content) > 1000:
+                raw_bytes = bytes(content)
+                if _is_valid_xlsx(raw_bytes):
                     with open(tmp, "wb") as f:
-                        f.write(content)
+                        f.write(raw_bytes)
+                    try:
+                        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                        with open(cache_path, "wb") as f_cache:
+                            f_cache.write(raw_bytes)
+                    except Exception as e_c:
+                        print(f"[AVISO] Falha ao atualizar cache de empenhos: {e_c}")
                     return tmp
+                last_err = f"Conteúdo inválido recebido ({len(raw_bytes)} bytes, não é XLSX PK\\x03\\x04)"
+                print(f"[AVISO] Tentativa {attempt + 1} de empenhos retornou conteúdo não-XLSX (possível bloqueio/HTML).")
         except Exception as e:
-            if attempt == 2 and os.path.exists(tmp) and os.path.getsize(tmp) > 1000:
-                print(f"[AVISO] Download de empenhos falhou ({e}), usando cache existente em {tmp}")
-                return tmp
-            import time
-            time.sleep(1)
+            last_err = str(e)
+            print(f"[AVISO] Tentativa {attempt + 1} de download de empenhos falhou: {e}")
+        if attempt < 2:
+            time.sleep(2 * (attempt + 1))
 
-    if os.path.exists(tmp) and os.path.getsize(tmp) > 1000:
+    if _is_valid_xlsx(cache_path):
+        shutil.copyfile(cache_path, tmp)
+        print(f"[CONTINGÊNCIA ATIVADA] Download de empenhos indisponível ({last_err}). Usando cache persistente em {cache_path}")
         return tmp
-    raise RuntimeError("Não foi possível baixar a base de empenhos após 3 tentativas.")
+
+    if _is_valid_xlsx(tmp):
+        print(f"[AVISO] Usando arquivo temporário existente em {tmp}")
+        return tmp
+
+    raise RuntimeError(f"Não foi possível baixar a base de empenhos após 3 tentativas e nenhum cache válido foi encontrado: {last_err}")
 
 def _fmt_brl(v):
     if v is None:

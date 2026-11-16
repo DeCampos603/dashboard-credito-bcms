@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SICOF 3.0 — Sistema Integrado de Inteligência Orçamentária</title>
+  <link rel="icon" type="image/png" href="assets/logos/BCMS.png">
   
   <!-- Fontes Oficiais de Alta Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=3.7">
+  <link rel="stylesheet" href="styles.css?v=3.8">
 </head>
 <body>
 
@@ -59,8 +60,8 @@
           <h2>Organizações Militares Subordinadas</h2>
           <p>Selecione o brasão da unidade para carregar os dados e a visão geral correspondente</p>
         </div>
-        <div style="font-size: 0.75rem; color: var(--text-emerald); font-weight: 600;">
-          ● Posição 29/10/2026 • 52 dias para o encerramento do exercício
+        <div id="header-posicao-meta" style="font-size: 0.75rem; color: var(--text-emerald); font-weight: 600;">
+          ● Posição 16/11/2026 (Últ. NC: 13/11/2026) • 45 dias para o encerramento do exercício
         </div>
       </div>
 
@@ -391,7 +392,7 @@
       <section class="viz-panel" style="margin-bottom: 2rem;">
         <div class="viz-header">
           <div>
-            <h3>Curva de Aceleração Orçamentária (Julho a Outubro/2026)</h3>
+            <h3 id="chart-accel-title">Curva de Aceleração Orçamentária (Julho a Novembro/2026)</h3>
             <p>Evolução comparativa entre Dotação, Empenhos emitidos e Liquidação no exercício corrente</p>
           </div>
           <div style="display: flex; gap: 0.85rem; font-size: 0.75rem;">
@@ -454,7 +455,7 @@
           <div>
             <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
               <span>Auditoria de Notas de Empenho (Bottom-Up)</span>
-              <span id="ne-count-badge" class="badge-pill badge-cyan">3.014 NEs</span>
+              <span id="ne-count-badge" class="badge-pill badge-cyan">3.117 NEs</span>
             </h3>
             <p style="font-size: 0.78rem; color: var(--text-muted);">Base consolidada das Notas de Empenho emitidas com identificação de credores, CNPJ e processos</p>
           </div>
@@ -524,7 +525,7 @@
         <div class="viz-header">
           <div>
             <h3 id="riscos-header-title">Monitor de Riscos Orçamentários</h3>
-            <p>Análise preventiva de créditos parados, prazos críticos e risco de estorno no encerramento (52 dias)</p>
+            <p id="riscos-subtitle">Análise preventiva de créditos parados, prazos críticos e risco de estorno no encerramento (45 dias)</p>
           </div>
         </div>
 
@@ -625,8 +626,8 @@
   <!-- Scripts -->
   <script src="exceljs.min.js"></script>
   <script src="xlsx.full.min.js"></script>
-  <script src="dashboard-data.js?v=3.7"></script>
-  <script src="motion-background.js?v=3.7"></script>
-  <script src="dashboard-app.js?v=3.7"></script>
+  <script src="dashboard-data.js?v=3.8"></script>
+  <script src="motion-background.js?v=3.8"></script>
+  <script src="dashboard-app.js?v=3.8"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import json
+import re
 import datetime
 from pathlib import Path
 from collections import defaultdict
@@ -31,9 +32,63 @@ def build(root_dir=None):
     daydata = data_json.get("daydata", {})
     ncdata = data_json.get("ncdata", {})
     emp = data_json.get("empenhodata", {})
-    siafi_totais = emp.get("om_totais_siafi", {})
-    nes_raw = emp.get("nes", [])
-    nc_to_nes = emp.get("nc_to_nes", {})
+    siafi_totais = emp.get("om_totais_siafi", {}) or {}
+    nes_raw = emp.get("nes", []) or []
+    nc_to_nes = emp.get("nc_to_nes", {}) or {}
+
+    # Fallback deterministico caso empenhodata esteja vazio ou incompleto
+    UG_TO_SIGLA = {
+        "160329": "BCMS", "167329": "BCMS",
+        "160238": "Ba Ap Log", "167238": "Ba Ap Log",
+        "160246": "D C Mun", "167246": "D C Mun",
+        "160304": "BMSA", "167304": "BMSA",
+        "160307": "1º D Sup", "167307": "1º D Sup",
+        "160321": "ECT", "167321": "ECT",
+    }
+    if not siafi_totais or sum(float(v.get("prov", 0.0) or 0.0) for k, v in siafi_totais.items() if k in UG_TO_SIGLA) <= 0:
+        fallback_source = data_json.get("res_totais") or (history[-1] if history else {})
+        rebuilt = {}
+        if isinstance(fallback_source, dict):
+            for ug_cod, sigla in UG_TO_SIGLA.items():
+                src = fallback_source.get(ug_cod)
+                if isinstance(src, dict):
+                    entry = {
+                        "prov": round(float(src.get("prov", 0.0) or 0.0), 2),
+                        "conc": round(float(src.get("conc", 0.0) or 0.0), 2),
+                        "cred": round(float(src.get("cred", 0.0) or 0.0), 2),
+                        "emp": round(float(src.get("emp", 0.0) or 0.0), 2),
+                        "liq": round(float(src.get("liq", 0.0) or 0.0), 2),
+                        "pag": round(float(src.get("pag", 0.0) or 0.0), 2),
+                    }
+                    rebuilt[ug_cod] = entry
+                    if sigla not in rebuilt:
+                        rebuilt[sigla] = {"prov": 0.0, "conc": 0.0, "cred": 0.0, "emp": 0.0, "liq": 0.0, "pag": 0.0}
+                    for fld in ("prov", "conc", "cred", "emp", "liq", "pag"):
+                        rebuilt[sigla][fld] = round(rebuilt[sigla][fld] + entry[fld], 2)
+        if not rebuilt and isinstance(data_json.get("celulas"), dict):
+            for cid, c in data_json["celulas"].items():
+                ug_cod = str(c.get("uasg") or "").strip()
+                sigla = UG_TO_SIGLA.get(ug_cod)
+                if not sigla:
+                    continue
+                if ug_cod not in rebuilt:
+                    rebuilt[ug_cod] = {"prov": 0.0, "conc": 0.0, "cred": 0.0, "emp": 0.0, "liq": 0.0, "pag": 0.0}
+                if sigla not in rebuilt:
+                    rebuilt[sigla] = {"prov": 0.0, "conc": 0.0, "cred": 0.0, "emp": 0.0, "liq": 0.0, "pag": 0.0}
+                prov_c = float(c.get("r", 0.0) or 0.0)
+                emp_c = float(c.get("e", 0.0) or 0.0)
+                liq_c = float(c.get("l", 0.0) or 0.0)
+                pag_c = float(c.get("p", 0.0) or 0.0)
+                cred_c = float(c.get("d", 0.0) or 0.0)
+                for target in (rebuilt[ug_cod], rebuilt[sigla]):
+                    target["prov"] = round(target["prov"] + prov_c, 2)
+                    target["emp"] = round(target["emp"] + emp_c, 2)
+                    target["liq"] = round(target["liq"] + liq_c, 2)
+                    target["pag"] = round(target["pag"] + pag_c, 2)
+                    target["cred"] = round(target["cred"] + cred_c, 2)
+        if rebuilt:
+            siafi_totais = rebuilt
+            print("⚠ [FALLBACK] siafi_totais reconstruído a partir de res_totais/history/celulas.")
 
     UG_NAMES = {
         "160504": "CMAT - Centro de Material Bélico / COLOG",
@@ -480,22 +535,53 @@ def build(root_dir=None):
             "val": round(info["val"], 2)
         })
 
-    # Data de posição e encerramento
+    # Data de posição, última movimentação real (NC) e encerramento
     meta_meta = data_json.get("metadata", {})
     gerado_em = meta_meta.get("gerado_em", "")
+    tz_br = datetime.timezone(datetime.timedelta(hours=-3))
+    hoje = datetime.datetime.now(tz_br).date()
+
     if "às" in gerado_em:
         posicao_data = gerado_em.split("às")[0].strip()
     else:
-        posicao_data = datetime.date.today().strftime("%d/%m/%Y")
+        posicao_data = hoje.strftime("%d/%m/%Y")
 
-    hoje = datetime.date.today()
-    fim_exercicio = datetime.date(2026, 12, 31)
+    datas_nc = []
+    for src_dict in (ncdata, teladata):
+        for v in src_dict.values():
+            d_str = str(v.get("dia") or "").strip()
+            if re.match(r"^\d{2}/\d{2}/\d{4}$", d_str):
+                try:
+                    datas_nc.append(datetime.datetime.strptime(d_str, "%d/%m/%Y").date())
+                except ValueError:
+                    pass
+    for c_val in data_json.get("celulas", {}).values():
+        for nc_row in c_val.get("ncs", []):
+            if len(nc_row) > 5:
+                d_str = str(nc_row[5] or "").strip()
+                if re.match(r"^\d{2}/\d{2}/\d{4}$", d_str):
+                    try:
+                        datas_nc.append(datetime.datetime.strptime(d_str, "%d/%m/%Y").date())
+                    except ValueError:
+                        pass
+    ultima_data_nc = max(datas_nc).strftime("%d/%m/%Y") if datas_nc else ""
+
+    MESES_PT = {
+        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+    }
+    mes_atual_nome = MESES_PT.get(hoje.month, "Novembro")
+
+    fim_exercicio = datetime.date(hoje.year, 12, 31)
     dias_restantes = max(0, (fim_exercicio - hoje).days)
 
     data_dict = {
         "meta": {
-            "exercicio": "2026",
+            "exercicio": str(hoje.year),
             "posicaoData": posicao_data,
+            "ultimaMovimentacao": ultima_data_nc,
+            "mesAtualNome": mes_atual_nome,
             "fonte": "SIAFI / Tesouro Gerencial / SICOF",
             "orgaoSuperior": "Comando Logístico (COLOG) / Base de Apoio Logístico",
             "statusGeral": f"Execução Avançada ({round(taxa_emp_total, 2)}% Empenhado)",
@@ -540,6 +626,43 @@ function formatPercent(val) {
         t.parent.mkdir(parents=True, exist_ok=True)
         t.write_text(js_output, encoding="utf-8")
         print(f"✓ Sucesso! Gerado {t} ({t.stat().st_size} bytes)")
+
+    # Atualiza textos estáticos de fallback nos arquivos index.html
+    ult_nc_txt = f" (Últ. NC: {ultima_data_nc})" if ultima_data_nc else ""
+    pos_header_txt = f"● Posição {posicao_data}{ult_nc_txt} • {dias_restantes} dias para o encerramento do exercício"
+    nes_fmt_txt = f"{len(todas_nes):,}".replace(",", ".") + " NEs"
+    chart_title_txt = f"Curva de Aceleração Orçamentária (Julho a {mes_atual_nome}/{hoje.year})"
+    riscos_sub_txt = f"Análise preventiva de créditos parados, prazos críticos e risco de estorno no encerramento ({dias_restantes} dias)"
+
+    for html_path in (ROOT / "site" / "index.html", ROOT / "prototipo-v3" / "index.html"):
+        if html_path.exists():
+            ht = html_path.read_text(encoding="utf-8")
+            ht = re.sub(
+                r'(<div\s+id="header-posicao-meta"[^>]*>)[\s\S]*?(</div>)',
+                rf'\g<1>\n          {pos_header_txt}\n        \2',
+                ht,
+                count=1
+            )
+            ht = re.sub(
+                r'(<h3\s+id="chart-accel-title"[^>]*>).*?(</h3>)',
+                rf'\g<1>{chart_title_txt}\2',
+                ht,
+                count=1
+            )
+            ht = re.sub(
+                r'(<span\s+id="ne-count-badge"[^>]*>).*?(</span>)',
+                rf'\g<1>{nes_fmt_txt}\2',
+                ht,
+                count=1
+            )
+            ht = re.sub(
+                r'(<p\s+id="riscos-subtitle"[^>]*>).*?(</p>)',
+                rf'\g<1>{riscos_sub_txt}\2',
+                ht,
+                count=1
+            )
+            html_path.write_text(ht, encoding="utf-8")
+            print(f"✓ Metadados HTML atualizados em {html_path}")
 
     print(f"Total NEs: {len(todas_nes)} | Total Créditos em Tela: {len(creditos_em_tela)} | Total NCs Indexadas: {len(mapa_ncs)}")
     return True

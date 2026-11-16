@@ -2379,6 +2379,17 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
     empenhosdata_json = json.dumps(empenhos_data, ensure_ascii=False).replace("</", "<\\/") if empenhos_data else "{}"
     
     # Salva dados atualizados em data/data.json e site/data/data.json
+    res_totais = {
+        cod: {
+            "prov": round(d.get("prov", 0.0), 2),
+            "conc": round(d.get("conc", 0.0), 2),
+            "cred": round(d.get("cred", 0.0), 2),
+            "emp": round(d.get("emp", 0.0), 2),
+            "liq": round(d.get("liq", 0.0), 2),
+            "pag": round(d.get("pag", 0.0), 2),
+        }
+        for cod, d in res.items()
+    }
     full_data_payload = {
         "metadata": {
             "gerado_em": ger,
@@ -2387,6 +2398,7 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
             "usando_cache": usando_cache
         },
         "unidades": UNIDADES,
+        "res_totais": res_totais,
         "celulas": CEL,
         "ncdata": NCD,
         "daydata": DAY,

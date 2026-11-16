@@ -49,7 +49,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history.json data/data.json data/credito_disp_cache.xlsx
+          git add data/history.json data/data.json data/credito_disp_cache.xlsx data/empenhos_cache.xlsx site/dashboard-data.js site/index.html
           if git diff --staged --quiet; then
             echo "Sem mudança no histórico ou cache."
           else
