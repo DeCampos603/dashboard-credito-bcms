@@ -1,10 +1,13 @@
 name: Atualizar Dashboard BCMS
 
-# Roda todo dia (cron em UTC; 11:00 UTC = 08:00 de Brasília) e sob demanda.
-# Obs.: o agendamento do GitHub é "melhor esforço" (pode atrasar alguns minutos).
+# Roda todo dia em minutos quebrados (evita fila de pico no minuto :00 do GitHub Actions):
+# - 11:23 UTC = 08:23 de Brasília (abertura do expediente)
+# - 13:37 UTC = 10:37 de Brasília (logo após atualização matinal da planilha no Drive)
+# Também executa sob demanda (workflow_dispatch) e a cada push na main.
 on:
   schedule:
-    - cron: "0 11 * * *"
+    - cron: "23 11 * * *"
+    - cron: "37 13 * * *"
   workflow_dispatch: {}
   push:
     branches:
