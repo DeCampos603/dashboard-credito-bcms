@@ -1,13 +1,13 @@
 const DASHBOARD_DATA = {
   "meta": {
     "exercicio": "2026",
-    "posicaoData": "21/11/2026",
+    "posicaoData": "22/11/2026",
     "ultimaMovimentacao": "19/11/2026",
     "mesAtualNome": "Novembro",
     "fonte": "SIAFI / Tesouro Gerencial / SICOF",
     "orgaoSuperior": "Comando Logístico (COLOG) / Base de Apoio Logístico",
     "statusGeral": "Execução Avançada (98.08% Empenhado)",
-    "diasAteEncerramento": 40,
+    "diasAteEncerramento": 39,
     "totalNEs": 3168,
     "totalNEsAuditadas": 2653,
     "valorTotalEmpenhado": 53589415.51
@@ -207368,7 +207368,7 @@ const DASHBOARD_DATA = {
       "cred": 2135810.0
     },
     {
-      "data": "21/11",
+      "data": "22/11",
       "prov": 54639889.61,
       "emp": 53589415.51,
       "liq": 31252530.45,
