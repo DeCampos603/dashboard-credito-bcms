@@ -1128,7 +1128,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const opNome = (ncInfo && ncInfo.op_principal) || "DESCENTRALIZAÇÃO DE CRÉDITO";
     const ndStr = (ncInfo && ncInfo.nd ? `${ncInfo.nd} - ${ncInfo.ndn}` : (ncTela ? `${ncTela.nd} - ${ncTela.ndnome}` : "—"));
     const piStr = (ncInfo && ncInfo.pi ? `${ncInfo.pi} (Ação: ${ncInfo.acao || "—"})` : (ncTela ? `${ncTela.pi}` : "—"));
-    const prazoStr = (ncTela && ncTela.prazo) || (ncInfo && ncInfo.prazo) || "30/11/2026";
+    // Prazo vem do texto da NC (build_data.py / prazo_nc.py). Sem prazo no texto, não se inventa data.
+    const prazoStr = (ncTela && ncTela.prazo) || (ncInfo && ncInfo.prazo) || "Não informado na NC";
+    const prazoInfo = (ncTela && ncTela.prazo_info) || (ncInfo && ncInfo.prazo_info) || {};
     const finalidadeStr = (ncTela && ncTela.obj) || (ncInfo && ncInfo.obj) || "Finalidade registrada no SIAFI";
 
     // Valores
@@ -1167,7 +1169,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (piEl) piEl.textContent = piStr;
 
     const prazoEl = document.getElementById("drawer-prazo-val");
-    if (prazoEl) prazoEl.textContent = prazoStr;
+    if (prazoEl) {
+      const partes = [prazoStr];
+      if (prazoInfo.tipo) partes.push(prazoInfo.tipo);
+      const posicao = (DASHBOARD_DATA.meta && DASHBOARD_DATA.meta.posicaoData) || "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(prazoStr) && posicao && parseBRDate(prazoStr) < parseBRDate(posicao)) {
+        partes.push("vencido");
+      }
+      prazoEl.textContent = partes.join(" · ");
+      prazoEl.title = [prazoInfo.fonte && `Fonte: ${prazoInfo.fonte}`, prazoInfo.regra, prazoInfo.trecho && `Trecho: "${prazoInfo.trecho}"`]
+        .filter(Boolean).join("\n");
+    }
 
     const finalidadeEl = document.getElementById("drawer-finalidade-text");
     if (finalidadeEl) finalidadeEl.textContent = finalidadeStr;
@@ -1826,6 +1838,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const ultMov = meta.ultimaMovimentacao ? ` (Últ. NC: ${meta.ultimaMovimentacao})` : "";
       const diasTxt = meta.diasAteEncerramento != null ? ` • ${meta.diasAteEncerramento} dias para o encerramento do exercício` : "";
       posEl.textContent = `● Posição ${meta.posicaoData}${ultMov}${diasTxt}`;
+      posEl.title = [
+        meta.dataColetaFonte ? `Dados colhidos em ${meta.posicaoData}${meta.dataColetaHora ? " às " + meta.dataColetaHora : ""} (${meta.dataColetaFonte})` : "",
+        meta.atualizadoEm ? `Site publicado em ${meta.atualizadoEm}` : "",
+      ].filter(Boolean).join("\n");
     }
 
     const riscosSubEl = document.getElementById("riscos-subtitle");

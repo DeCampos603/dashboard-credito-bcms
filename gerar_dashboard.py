@@ -307,6 +307,43 @@ def baixar(file_id):
         "Verifique o compartilhamento público do arquivo ou a conectividade da rede."
     )
 
+def data_coleta_drive(file_id):
+    """Data/hora (Brasília) da última modificação do arquivo no Drive = dia em que os dados foram colhidos.
+
+    A URL uc?export=download devolve o arquivo original com o cabeçalho Last-Modified;
+    a de exportação do Sheets (usada no download) não traz essa data. Só lê os cabeçalhos.
+    Devolve {"data": "dd/mm/aaaa", "hora": "HH:MM", "fonte": str} ou None.
+    """
+    from email.utils import parsedate_to_datetime
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "Mozilla/5.0"})
+    for tentativa in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                lm = r.headers.get("Last-Modified")
+            if not lm:
+                return None
+            dt = parsedate_to_datetime(lm).astimezone(datetime.timezone(datetime.timedelta(hours=-3)))
+            return {"data": dt.strftime("%d/%m/%Y"), "hora": dt.strftime("%H:%M"),
+                    "fonte": "Last-Modified do arquivo no Google Drive"}
+        except Exception as e:
+            print(f"[AVISO] Data de coleta (tentativa {tentativa + 1}) indisponível: {e}")
+    return None
+
+
+def data_coleta_anterior():
+    """Data de coleta gravada no data.json anterior (vale para o modo cache, que reusa aquele arquivo)."""
+    try:
+        with open(os.path.join(DATA, "data.json"), "r", encoding="utf-8") as f:
+            meta = json.load(f).get("metadata", {})
+        if meta.get("data_coleta"):
+            return {"data": meta["data_coleta"], "hora": meta.get("data_coleta_hora", ""),
+                    "fonte": (meta.get("data_coleta_fonte") or "") + " (cache)"}
+    except Exception:
+        pass
+    return None
+
+
 # ---------------- ETL ----------------
 def _dt_br(s):
     try:
@@ -2317,7 +2354,7 @@ def secao_historico_ncs(res, hist, data_str, periodo):
     return frag, histdata_payload
 
 # ---------------- shell da página (multi-OMDS) ----------------
-def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data=None, usando_cache=False):
+def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data=None, usando_cache=False, coleta=None):
     hist_frag, histdata = secao_historico_ncs(res, hist, data_str, periodo)
 
     frags, CEL, NCD, DAY, TELA = [], {}, {}, {}, {}
@@ -2395,7 +2432,10 @@ def montar_pagina(res, hist, data_str, periodo=None, alertas=None, empenhos_data
             "gerado_em": ger,
             "gerado_em_iso": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "periodo": posicao,
-            "usando_cache": usando_cache
+            "usando_cache": usando_cache,
+            "data_coleta": (coleta or {}).get("data", ""),
+            "data_coleta_hora": (coleta or {}).get("hora", ""),
+            "data_coleta_fonte": (coleta or {}).get("fonte", ""),
         },
         "unidades": UNIDADES,
         "res_totais": res_totais,
@@ -7073,13 +7113,27 @@ def main():
     ap.add_argument("--empenhos-local", help="caminho de um xlsx de empenhos local (teste)")
     args = ap.parse_args()
 
-    data_str = args.date or datetime.date.today().isoformat()
     usando_cache = False
     if args.local:
         path = args.local
+        mt = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+        coleta = {"data": mt.strftime("%d/%m/%Y"), "hora": mt.strftime("%H:%M"),
+                  "fonte": "data de modificação do arquivo local"}
     else:
         path, usando_cache = baixar(args.file_id)
+        coleta = None if usando_cache else data_coleta_drive(args.file_id)
+        if not coleta:
+            coleta = data_coleta_anterior()
     print("Fonte Créditos:", path, "(Modo Contingência / Cache)" if usando_cache else "")
+    print("Data de coleta:", coleta or "INDISPONÍVEL (posição cairá na data do build)")
+    # O snapshot do histórico leva a data da coleta, não a do build: rodar sábado e domingo
+    # com o arquivo de sexta não cria dias novos com dados repetidos.
+    if args.date:
+        data_str = args.date
+    elif coleta:
+        data_str = datetime.datetime.strptime(coleta["data"], "%d/%m/%Y").date().isoformat()
+    else:
+        data_str = datetime.date.today().isoformat()
     res, periodo, alertas = etl(path)
 
     # Empenhos
@@ -7095,7 +7149,8 @@ def main():
     for a in alertas:
         print("[ALERTA]", a)
     hist = atualizar_historico(res, data_str)
-    html_out = montar_pagina(res, hist, data_str, periodo, alertas, empenhos_data=emp_data, usando_cache=usando_cache)
+    html_out = montar_pagina(res, hist, data_str, periodo, alertas, empenhos_data=emp_data,
+                             usando_cache=usando_cache, coleta=coleta)
 
     os.makedirs(SITE, exist_ok=True)
     os.makedirs(os.path.join(SITE, "data"), exist_ok=True)

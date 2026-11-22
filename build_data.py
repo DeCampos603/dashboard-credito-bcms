@@ -4,6 +4,8 @@ import datetime
 from pathlib import Path
 from collections import defaultdict
 
+from prazo_nc import resolver_prazo
+
 def build(root_dir=None):
     if root_dir is None:
         p = Path(__file__).resolve().parent
@@ -128,7 +130,6 @@ def build(root_dir=None):
         concedente_nome = UG_NAMES.get(concedente_ug, f"UG {concedente_ug}" if concedente_ug else "Órgão Concedente")
 
         if nc_code not in mapa_ncs:
-            prazo_val = resumos.get(nc_code, {}).get("prazo") or "30/11/2026"
             mapa_ncs[nc_code] = {
                 "nc": nc_code,
                 "short_nc": short_nc,
@@ -146,7 +147,7 @@ def build(root_dir=None):
                 "val_reduzido": 0.0,
                 "saldo_tela": 0.0,
                 "dias_tela": 0,
-                "prazo": prazo_val,
+                "prazo": "",
                 "obj": v.get("obj", ""),
                 "movimentacoes": [],
                 "nes": []
@@ -181,6 +182,12 @@ def build(root_dir=None):
                 mapa_ncs[nc_code]["ndn"] = v.get("ndnome")
             if v.get("pi"):
                 mapa_ncs[nc_code]["pi"] = v.get("pi")
+
+    # Prazo: lido do texto da NC (SIAFI); resumos_nc.json só quando o texto não traz prazo.
+    # Nunca estimar pelo tempo em tela (antes: 15/11, 30/11 ou 15/12 conforme "dias").
+    for nc_code, entry in mapa_ncs.items():
+        entry["prazo"], entry["prazo_info"] = resolver_prazo(
+            entry["obj"], entry["dia"], resumos.get(nc_code, {}).get("prazo"))
 
     # Cruzar com nc_to_nes
     for nc_key, nes_list in nc_to_nes.items():
@@ -220,10 +227,9 @@ def build(root_dir=None):
         dias = int(v.get("dias", 0))
         val_disp = float(v.get("v", 0.0))
         
-        prazo = resumos.get(nc_num, {}).get("prazo")
-        if not prazo:
-            prazo = "15/11/2026" if dias > 45 else ("30/11/2026" if dias > 20 else "15/12/2026")
-            
+        prazo, prazo_info = resolver_prazo(v.get("obj", ""), v.get("dia", ""),
+                                           resumos.get(nc_num, {}).get("prazo"))
+
         info_mapa = mapa_ncs.get(nc_num, {})
         val_alocado = info_mapa.get("val_alocado", val_disp * 1.5)
         nes_nc = info_mapa.get("nes", [])
@@ -252,6 +258,7 @@ def build(root_dir=None):
             "dia": v.get("dia", ""),
             "obj": v.get("obj", ""),
             "prazo": prazo,
+            "prazo_info": prazo_info,
             "concedente": info_mapa.get("concedente_nome", "Órgão Concedente")
         })
 
@@ -541,10 +548,17 @@ def build(root_dir=None):
     tz_br = datetime.timezone(datetime.timedelta(hours=-3))
     hoje = datetime.datetime.now(tz_br).date()
 
-    if "às" in gerado_em:
+    # Posição = dia em que a planilha foi colhida (Last-Modified do arquivo no Drive),
+    # não o dia em que o GitHub Actions rodou. Sem essa data, cai na data do build e avisa.
+    data_coleta = meta_meta.get("data_coleta", "")
+    if data_coleta:
+        posicao_data = data_coleta
+    elif "às" in gerado_em:
         posicao_data = gerado_em.split("às")[0].strip()
+        print("⚠ [POSIÇÃO] data_coleta ausente no data.json; usando a data do build.")
     else:
         posicao_data = hoje.strftime("%d/%m/%Y")
+        print("⚠ [POSIÇÃO] data_coleta ausente no data.json; usando a data de hoje.")
 
     datas_nc = []
     for src_dict in (ncdata, teladata):
@@ -580,6 +594,9 @@ def build(root_dir=None):
         "meta": {
             "exercicio": str(hoje.year),
             "posicaoData": posicao_data,
+            "dataColetaHora": meta_meta.get("data_coleta_hora", ""),
+            "dataColetaFonte": meta_meta.get("data_coleta_fonte", ""),
+            "atualizadoEm": gerado_em,
             "ultimaMovimentacao": ultima_data_nc,
             "mesAtualNome": mes_atual_nome,
             "fonte": "SIAFI / Tesouro Gerencial / SICOF",
