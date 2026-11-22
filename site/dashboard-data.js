@@ -8,8 +8,8 @@ const DASHBOARD_DATA = {
     "orgaoSuperior": "Comando Logístico (COLOG) / Base de Apoio Logístico",
     "statusGeral": "Execução Avançada (98.08% Empenhado)",
     "diasAteEncerramento": 39,
-    "totalNEs": 3168,
-    "totalNEsAuditadas": 2653,
+    "totalNEs": 3193,
+    "totalNEsAuditadas": 2678,
     "valorTotalEmpenhado": 53589415.51
   },
   "unidades": [
@@ -839,9 +839,9 @@ const DASHBOARD_DATA = {
       "pinome": "MATERIAL DE INTENDENCIA",
       "v": 1604.0,
       "prov": 10000.0,
-      "emp": 2308.0,
+      "emp": 8396.0,
       "saldo": 1604.0,
-      "taxa": 23.08,
+      "taxa": 83.96,
       "dias": 225,
       "dia": "07/04/2026",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-RECURSO PARA ATENDER CONFECCAO DE MATERIAL DE BIDS, CFM PEDIDOS APROVADOS NO PDR LOG 2026. POR ORDEM DO CMT LOG, EMPH ATE 31 MAIO 26.",
@@ -2015,9 +2015,9 @@ const DASHBOARD_DATA = {
       "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZACAO",
       "v": 6.22,
       "prov": 19000.0,
-      "emp": 4811.75,
+      "emp": 7261.75,
       "saldo": 6.22,
-      "taxa": 25.32,
+      "taxa": 38.22,
       "dias": 29,
       "dia": "20/10/2026",
       "obj": "CMAT-MOTO ? DESCENTRALIZACAO PARCIAL PDRLOG P/ MNT CORRETIVA VTR NAO BLD. PRIORIDADE ATD DEMANDAS APROVADAS NO SIGELOG. EMPENHO ATE 31 OUT 26.",
@@ -2141,9 +2141,9 @@ const DASHBOARD_DATA = {
       "pinome": "A6OP - MNT DE ORGAO PROVEDOR SOLICITADO",
       "v": 3.0,
       "prov": 120000.0,
-      "emp": 109880.0,
+      "emp": 120040.5,
       "saldo": 3.0,
-      "taxa": 91.57,
+      "taxa": 100.03,
       "dias": 7,
       "dia": "11/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (COMPRA DE MATERIAIS PARA REVITALIZACAO E PINTURA) REF DIEX NO 2959-COS/1O D SUP DE 02/11/2026. EMPH ATE 48H. PRB DETAORC.",
@@ -8121,6 +8121,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -14413,6 +14422,15 @@ const DASHBOARD_DATA = {
           "doc": "13378981000157",
           "val": 35000.16,
           "proc": "PREGAO 90019/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000366",
+          "dia": "18/11/2026",
+          "fav": "MS COMERCIO E SERVICOS DE PRODUTOS INDUSTRIAIS E AUTOMO",
+          "doc": "37512517000170",
+          "val": 40000.69,
+          "proc": "PREGAO 90001/2024",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -21718,6 +21736,15 @@ const DASHBOARD_DATA = {
           "prova": "Célula Orçamentária SIAFI"
         },
         {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
           "ne": "2026NE000039",
           "dia": "05/05/2026",
           "fav": "DEPOSITO CENTRAL DE MUNICAO",
@@ -22598,6 +22625,15 @@ const DASHBOARD_DATA = {
           "fav": "HERO COMERCIO E DISTRIBUICAO LTDA",
           "doc": "60896061000100",
           "val": 1732.5,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000120",
+          "dia": "18/11/2026",
+          "fav": "LUTHOR COMERCIO LTDA",
+          "doc": "48040995000140",
+          "val": 2189.37,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -29638,6 +29674,15 @@ const DASHBOARD_DATA = {
           "prova": "Célula Orçamentária SIAFI"
         },
         {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
           "ne": "2026NE000039",
           "dia": "05/05/2026",
           "fav": "DEPOSITO CENTRAL DE MUNICAO",
@@ -35790,6 +35835,15 @@ const DASHBOARD_DATA = {
           "val": 35000.16,
           "proc": "PREGAO 90019/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000366",
+          "dia": "18/11/2026",
+          "fav": "MS COMERCIO E SERVICOS DE PRODUTOS INDUSTRIAIS E AUTOMO",
+          "doc": "37512517000170",
+          "val": 40000.69,
+          "proc": "PREGAO 90001/2024",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -41694,6 +41748,15 @@ const DASHBOARD_DATA = {
           "val": 178.0,
           "proc": "",
           "prova": "Divergência de PI"
+        },
+        {
+          "ne": "2026NE000485",
+          "dia": "18/11/2026",
+          "fav": "REAL FORTE MANUTENCAO PREDIAL LTDA",
+          "doc": "15656953000180",
+          "val": 3500.2,
+          "proc": "",
+          "prova": "Divergência de PI"
         }
       ]
     },
@@ -42648,6 +42711,24 @@ const DASHBOARD_DATA = {
           "fav": "CASA VAREJAO ARTIGOS DESPORTIVOS LTDA",
           "doc": "33101460000165",
           "val": 2308.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000482",
+          "dia": "18/11/2026",
+          "fav": "WAGNER LEITE DE OLIVEIRA 11734057718",
+          "doc": "35430841000113",
+          "val": 1499.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000483",
+          "dia": "18/11/2026",
+          "fav": "WAGNER LEITE DE OLIVEIRA 11734057718",
+          "doc": "35430841000113",
+          "val": 4589.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -44389,6 +44470,15 @@ const DASHBOARD_DATA = {
           "val": 1190.0,
           "proc": "",
           "prova": "Divergência de PI"
+        },
+        {
+          "ne": "2026NE000481",
+          "dia": "18/11/2026",
+          "fav": "SCOTT SERVICOS, COMERCIO E DISTRIBUICAO LTDA",
+          "doc": "13378981000157",
+          "val": 4938.36,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -45061,6 +45151,24 @@ const DASHBOARD_DATA = {
           "fav": "SCOTT SERVICOS, COMERCIO E DISTRIBUICAO LTDA",
           "doc": "13378981000157",
           "val": 1783.32,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000484",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 900.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000486",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 1550.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -49357,6 +49465,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -55279,6 +55396,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -66615,6 +66741,15 @@ const DASHBOARD_DATA = {
           "prova": "Célula Orçamentária SIAFI"
         },
         {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
           "ne": "2026NE000039",
           "dia": "05/05/2026",
           "fav": "DEPOSITO CENTRAL DE MUNICAO",
@@ -72977,6 +73112,15 @@ const DASHBOARD_DATA = {
           "val": 650.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000509",
+          "dia": "18/11/2026",
+          "fav": "VIPE COMERCIAL LTDA",
+          "doc": "17526067000167",
+          "val": 55.3,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -74157,6 +74301,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -85172,7 +85325,44 @@ const DASHBOARD_DATA = {
           "obj": "AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000510",
+          "dia": "18/11/2026",
+          "fav": "CURICICA MADEIRAS LTDA",
+          "doc": "65921003000103",
+          "val": 19160.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000511",
+          "dia": "18/11/2026",
+          "fav": "CURICICA MADEIRAS LTDA",
+          "doc": "65921003000103",
+          "val": 4260.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000512",
+          "dia": "18/11/2026",
+          "fav": "G.R CARNEIRO LTDA",
+          "doc": "43032617000100",
+          "val": 5870.74,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000513",
+          "dia": "18/11/2026",
+          "fav": "ESTRUTURAL COMERCIO E SERVICOS DE ITAGUAI / RJ LTDA",
+          "doc": "51638027000145",
+          "val": 6500.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "160504000012026NC420894": {
       "nc": "160504000012026NC420894",
@@ -87865,6 +88055,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -91494,7 +91693,17 @@ const DASHBOARD_DATA = {
           "obj": "RESSARC CONTR SV ENS ESP ANEE ESCOLA CANADENSE DA FREGUESIA CNPJ 23110333000179 MENS NOVEMBRO 26 MAJ BRAULIO CASTELUCI TESTA CPF 05657950747 BAR NR 03 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE"
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000133",
+          "dia": "18/11/2026",
+          "fav": "BRAULIO CASTELUCI TESTA",
+          "doc": "05657950747",
+          "val": 1177.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "160035000012026NC000013": {
       "nc": "160035000012026NC000013",
@@ -94048,6 +94257,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -103225,7 +103443,17 @@ const DASHBOARD_DATA = {
           "obj": "C SUP-DIV SUBS-RECOLHIMENTO DE CREDITO POR TERMINO DE PRAZO DE APLICACAO. REF:IN LOG, DE 16JUN25."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000525",
+          "dia": "18/11/2026",
+          "fav": "SUNERGY FARM AND CONSTRUCTION LTDA",
+          "doc": "54303736000168",
+          "val": 9850.26,
+          "proc": "PE 90020/2026",
+          "prova": "Divergência de PI"
+        }
+      ]
     },
     "160504000012026NC409954": {
       "nc": "160504000012026NC409954",
@@ -105015,6 +105243,15 @@ const DASHBOARD_DATA = {
           "doc": "33493603000121",
           "val": 27868.0,
           "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000524",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 252280.0,
+          "proc": "PE 90006/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -106823,6 +107060,15 @@ const DASHBOARD_DATA = {
           "val": 18291.76,
           "proc": "PREGAO ELETRONICO 90248/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000526",
+          "dia": "18/11/2026",
+          "fav": "SUNERGY FARM AND CONSTRUCTION LTDA",
+          "doc": "54303736000168",
+          "val": 50916.11,
+          "proc": "PE 90020/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -107440,7 +107686,17 @@ const DASHBOARD_DATA = {
           "obj": "(040584-1O D SUP)C SUP-DIV SUBS-PLJ-RES REG DSP ORDINARIA. OBS REGRAS DO BT30.411-01. (PASSAGEM DE FUNCAO DO ADJ CMDO DO 1O D SUP) REF: DIEX NO 29295-SECOPSUP/ESCLOG/CMDO 1A RM, DE 28OUT26. EMPH ATE 15NOV26. PRB DETAORC."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000523",
+          "dia": "18/11/2026",
+          "fav": "ALK COMERCIO E SERVICOS DE ALIMENTACAO LTDA",
+          "doc": "33697852000139",
+          "val": 4996.2,
+          "proc": "PE 00009/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "160504000012026NC420059": {
       "nc": "160504000012026NC420059",
@@ -107510,6 +107766,15 @@ const DASHBOARD_DATA = {
           "doc": "37223288000173",
           "val": 109880.0,
           "proc": "PE 00106/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000522",
+          "dia": "18/11/2026",
+          "fav": "F C VIANA MATERIAIS E SERVICOS LTDA",
+          "doc": "20978099000108",
+          "val": 10160.5,
+          "proc": "PREGAO 90016/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -107708,7 +107973,17 @@ const DASHBOARD_DATA = {
           "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000527",
+          "dia": "18/11/2026",
+          "fav": "62.959.421 CAMILA RODRIGUES AUGUSTO",
+          "doc": "62959421000100",
+          "val": 75331.5,
+          "proc": "PE 00106/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "160504000012026NC421065": {
       "nc": "160504000012026NC421065",
@@ -111338,6 +111613,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -116258,6 +116542,15 @@ const DASHBOARD_DATA = {
           "val": 0.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000290",
+          "dia": "18/11/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 600000.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
         }
       ]
     },
@@ -120226,7 +120519,17 @@ const DASHBOARD_DATA = {
           "obj": "(52001-ECT) C SUP-DIV SUBS - TRNP LOG SUP CL I. OBS LEGISLACAO VIGENTE. (AQS SUPRIMENTO DE FUNDOS PARA TRANSPORTE DE SUPRIMENTOS CLASSE I - 2026NC416921), REF DIEX NO 1373-COT/ECT, 30/10/26."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000291",
+          "dia": "18/11/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 2124.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        }
+      ]
     },
     "160504000012026NC420799": {
       "nc": "160504000012026NC420799",
@@ -122393,7 +122696,17 @@ const DASHBOARD_DATA = {
           "obj": "RESSARC CONTR SV ENS ESP ANEE ASSOCIACAO EDUCATIVA E ASSISTENCIAL MADRE CARMEN SALLES CNPJ 00093278000827 MENS OUTUBRO 26 SGT RODRIGO DA FONSECA RODRIGUES CPF 09364500709 BAR 10 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLA"
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000025",
+          "dia": "18/11/2026",
+          "fav": "RODRIGO DA FONSECA RODRIGUES",
+          "doc": "09364500709",
+          "val": 915.92,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "167505000012026NC439871": {
       "nc": "167505000012026NC439871",
@@ -125840,6 +126153,15 @@ const DASHBOARD_DATA = {
           "doc": "50615423000194",
           "val": 1369.0,
           "proc": "PREGAO 90001/2025",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000137",
+          "dia": "18/11/2026",
+          "fav": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+          "doc": "08362070000100",
+          "val": 38989.98,
+          "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
         {
@@ -131767,6 +132089,15 @@ const DASHBOARD_DATA = {
           "doc": "13378981000157",
           "val": 35000.16,
           "proc": "PREGAO 90019/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000366",
+          "dia": "18/11/2026",
+          "fav": "MS COMERCIO E SERVICOS DE PRODUTOS INDUSTRIAIS E AUTOMO",
+          "doc": "37512517000170",
+          "val": 40000.69,
+          "proc": "PREGAO 90001/2024",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -138884,6 +139215,15 @@ const DASHBOARD_DATA = {
           "fav": "HERO COMERCIO E DISTRIBUICAO LTDA",
           "doc": "60896061000100",
           "val": 1732.5,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000120",
+          "dia": "18/11/2026",
+          "fav": "LUTHOR COMERCIO LTDA",
+          "doc": "48040995000140",
+          "val": 2189.37,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -150507,6 +150847,15 @@ const DASHBOARD_DATA = {
           "val": 178.0,
           "proc": "",
           "prova": "Divergência de PI"
+        },
+        {
+          "ne": "2026NE000485",
+          "dia": "18/11/2026",
+          "fav": "REAL FORTE MANUTENCAO PREDIAL LTDA",
+          "doc": "15656953000180",
+          "val": 3500.2,
+          "proc": "",
+          "prova": "Divergência de PI"
         }
       ]
     },
@@ -151384,6 +151733,24 @@ const DASHBOARD_DATA = {
           "fav": "CASA VAREJAO ARTIGOS DESPORTIVOS LTDA",
           "doc": "33101460000165",
           "val": 2308.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000482",
+          "dia": "18/11/2026",
+          "fav": "WAGNER LEITE DE OLIVEIRA 11734057718",
+          "doc": "35430841000113",
+          "val": 1499.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000483",
+          "dia": "18/11/2026",
+          "fav": "WAGNER LEITE DE OLIVEIRA 11734057718",
+          "doc": "35430841000113",
+          "val": 4589.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -153125,6 +153492,15 @@ const DASHBOARD_DATA = {
           "val": 1190.0,
           "proc": "",
           "prova": "Divergência de PI"
+        },
+        {
+          "ne": "2026NE000481",
+          "dia": "18/11/2026",
+          "fav": "SCOTT SERVICOS, COMERCIO E DISTRIBUICAO LTDA",
+          "doc": "13378981000157",
+          "val": 4938.36,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -153797,6 +154173,24 @@ const DASHBOARD_DATA = {
           "fav": "SCOTT SERVICOS, COMERCIO E DISTRIBUICAO LTDA",
           "doc": "13378981000157",
           "val": 1783.32,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000484",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 900.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000486",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 1550.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -175233,6 +175627,15 @@ const DASHBOARD_DATA = {
           "val": 650.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000509",
+          "dia": "18/11/2026",
+          "fav": "VIPE COMERCIAL LTDA",
+          "doc": "17526067000167",
+          "val": 55.3,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -181765,7 +182168,44 @@ const DASHBOARD_DATA = {
           "obj": "AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000510",
+          "dia": "18/11/2026",
+          "fav": "CURICICA MADEIRAS LTDA",
+          "doc": "65921003000103",
+          "val": 19160.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000511",
+          "dia": "18/11/2026",
+          "fav": "CURICICA MADEIRAS LTDA",
+          "doc": "65921003000103",
+          "val": 4260.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000512",
+          "dia": "18/11/2026",
+          "fav": "G.R CARNEIRO LTDA",
+          "doc": "43032617000100",
+          "val": 5870.74,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000513",
+          "dia": "18/11/2026",
+          "fav": "ESTRUTURAL COMERCIO E SERVICOS DE ITAGUAI / RJ LTDA",
+          "doc": "51638027000145",
+          "val": 6500.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "26NC420894": {
       "nc": "160504000012026NC420894",
@@ -186071,7 +186511,17 @@ const DASHBOARD_DATA = {
           "obj": "RESSARC CONTR SV ENS ESP ANEE ESCOLA CANADENSE DA FREGUESIA CNPJ 23110333000179 MENS NOVEMBRO 26 MAJ BRAULIO CASTELUCI TESTA CPF 05657950747 BAR NR 03 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE"
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000133",
+          "dia": "18/11/2026",
+          "fav": "BRAULIO CASTELUCI TESTA",
+          "doc": "05657950747",
+          "val": 1177.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "26NC400630": {
       "nc": "160035000012026NC400630",
@@ -192949,7 +193399,17 @@ const DASHBOARD_DATA = {
           "obj": "C SUP-DIV SUBS-RECOLHIMENTO DE CREDITO POR TERMINO DE PRAZO DE APLICACAO. REF:IN LOG, DE 16JUN25."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000525",
+          "dia": "18/11/2026",
+          "fav": "SUNERGY FARM AND CONSTRUCTION LTDA",
+          "doc": "54303736000168",
+          "val": 9850.26,
+          "proc": "PE 90020/2026",
+          "prova": "Divergência de PI"
+        }
+      ]
     },
     "26NC409954": {
       "nc": "160504000012026NC409954",
@@ -194739,6 +195199,15 @@ const DASHBOARD_DATA = {
           "doc": "33493603000121",
           "val": 27868.0,
           "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000524",
+          "dia": "18/11/2026",
+          "fav": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+          "doc": "13004212000199",
+          "val": 252280.0,
+          "proc": "PE 90006/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -196547,6 +197016,15 @@ const DASHBOARD_DATA = {
           "val": 18291.76,
           "proc": "PREGAO ELETRONICO 90248/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000526",
+          "dia": "18/11/2026",
+          "fav": "SUNERGY FARM AND CONSTRUCTION LTDA",
+          "doc": "54303736000168",
+          "val": 50916.11,
+          "proc": "PE 90020/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
     },
@@ -197164,7 +197642,17 @@ const DASHBOARD_DATA = {
           "obj": "(040584-1O D SUP)C SUP-DIV SUBS-PLJ-RES REG DSP ORDINARIA. OBS REGRAS DO BT30.411-01. (PASSAGEM DE FUNCAO DO ADJ CMDO DO 1O D SUP) REF: DIEX NO 29295-SECOPSUP/ESCLOG/CMDO 1A RM, DE 28OUT26. EMPH ATE 15NOV26. PRB DETAORC."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000523",
+          "dia": "18/11/2026",
+          "fav": "ALK COMERCIO E SERVICOS DE ALIMENTACAO LTDA",
+          "doc": "33697852000139",
+          "val": 4996.2,
+          "proc": "PE 00009/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "26NC420059": {
       "nc": "160504000012026NC420059",
@@ -197234,6 +197722,15 @@ const DASHBOARD_DATA = {
           "doc": "37223288000173",
           "val": 109880.0,
           "proc": "PE 00106/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000522",
+          "dia": "18/11/2026",
+          "fav": "F C VIANA MATERIAIS E SERVICOS LTDA",
+          "doc": "20978099000108",
+          "val": 10160.5,
+          "proc": "PREGAO 90016/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ]
@@ -197432,7 +197929,17 @@ const DASHBOARD_DATA = {
           "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000527",
+          "dia": "18/11/2026",
+          "fav": "62.959.421 CAMILA RODRIGUES AUGUSTO",
+          "doc": "62959421000100",
+          "val": 75331.5,
+          "proc": "PE 00106/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "26NC421065": {
       "nc": "160504000012026NC421065",
@@ -201305,6 +201812,15 @@ const DASHBOARD_DATA = {
           "val": 0.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000290",
+          "dia": "18/11/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 600000.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
         }
       ]
     },
@@ -205077,7 +205593,17 @@ const DASHBOARD_DATA = {
           "obj": "(52001-ECT) C SUP-DIV SUBS - TRNP LOG SUP CL I. OBS LEGISLACAO VIGENTE. (AQS SUPRIMENTO DE FUNDOS PARA TRANSPORTE DE SUPRIMENTOS CLASSE I - 2026NC416921), REF DIEX NO 1373-COT/ECT, 30/10/26."
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000291",
+          "dia": "18/11/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 2124.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        }
+      ]
     },
     "26NC420799": {
       "nc": "160504000012026NC420799",
@@ -207244,7 +207770,17 @@ const DASHBOARD_DATA = {
           "obj": "RESSARC CONTR SV ENS ESP ANEE ASSOCIACAO EDUCATIVA E ASSISTENCIAL MADRE CARMEN SALLES CNPJ 00093278000827 MENS OUTUBRO 26 SGT RODRIGO DA FONSECA RODRIGUES CPF 09364500709 BAR 10 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLA"
         }
       ],
-      "nes": []
+      "nes": [
+        {
+          "ne": "2026NE000025",
+          "dia": "18/11/2026",
+          "fav": "RODRIGO DA FONSECA RODRIGUES",
+          "doc": "09364500709",
+          "val": 915.92,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ]
     },
     "26NC439871": {
       "nc": "167505000012026NC439871",
@@ -207413,6 +207949,13 @@ const DASHBOARD_DATA = {
       "val": 1948000.0
     },
     {
+      "nome": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+      "cnpj": "160321",
+      "qtdNEs": 40,
+      "omds": "ECT",
+      "val": 1867779.05
+    },
+    {
       "nome": "JH2P-ENGENHARIA, CONSTRUCAO E DECORACAO LTDA",
       "cnpj": "03.992.117/0001-97",
       "qtdNEs": 14,
@@ -207425,13 +207968,6 @@ const DASHBOARD_DATA = {
       "qtdNEs": 3,
       "omds": "1º D Sup, BCMS",
       "val": 1443911.05
-    },
-    {
-      "nome": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
-      "cnpj": "160321",
-      "qtdNEs": 38,
-      "omds": "ECT",
-      "val": 1265655.05
     },
     {
       "nome": "RLH INDUSTRIA E COMERCIO LTDA",
@@ -207576,6 +208112,356 @@ const DASHBOARD_DATA = {
     }
   ],
   "todasNEs": [
+    {
+      "ne": "2026NE000481",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "SCOTT SERVICOS, COMERCIO E DISTRIBUICAO LTDA",
+      "cnpj": "13378981000157",
+      "valor": 4938.36,
+      "data": "18/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC414263",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 17400.0
+    },
+    {
+      "ne": "2026NE000482",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "WAGNER LEITE DE OLIVEIRA 11734057718",
+      "cnpj": "35430841000113",
+      "valor": 1499.0,
+      "data": "18/11/2026",
+      "processo": "2865",
+      "ncOrigem": "2026NC405169",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2580.8
+    },
+    {
+      "ne": "2026NE000483",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "WAGNER LEITE DE OLIVEIRA 11734057718",
+      "cnpj": "35430841000113",
+      "valor": 4589.0,
+      "data": "18/11/2026",
+      "processo": "2865",
+      "ncOrigem": "2026NC405169",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2580.8
+    },
+    {
+      "ne": "2026NE000484",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+      "cnpj": "13004212000199",
+      "valor": 900.0,
+      "data": "18/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC417959",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 19380.0
+    },
+    {
+      "ne": "2026NE000485",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "REAL FORTE MANUTENCAO PREDIAL LTDA",
+      "cnpj": "15656953000180",
+      "valor": 3500.2,
+      "data": "18/11/2026",
+      "processo": "212B",
+      "ncOrigem": "2026NC402304",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 1233.59
+    },
+    {
+      "ne": "2026NE000486",
+      "ug": "160238",
+      "omSigla": "Ba Ap Log",
+      "credor": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+      "cnpj": "13004212000199",
+      "valor": 1550.0,
+      "data": "18/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC417959",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 19380.0
+    },
+    {
+      "ne": "2026NE000509",
+      "ug": "160304",
+      "omSigla": "BMSA",
+      "credor": "VIPE COMERCIAL LTDA",
+      "cnpj": "17526067000167",
+      "valor": 55.3,
+      "data": "18/11/2026",
+      "processo": "2000",
+      "ncOrigem": "2026NC021456",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 36314.82
+    },
+    {
+      "ne": "2026NE000510",
+      "ug": "160304",
+      "omSigla": "BMSA",
+      "credor": "CURICICA MADEIRAS LTDA",
+      "cnpj": "65921003000103",
+      "valor": 19160.0,
+      "data": "18/11/2026",
+      "processo": "156M",
+      "ncOrigem": "2026NC420818",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 38320.0
+    },
+    {
+      "ne": "2026NE000511",
+      "ug": "160304",
+      "omSigla": "BMSA",
+      "credor": "CURICICA MADEIRAS LTDA",
+      "cnpj": "65921003000103",
+      "valor": 4260.0,
+      "data": "18/11/2026",
+      "processo": "156M",
+      "ncOrigem": "2026NC420818",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 8520.0
+    },
+    {
+      "ne": "2026NE000512",
+      "ug": "160304",
+      "omSigla": "BMSA",
+      "credor": "G.R CARNEIRO LTDA",
+      "cnpj": "43032617000100",
+      "valor": 5870.74,
+      "data": "18/11/2026",
+      "processo": "156M",
+      "ncOrigem": "2026NC420818",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 11741.48
+    },
+    {
+      "ne": "2026NE000513",
+      "ug": "160304",
+      "omSigla": "BMSA",
+      "credor": "ESTRUTURAL COMERCIO E SERVICOS DE ITAGUAI / RJ LTDA",
+      "cnpj": "51638027000145",
+      "valor": 6500.0,
+      "data": "18/11/2026",
+      "processo": "156M",
+      "ncOrigem": "2026NC420818",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 13000.0
+    },
+    {
+      "ne": "2026NE000522",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "F C VIANA MATERIAIS E SERVICOS LTDA",
+      "cnpj": "20978099000108",
+      "valor": 10160.5,
+      "data": "18/11/2026",
+      "processo": "PREGAO 90016/2025",
+      "ncOrigem": "2026NC420125",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 38440.23
+    },
+    {
+      "ne": "2026NE000523",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "ALK COMERCIO E SERVICOS DE ALIMENTACAO LTDA",
+      "cnpj": "33697852000139",
+      "valor": 4996.2,
+      "data": "18/11/2026",
+      "processo": "PE 00009/2026",
+      "ncOrigem": "2026NC419921",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 8974.75
+    },
+    {
+      "ne": "2026NE000524",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "FACILITA SERVICOS E COMERCIO DE PRODUTOS INDUSTRIAIS E",
+      "cnpj": "13004212000199",
+      "valor": 252280.0,
+      "data": "18/11/2026",
+      "processo": "PE 90006/2025",
+      "ncOrigem": "2026NC413139",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2382824.73
+    },
+    {
+      "ne": "2026NE000525",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "SUNERGY FARM AND CONSTRUCTION LTDA",
+      "cnpj": "54303736000168",
+      "valor": 9850.26,
+      "data": "18/11/2026",
+      "processo": "PE 90020/2026",
+      "ncOrigem": "2026NC409932",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 1011314.45
+    },
+    {
+      "ne": "2026NE000526",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "SUNERGY FARM AND CONSTRUCTION LTDA",
+      "cnpj": "54303736000168",
+      "valor": 50916.11,
+      "data": "18/11/2026",
+      "processo": "PE 90020/2025",
+      "ncOrigem": "2026NC417723",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2382824.73
+    },
+    {
+      "ne": "2026NE000527",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "62.959.421 CAMILA RODRIGUES AUGUSTO",
+      "cnpj": "62959421000100",
+      "valor": 75331.5,
+      "data": "18/11/2026",
+      "processo": "PE 00106/2026",
+      "ncOrigem": "2026NC420819",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 150663.0
+    },
+    {
+      "ne": "2026NE000290",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+      "cnpj": "160321",
+      "valor": 600000.0,
+      "data": "18/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC400387",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 118659.38
+    },
+    {
+      "ne": "2026NE000291",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+      "cnpj": "160321",
+      "valor": 2124.0,
+      "data": "18/11/2026",
+      "processo": "212B",
+      "ncOrigem": "2026NC420797",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 4248.0
+    },
+    {
+      "ne": "2026NE000366",
+      "ug": "160329",
+      "omSigla": "BCMS",
+      "credor": "MS COMERCIO E SERVICOS DE PRODUTOS INDUSTRIAIS E AUTOMO",
+      "cnpj": "37512517000170",
+      "valor": 40000.69,
+      "data": "18/11/2026",
+      "processo": "PREGAO 90001/2024",
+      "ncOrigem": "2026NC000112",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 877.2
+    },
+    {
+      "ne": "2026NE000137",
+      "ug": "167238",
+      "omSigla": "Ba Ap Log",
+      "credor": "ALIANCA CARVALHO COMERCIO E SERVICOS DE PRODUTOS INDUST",
+      "cnpj": "08362070000100",
+      "valor": 38989.98,
+      "data": "18/11/2026",
+      "processo": "2004",
+      "ncOrigem": "2026NC000002",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 16013.04
+    },
+    {
+      "ne": "2026NE000132",
+      "ug": "167304",
+      "omSigla": "BMSA",
+      "credor": "WAGNER SILVA LIMA",
+      "cnpj": "08622988732",
+      "valor": 1177.0,
+      "data": "18/11/2026",
+      "processo": "2004",
+      "ncOrigem": "2026NC440483",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 23940.0
+    },
+    {
+      "ne": "2026NE000133",
+      "ug": "167304",
+      "omSigla": "BMSA",
+      "credor": "BRAULIO CASTELUCI TESTA",
+      "cnpj": "05657950747",
+      "valor": 1177.0,
+      "data": "18/11/2026",
+      "processo": "2004",
+      "ncOrigem": "2026NC440437",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 23940.0
+    },
+    {
+      "ne": "2026NE000025",
+      "ug": "167321",
+      "omSigla": "ECT",
+      "credor": "RODRIGO DA FONSECA RODRIGUES",
+      "cnpj": "09364500709",
+      "valor": 915.92,
+      "data": "18/11/2026",
+      "processo": "2004",
+      "ncOrigem": "2026NC439870",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 7326.96
+    },
+    {
+      "ne": "2026NE000120",
+      "ug": "167329",
+      "omSigla": "BCMS",
+      "credor": "LUTHOR COMERCIO LTDA",
+      "cnpj": "48040995000140",
+      "valor": 2189.37,
+      "data": "18/11/2026",
+      "processo": "21GN",
+      "ncOrigem": "2026NC001540",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 26915.56
+    },
     {
       "ne": "2026NE000477",
       "ug": "160238",
