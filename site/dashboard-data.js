@@ -1,19 +1,19 @@
 const DASHBOARD_DATA = {
   "meta": {
     "exercicio": "2026",
-    "posicaoData": "26/11/2026",
-    "dataColetaHora": "07:14",
+    "posicaoData": "27/11/2026",
+    "dataColetaHora": "09:15",
     "dataColetaFonte": "Last-Modified do arquivo no Google Drive",
-    "atualizadoEm": "26/11/2026 às 19:34",
-    "ultimaMovimentacao": "25/11/2026",
+    "atualizadoEm": "27/11/2026 às 17:03",
+    "ultimaMovimentacao": "26/11/2026",
     "mesAtualNome": "Novembro",
     "fonte": "SIAFI / Tesouro Gerencial / SICOF",
     "orgaoSuperior": "Comando Logístico (COLOG) / Base de Apoio Logístico",
-    "statusGeral": "Execução Avançada (99.01% Empenhado)",
-    "diasAteEncerramento": 35,
-    "totalNEs": 3203,
-    "totalNEsAuditadas": 2688,
-    "valorTotalEmpenhado": 53984669.47
+    "statusGeral": "Execução Avançada (99.61% Empenhado)",
+    "diasAteEncerramento": 34,
+    "totalNEs": 3215,
+    "totalNEsAuditadas": 2699,
+    "valorTotalEmpenhado": 54043844.67
   },
   "unidades": [
     {
@@ -26,15 +26,15 @@ const DASHBOARD_DATA = {
       "ugs": [
         "Consolidado Geral (12 UGs)"
       ],
-      "prov": 54526129.57,
-      "emp": 53984669.47,
-      "liq": 31880577.81,
-      "pag": 31253775.12,
-      "cred": 449928.62,
+      "prov": 54257810.86,
+      "emp": 54043844.67,
+      "liq": 31938261.64,
+      "pag": 31285511.1,
+      "cred": 122445.03,
       "conc": 0.0,
-      "taxaEmpenho": 99.01,
-      "taxaLiquidacao": 59.05,
-      "taxaPagamento": 98.03
+      "taxaEmpenho": 99.61,
+      "taxaLiquidacao": 59.1,
+      "taxaPagamento": 97.96
     },
     {
       "id": "BCMS",
@@ -47,33 +47,33 @@ const DASHBOARD_DATA = {
         "160329 (Ordinário)",
         "167329 (Saúde)"
       ],
-      "prov": 12281062.63,
-      "emp": 12276983.41,
-      "liq": 6157269.68,
-      "pag": 6112726.48,
-      "cred": 4079.22,
+      "prov": 12289390.84,
+      "emp": 12277930.31,
+      "liq": 6187532.95,
+      "pag": 6112746.1,
+      "cred": 11460.53,
       "conc": 0.0,
-      "taxaEmpenho": 99.97,
-      "taxaLiquidacao": 50.15,
-      "taxaPagamento": 99.28,
+      "taxaEmpenho": 99.91,
+      "taxaLiquidacao": 50.4,
+      "taxaPagamento": 98.79,
       "sub": {
         "ordinario": {
           "ug": "160329",
-          "prov": 9806095.41,
+          "prov": 9814423.62,
           "emp": 9804800.1,
-          "liq": 5072957.43,
-          "pag": 5028414.23,
-          "cred": 1295.31,
-          "taxaEmp": 99.99
+          "liq": 5103220.7,
+          "pag": 5028433.85,
+          "cred": 9623.52,
+          "taxaEmp": 99.9
         },
         "saude": {
           "ug": "167329",
           "prov": 2474967.22,
-          "emp": 2472183.31,
+          "emp": 2473130.21,
           "liq": 1084312.25,
           "pag": 1084312.25,
-          "cred": 2783.91,
-          "taxaEmp": 99.89
+          "cred": 1837.01,
+          "taxaEmp": 99.93
         }
       }
     },
@@ -88,24 +88,24 @@ const DASHBOARD_DATA = {
         "160238 (Ordinário)",
         "167238 (Saúde)"
       ],
-      "prov": 5208562.02,
-      "emp": 4927320.31,
+      "prov": 5121032.56,
+      "emp": 4991956.62,
       "liq": 2793910.63,
       "pag": 2777520.03,
-      "cred": 189710.23,
+      "cred": 37554.78,
       "conc": 0.0,
-      "taxaEmpenho": 94.6,
-      "taxaLiquidacao": 56.7,
+      "taxaEmpenho": 97.48,
+      "taxaLiquidacao": 55.97,
       "taxaPagamento": 99.41,
       "sub": {
         "ordinario": {
           "ug": "160238",
-          "prov": 4565280.42,
-          "emp": 4285013.05,
+          "prov": 4477750.96,
+          "emp": 4349649.36,
           "liq": 2391763.79,
           "pag": 2378895.89,
-          "cred": 188735.89,
-          "taxaEmp": 93.86
+          "cred": 36580.44,
+          "taxaEmp": 97.14
         },
         "saude": {
           "ug": "167238",
@@ -129,31 +129,31 @@ const DASHBOARD_DATA = {
         "160246 (Ordinário)",
         "167246 (Saúde)"
       ],
-      "prov": 3894314.75,
-      "emp": 3884504.1,
-      "liq": 2695544.11,
-      "pag": 2613044.47,
-      "cred": 9810.65,
+      "prov": 3894314.74,
+      "emp": 3893984.41,
+      "liq": 2715765.67,
+      "pag": 2617016.02,
+      "cred": 330.33,
       "conc": 0.0,
-      "taxaEmpenho": 99.75,
-      "taxaLiquidacao": 69.39,
-      "taxaPagamento": 96.94,
+      "taxaEmpenho": 99.99,
+      "taxaLiquidacao": 69.74,
+      "taxaPagamento": 96.36,
       "sub": {
         "ordinario": {
           "ug": "160246",
-          "prov": 3622447.03,
-          "emp": 3612871.71,
+          "prov": 3622447.02,
+          "emp": 3622352.02,
           "liq": 2487364.19,
-          "pag": 2408761.26,
-          "cred": 9575.32,
-          "taxaEmp": 99.74
+          "pag": 2408889.39,
+          "cred": 95.0,
+          "taxaEmp": 100.0
         },
         "saude": {
           "ug": "167246",
           "prov": 271867.72,
           "emp": 271632.39,
-          "liq": 208179.92,
-          "pag": 204283.21,
+          "liq": 228401.48,
+          "pag": 208126.63,
           "cred": 235.33,
           "taxaEmp": 99.91
         }
@@ -170,30 +170,30 @@ const DASHBOARD_DATA = {
         "160304 (Ordinário)",
         "167304 (Saúde)"
       ],
-      "prov": 5297948.89,
+      "prov": 5297200.46,
       "emp": 5293861.22,
-      "liq": 3461532.73,
-      "pag": 3452972.81,
-      "cred": 4087.67,
+      "liq": 3468731.73,
+      "pag": 3462003.81,
+      "cred": 3339.24,
       "conc": 0.0,
-      "taxaEmpenho": 99.92,
-      "taxaLiquidacao": 65.39,
-      "taxaPagamento": 99.75,
+      "taxaEmpenho": 99.94,
+      "taxaLiquidacao": 65.52,
+      "taxaPagamento": 99.81,
       "sub": {
         "ordinario": {
           "ug": "160304",
-          "prov": 4636833.83,
+          "prov": 4636085.4,
           "emp": 4636056.04,
-          "liq": 3218605.21,
-          "pag": 3210949.51,
-          "cred": 777.79,
-          "taxaEmp": 99.98
+          "liq": 3223450.21,
+          "pag": 3219980.51,
+          "cred": 29.36,
+          "taxaEmp": 100.0
         },
         "saude": {
           "ug": "167304",
           "prov": 661115.06,
           "emp": 657805.18,
-          "liq": 242927.52,
+          "liq": 245281.52,
           "pag": 242023.3,
           "cred": 3309.88,
           "taxaEmp": 99.5
@@ -211,24 +211,24 @@ const DASHBOARD_DATA = {
         "160307 (Ordinário)",
         "167307 (Saúde)"
       ],
-      "prov": 21221869.52,
-      "emp": 21167469.65,
+      "prov": 21221112.55,
+      "emp": 21153469.65,
       "liq": 11859460.89,
       "pag": 11406871.1,
-      "cred": 54399.87,
+      "cred": 67642.9,
       "conc": 0.0,
-      "taxaEmpenho": 99.74,
-      "taxaLiquidacao": 56.03,
+      "taxaEmpenho": 99.68,
+      "taxaLiquidacao": 56.06,
       "taxaPagamento": 96.18,
       "sub": {
         "ordinario": {
           "ug": "160307",
-          "prov": 19244527.99,
-          "emp": 19190200.08,
+          "prov": 19243771.02,
+          "emp": 19176200.08,
           "liq": 10188262.51,
           "pag": 9741166.72,
-          "cred": 54327.91,
-          "taxaEmp": 99.72
+          "cred": 67570.94,
+          "taxaEmp": 99.65
         },
         "saude": {
           "ug": "167307",
@@ -252,24 +252,24 @@ const DASHBOARD_DATA = {
         "160321 (Ordinário)",
         "167321 (Saúde)"
       ],
-      "prov": 6622371.76,
-      "emp": 6434530.78,
+      "prov": 6434759.71,
+      "emp": 6432642.46,
       "liq": 4912859.77,
-      "pag": 4890640.23,
-      "cred": 187840.98,
+      "pag": 4909354.04,
+      "cred": 2117.25,
       "conc": 0.0,
-      "taxaEmpenho": 97.16,
-      "taxaLiquidacao": 76.35,
-      "taxaPagamento": 99.55,
+      "taxaEmpenho": 99.97,
+      "taxaLiquidacao": 76.37,
+      "taxaPagamento": 99.93,
       "sub": {
         "ordinario": {
           "ug": "160321",
-          "prov": 6576282.52,
-          "emp": 6388448.83,
+          "prov": 6388670.47,
+          "emp": 6386560.51,
           "liq": 4890437.15,
-          "pag": 4870049.85,
-          "cred": 187833.69,
-          "taxaEmp": 97.14
+          "pag": 4888763.66,
+          "cred": 2109.96,
+          "taxaEmp": 99.97
         },
         "saude": {
           "ug": "167321",
@@ -285,115 +285,7 @@ const DASHBOARD_DATA = {
   ],
   "creditosEmTela": [
     {
-      "id": "ECT_t6",
-      "om": "ECT",
-      "nc": "160504000012026NC420162",
-      "uasg": "160321",
-      "u": "160",
-      "nd": "339039",
-      "ndnome": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
-      "pi": "E7DATRSAPIO",
-      "pinome": "TRANSPORTE",
-      "v": 187133.58,
-      "prov": 600000.0,
-      "emp": 0.0,
-      "saldo": 187133.58,
-      "taxa": 0.0,
-      "dias": 12,
-      "dia": "11/11/2026",
-      "obj": "COPLOG_CONTRATACAO DE SERVICOS DE MANUTENCAO DE VIATURAS (QUARTEIRIZACAO). EMPENHO IMEDIATO. CONFORME PLANEJAMENTO DO COPLOG.",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPENHO IMEDIATO"
-      },
-      "concedente": "CMAT - Centro de Material Bélico / COLOG"
-    },
-    {
-      "id": "BAAPLOG_t7",
-      "om": "BAAPLOG",
-      "nc": "160504000012026NC412179",
-      "uasg": "160238",
-      "u": "160",
-      "nd": "339030",
-      "ndnome": "MATERIAL DE CONSUMO",
-      "pi": "E6SUPLJA1QR",
-      "pinome": "A1QR - QUANTITATIVO DE RANCHO",
-      "v": 67377.68,
-      "prov": 148134.0,
-      "emp": 139227.36,
-      "saldo": 67377.68,
-      "taxa": 93.99,
-      "dias": 106,
-      "dia": "10/08/2026",
-      "obj": "(027318-CIA C BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.193H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP16.807,10.NEALIQ101.565,72.DSPN598,27.TRNF-476,00.ADNT0,00.PRB DETAORC.",
-      "prazo": "30/10/2026",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "data explícita na NC",
-        "trecho": "EMPH ATE 30OUT26"
-      },
-      "concedente": "CMAT - Centro de Material Bélico / COLOG"
-    },
-    {
-      "id": "BAAPLOG_t16",
-      "om": "BAAPLOG",
-      "nc": "160504000012026NC421373",
-      "uasg": "160238",
-      "u": "160",
-      "nd": "449052",
-      "ndnome": "EQUIPAMENTOS E MATERIAL PERMANENTE",
-      "pi": "E6MISOLMNOP",
-      "pinome": "MATERIAL DE INTENDENCIA",
-      "v": 62088.72,
-      "prov": 62088.72,
-      "emp": 0.0,
-      "saldo": 62088.72,
-      "taxa": 0.0,
-      "dias": 6,
-      "dia": "18/11/2026",
-      "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-AQUISICAO DE EQUIPAMENTOS E MOBILIARIO PARA FUNCIONAMENTO DE ESTRUTURAS DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPH IMEDIATO"
-      },
-      "concedente": "CMAT - Centro de Material Bélico / COLOG"
-    },
-    {
-      "id": "BAAPLOG_t8",
-      "om": "BAAPLOG",
-      "nc": "160504000012026NC412142",
-      "uasg": "160238",
-      "u": "160",
-      "nd": "339030",
-      "ndnome": "MATERIAL DE CONSUMO",
-      "pi": "E6SUPLJA1QR",
-      "pinome": "A1QR - QUANTITATIVO DE RANCHO",
-      "v": 45997.0,
-      "prov": 45997.0,
-      "emp": 0.0,
-      "saldo": 45997.0,
-      "taxa": 0.0,
-      "dias": 106,
-      "dia": "10/08/2026",
-      "obj": "(012369-BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.68H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP5.921,67.NEALIQ35.784,81.DSPN210,79.TRNF-6.363,00.ADNT0,00.PRB DETAORC.",
-      "prazo": "30/10/2026",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "data explícita na NC",
-        "trecho": "EMPH ATE 30OUT26"
-      },
-      "concedente": "CMAT - Centro de Material Bélico / COLOG"
-    },
-    {
-      "id": "DSUP1_t4",
+      "id": "DSUP1_t3",
       "om": "DSUP1",
       "nc": "160504000012026NC418801",
       "uasg": "160307",
@@ -402,12 +294,12 @@ const DASHBOARD_DATA = {
       "ndnome": "EQUIPAMENTOS E MATERIAL PERMANENTE",
       "pi": "E6SUSOLA6OP",
       "pinome": "A6OP - MNT DE ORGAO PROVEDOR SOLICITADO",
-      "v": 39503.74,
+      "v": 53503.74,
       "prov": 55957.72,
       "emp": 55957.72,
-      "saldo": 39503.74,
+      "saldo": 53503.74,
       "taxa": 100.0,
-      "dias": 21,
+      "dias": 22,
       "dia": "04/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE EQUIPAMENTOS P/ SETOR SUP CL) REF DIEX NO 2720-COS/1O D SUP DE 08/10/2026. EMPH ATE 7 DIAS UTEIS. PRB DETAORC.",
       "prazo": "13/11/2026",
@@ -420,7 +312,34 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "DSUP1_t8",
+      "id": "BAAPLOG_t15",
+      "om": "BAAPLOG",
+      "nc": "160505000012026NC442617",
+      "uasg": "160238",
+      "u": "160",
+      "nd": "339093",
+      "ndnome": "INDENIZACOES E RESTITUICOES",
+      "pi": "D6PEINDMV1A",
+      "pinome": "IND-INDENIZACOES",
+      "v": 21676.56,
+      "prov": 26169.24,
+      "emp": 4492.68,
+      "saldo": 21676.56,
+      "taxa": 17.17,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426",
+      "prazo": "Não informado na NC",
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      },
+      "concedente": "DSup - Diretoria de Suprimento / COLOG"
+    },
+    {
+      "id": "DSUP1_t6",
       "om": "DSUP1",
       "nc": "160504000012026NC421305",
       "uasg": "160307",
@@ -434,7 +353,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 14000.0,
       "taxa": 0.0,
-      "dias": 7,
+      "dias": 8,
       "dia": "18/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE UM EVAPORADOR ROTATIVO DA MARCA SOLA) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC.",
       "prazo": "20/11/2026",
@@ -447,7 +366,34 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BAAPLOG_t17",
+      "id": "BCMS_t14",
+      "om": "BCMS",
+      "nc": "160298000012026NC000980",
+      "uasg": "160329",
+      "u": "160",
+      "nd": "339030",
+      "ndnome": "MATERIAL DE CONSUMO",
+      "pi": "E6SUPLJA3RR",
+      "pinome": "A3RR - QUANTITATIVO DE RANCHO",
+      "v": 9600.0,
+      "prov": 9600.0,
+      "emp": 0.0,
+      "saldo": 9600.0,
+      "taxa": 0.0,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC.",
+      "prazo": "Não informado na NC",
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      },
+      "concedente": "Comando Militar do Leste (CML)"
+    },
+    {
+      "id": "BAAPLOG_t13",
       "om": "BAAPLOG",
       "nc": "160504000012026NC421372",
       "uasg": "160238",
@@ -461,7 +407,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 6702.27,
       "taxa": 0.0,
-      "dias": 6,
+      "dias": 8,
       "dia": "18/11/2026",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-ATENDER SERVICOS DE MANUTENCAO DE INSTALACOES DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
       "prazo": "IMEDIATO",
@@ -474,50 +420,23 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "DCMUN_t5",
-      "om": "DCMUN",
-      "nc": "160539000012026NC407899",
-      "uasg": "160246",
+      "id": "BAAPLOG_t16",
+      "om": "BAAPLOG",
+      "nc": "160505000012026NC442617",
+      "uasg": "160238",
       "u": "160",
-      "nd": "339030",
-      "ndnome": "MATERIAL DE CONSUMO",
-      "pi": "FAOPPREINIB",
-      "pinome": "INSTRUCAO INDIVIDUAL BASICA",
-      "v": 6650.0,
-      "prov": 6650.0,
-      "emp": 0.0,
-      "saldo": 6650.0,
-      "taxa": 0.0,
-      "dias": 33,
-      "dia": "22/10/2026",
-      "obj": "APOIAR IIB 2027. DC MUN. EMPENHO ATÉ 30NOV2026. ESSA UG NÃO DEVE ALTERAR ND/UGR (ALT EXEC SOMENTE P/ COTER). ATENDE DIEX Nº 11646 - DPG/CH PREP F TER/COTER, 16 OUT 26.",
-      "prazo": "30/11/2026",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "data explícita na NC",
-        "trecho": "EMPENHO ATE 30NOV2026"
-      },
-      "concedente": "DMAvEx - Diretoria de Material de Aviação"
-    },
-    {
-      "id": "DCMUN_t7",
-      "om": "DCMUN",
-      "nc": "160504000012026NC420820",
-      "uasg": "160246",
-      "u": "160",
-      "nd": "339030",
-      "ndnome": "MATERIAL DE CONSUMO",
-      "pi": "FIA111XARTC",
-      "pinome": "REESTRUTURACAO DO COMANDO DE OP ESP",
-      "v": 2830.31,
-      "prov": 2830.31,
-      "emp": 0.0,
-      "saldo": 2830.31,
-      "taxa": 0.0,
-      "dias": 7,
-      "dia": "17/11/2026",
-      "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
+      "nd": "339093",
+      "ndnome": "INDENIZACOES E RESTITUICOES",
+      "pi": "D6PEINDMV1T",
+      "pinome": "IND - INDENIZACOES",
+      "v": 4492.68,
+      "prov": 26169.24,
+      "emp": 21676.56,
+      "saldo": 4492.68,
+      "taxa": 82.83,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -525,37 +444,10 @@ const DASHBOARD_DATA = {
         "regra": "texto da NC sem prazo",
         "trecho": ""
       },
-      "concedente": "CMAT - Centro de Material Bélico / COLOG"
+      "concedente": "DSup - Diretoria de Suprimento / COLOG"
     },
     {
-      "id": "BAAPLOG_t18",
-      "om": "BAAPLOG",
-      "nc": "160073000012026NC022379",
-      "uasg": "160238",
-      "u": "160",
-      "nd": "449000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I1DSATSAIMP",
-      "pinome": "DESPESAS COM A ADMINISTRACAO DA IMPORTACAO",
-      "v": 2640.0,
-      "prov": 2640.0,
-      "emp": 0.0,
-      "saldo": 2640.0,
-      "taxa": 0.0,
-      "dias": 6,
-      "dia": "18/11/2026",
-      "obj": "AQUISICAO DE CADEIRA PARA A DIVISAO DE IMPORTACAO E EXPORTACAO DE MATERIAL. DOC REF: DIEX Nº 6703-DIEM/BAAPLOG DE 16NOV26. PRAZO DE EMPENHO: IMEDIATO. EMPENHAR CONFORME ORIENTACOES DO COAA DGO 03.",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "PRAZO DE EMPENHO: IMEDIATO"
-      },
-      "concedente": "SGS / DGO - Diretoria de Gestão Orçamentária"
-    },
-    {
-      "id": "BMSA_t3",
+      "id": "BMSA_t2",
       "om": "BMSA",
       "nc": "167505000012026NC430927",
       "uasg": "167304",
@@ -569,7 +461,7 @@ const DASHBOARD_DATA = {
       "emp": 2769.38,
       "saldo": 2156.63,
       "taxa": 65.07,
-      "dias": 70,
+      "dias": 71,
       "dia": "16/09/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "prazo": "19/10/2026",
@@ -596,7 +488,7 @@ const DASHBOARD_DATA = {
       "emp": 8396.0,
       "saldo": 1604.0,
       "taxa": 83.96,
-      "dias": 231,
+      "dias": 233,
       "dia": "07/04/2026",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-RECURSO PARA ATENDER CONFECCAO DE MATERIAL DE BIDS, CFM PEDIDOS APROVADOS NO PDR LOG 2026. POR ORDEM DO CMT LOG, EMPH ATE 31 MAIO 26.",
       "prazo": "31/05/2026",
@@ -609,7 +501,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BCMS_t16",
+      "id": "BCMS_t11",
       "om": "BCMS",
       "nc": "167505000012026NC440266",
       "uasg": "167329",
@@ -623,7 +515,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 1177.0,
       "taxa": 0.0,
-      "dias": 8,
+      "dias": 9,
       "dia": "17/11/2026",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "prazo": "IMEDIATO",
@@ -650,7 +542,7 @@ const DASHBOARD_DATA = {
       "emp": 3184.73,
       "saldo": 1071.25,
       "taxa": 74.83,
-      "dias": 320,
+      "dias": 321,
       "dia": "09/01/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26.",
       "prazo": "31/03/2026",
@@ -663,7 +555,7 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BAAPLOG_t12",
+      "id": "BAAPLOG_t9",
       "om": "BAAPLOG",
       "nc": "160238000012026NC000200",
       "uasg": "160238",
@@ -677,7 +569,7 @@ const DASHBOARD_DATA = {
       "emp": 5000.0,
       "saldo": 1069.26,
       "taxa": 29.41,
-      "dias": 13,
+      "dias": 15,
       "dia": "11/11/2026",
       "obj": "AJUS ND",
       "prazo": "Não informado na NC",
@@ -690,61 +582,61 @@ const DASHBOARD_DATA = {
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
-      "id": "BCMS_t20",
-      "om": "BCMS",
-      "nc": "160035000012026NC403162",
-      "uasg": "160329",
+      "id": "ECT_t3",
+      "om": "ECT",
+      "nc": "160504000012026NC415508",
+      "uasg": "160321",
       "u": "160",
       "nd": "339015",
       "ndnome": "DIARIAS - PESSOAL MILITAR",
-      "pi": "K8COMSIDIAR",
-      "pinome": "DIARIAS-MNT SIST INFO E COMUNICACAO",
-      "v": 850.0,
-      "prov": 850.0,
-      "emp": 0.0,
-      "saldo": 850.0,
-      "taxa": 0.0,
-      "dias": 6,
-      "dia": "19/11/2026",
-      "obj": "CCOMGEX/E4 - NC DE ORIGEM XXX CREDITO COMPL PGTO DE DIARIA P/ ATENDER ATIV. DE APOIO DIRETO DE MNT MEM CL VII,DESTINADO A COBRIR AS DESPESAS DO SUBTENENTE RODRIGUE. DIEX Nº 3093-SALC/CMDO/BCMS, DE 13NOV26.CONF. ITEM 1.B. DO PDR/26.",
-      "prazo": "Não informado na NC",
+      "pi": "E7DATRSDIAR",
+      "pinome": "TRANSPORTE-DIARIAS",
+      "v": 1068.32,
+      "prov": 86214.0,
+      "emp": 85145.68,
+      "saldo": 1068.32,
+      "taxa": 98.76,
+      "dias": 66,
+      "dia": "21/09/2026",
+      "obj": "COPLOG - PDRLOG2026 - ATENDER DIARIAS DE MILITARES EM AP AO EIXO SUL 2O SEMESTRE 2026 E EM AP ATV LOG TRNP, CONF. DIEX NO 22752-DIVOPLOG.6 /COPLOG/ COLOG DE 15SET26. EMPH ATE 30OUT26 NO SCDP.",
+      "prazo": "30/10/2026",
       "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
+        "tipo": "empenho",
+        "fonte": "descrição da NC (SIAFI)",
+        "regra": "data explícita na NC",
+        "trecho": "EMPH ATE 30OUT26"
       },
-      "concedente": "CCOMGEX - Cmdo Comunicações e Guerra Eletrônica"
+      "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BMSA_t2",
-      "om": "BMSA",
-      "nc": "160505000012026NC417188",
-      "uasg": "160304",
+      "id": "ECT_t4",
+      "om": "ECT",
+      "nc": "160504000012026NC418322",
+      "uasg": "160321",
       "u": "160",
-      "nd": "339033",
-      "ndnome": "PASSAGENS E DESPESAS COM LOCOMOCAO",
-      "pi": "IDDSATSPCEB",
-      "pinome": "DESL PARA CURSOS E ESTAGIOS NO AMBITODO EB",
-      "v": 748.43,
-      "prov": 4997.56,
-      "emp": 1345.27,
-      "saldo": 748.43,
-      "taxa": 26.92,
-      "dias": 149,
-      "dia": "29/06/2026",
-      "obj": "ATENDE ADITAMENTO 4A BOL DGP 067_12 JUN 2026_CURSOS FAVORECIDO MAJ BRAULIO CASTELUCI TESTA 05657950747 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 28354",
-      "prazo": "Não informado na NC",
+      "nd": "339015",
+      "ndnome": "DIARIAS - PESSOAL MILITAR",
+      "pi": "E7DATRSDIAR",
+      "pinome": "TRANSPORTE-DIARIAS",
+      "v": 820.0,
+      "prov": 820.0,
+      "emp": 0.0,
+      "saldo": 820.0,
+      "taxa": 0.0,
+      "dias": 34,
+      "dia": "23/10/2026",
+      "obj": "COPLOG - ATENDER DIARIAS DE MILITARES PARA TREINAMENTO SIGELOG NA GUARNICAO DE BRASILIA /DF E EM AP A ATV LOG TRNP, CONFORME DIEX NO 20500-DIEX NO 6147-CCOL /BAAPLOG DE 20OUT26. EMPENHO IMEDIATO NO SCDP.",
+      "prazo": "IMEDIATO",
       "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
+        "tipo": "empenho",
+        "fonte": "descrição da NC (SIAFI)",
+        "regra": "imediato (texto da NC)",
+        "trecho": "EMPENHO IMEDIATO"
       },
-      "concedente": "DSup - Diretoria de Suprimento / COLOG"
+      "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BAAPLOG_t10",
+      "id": "BAAPLOG_t7",
       "om": "BAAPLOG",
       "nc": "167238000012026NC000015",
       "uasg": "167238",
@@ -758,7 +650,7 @@ const DASHBOARD_DATA = {
       "emp": 13433.9,
       "saldo": 651.72,
       "taxa": 237.8,
-      "dias": 41,
+      "dias": 43,
       "dia": "14/10/2026",
       "obj": "ATD DESPESAS COM FUNADOM 2 COTA, CONFORME PDR SSEX 2026. LIQUIDAR ATE 30SET26 LIQ. MENSALMENTE. AUTORIZACAO PARA DETAORC CONF. LEGISLACAO VIGENTE",
       "prazo": "30/09/2026",
@@ -771,34 +663,7 @@ const DASHBOARD_DATA = {
       "concedente": "Ba Ap Log (Fundo de Saúde)"
     },
     {
-      "id": "DSUP1_t11",
-      "om": "DSUP1",
-      "nc": "160307000012026NC000066",
-      "uasg": "160307",
-      "u": "160",
-      "nd": "449000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNSUPL",
-      "pinome": "ADMINISTRACAO DE OM",
-      "v": 501.84,
-      "prov": 505.72,
-      "emp": 3.88,
-      "saldo": 501.84,
-      "taxa": 0.77,
-      "dias": 0,
-      "dia": "25/11/2026",
-      "obj": "DETALHAMENTO DE CREDITO.",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "1º D Sup - 1º Depósito de Suprimento"
-    },
-    {
-      "id": "BCMS_t17",
+      "id": "BCMS_t12",
       "om": "BCMS",
       "nc": "167505000012026NC440172",
       "uasg": "167329",
@@ -812,7 +677,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 500.0,
       "taxa": 0.0,
-      "dias": 8,
+      "dias": 9,
       "dia": "17/11/2026",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "prazo": "IMEDIATO",
@@ -825,7 +690,7 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BAAPLOG_t13",
+      "id": "BAAPLOG_t10",
       "om": "BAAPLOG",
       "nc": "160238000012026NC000199",
       "uasg": "160238",
@@ -839,144 +704,9 @@ const DASHBOARD_DATA = {
       "emp": 4523.32,
       "saldo": 476.79,
       "taxa": 90.46,
-      "dias": 13,
+      "dias": 15,
       "dia": "11/11/2026",
       "obj": "AJUS ND",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "Ba Ap Log - Base de Apoio Logístico"
-    },
-    {
-      "id": "BCMS_t18",
-      "om": "BCMS",
-      "nc": "167505000012026NC440271",
-      "uasg": "167329",
-      "u": "167",
-      "nd": "339093",
-      "ndnome": "INDENIZACOES E RESTITUICOES",
-      "pi": "D5SAFUSANEE",
-      "pinome": "DESPESAS COM ENSINO ESPECIALIZADO",
-      "v": 473.45,
-      "prov": 473.45,
-      "emp": 0.0,
-      "saldo": 473.45,
-      "taxa": 0.0,
-      "dias": 8,
-      "dia": "17/11/2026",
-      "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS SETEMBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPH IMTO"
-      },
-      "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
-    },
-    {
-      "id": "BCMS_t19",
-      "om": "BCMS",
-      "nc": "167505000012026NC440273",
-      "uasg": "167329",
-      "u": "167",
-      "nd": "339093",
-      "ndnome": "INDENIZACOES E RESTITUICOES",
-      "pi": "D5SAFUSANEE",
-      "pinome": "DESPESAS COM ENSINO ESPECIALIZADO",
-      "v": 473.45,
-      "prov": 473.45,
-      "emp": 0.0,
-      "saldo": 473.45,
-      "taxa": 0.0,
-      "dias": 8,
-      "dia": "17/11/2026",
-      "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS OUTUBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPH IMTO"
-      },
-      "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
-    },
-    {
-      "id": "BCMS_t2",
-      "om": "BCMS",
-      "nc": "160505000012026NC409700",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339033",
-      "ndnome": "PASSAGENS E DESPESAS COM LOCOMOCAO",
-      "pi": "IDDSATSPCEB",
-      "pinome": "DESL PARA CURSOS E ESTAGIOS NO AMBITODO EB",
-      "v": 411.7,
-      "prov": 1551.35,
-      "emp": 1139.65,
-      "saldo": 411.7,
-      "taxa": 73.46,
-      "dias": 232,
-      "dia": "07/04/2026",
-      "obj": "ATENDE COMPLEMENTO BOLETIM INTERNO RESERVADO BAR DGP 009_04 MAR 2026_CURSOS FAVORECIDO 2º TEN ESTHER DIAS DE OLIVEIRA 18121517729 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25155",
-      "prazo": "—",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "resumos_nc.json (curadoria)",
-        "regra": "registro manual",
-        "trecho": ""
-      },
-      "concedente": "DSup - Diretoria de Suprimento / COLOG"
-    },
-    {
-      "id": "ECT_t2",
-      "om": "ECT",
-      "nc": "160505000012026NC410703",
-      "uasg": "160321",
-      "u": "160",
-      "nd": "339033",
-      "ndnome": "PASSAGENS E DESPESAS COM LOCOMOCAO",
-      "pi": "IDDSATSPCEB",
-      "pinome": "DESL PARA CURSOS E ESTAGIOS NO AMBITODO EB",
-      "v": 383.47,
-      "prov": 2320.97,
-      "emp": 1937.5,
-      "saldo": 383.47,
-      "taxa": 83.48,
-      "dias": 221,
-      "dia": "16/04/2026",
-      "obj": "ATENDE ADITAMENTO 4C BOL DGP 027_06 MAR 2026_CURSOS FAVORECIDO 3º SGT HUGO LIMA OLIVEIRA 16479495721 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25148",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "DSup - Diretoria de Suprimento / COLOG"
-    },
-    {
-      "id": "BAAPLOG_t19",
-      "om": "BAAPLOG",
-      "nc": "160238000012026NC000211",
-      "uasg": "160238",
-      "u": "160",
-      "nd": "449000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNSUPL",
-      "pinome": "ADMINISTRACAO DE OM",
-      "v": 324.0,
-      "prov": 646.27,
-      "emp": 322.27,
-      "saldo": 324.0,
-      "taxa": 49.87,
-      "dias": 6,
-      "dia": "18/11/2026",
-      "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -1001,7 +731,7 @@ const DASHBOARD_DATA = {
       "emp": 15497.67,
       "saldo": 319.25,
       "taxa": 314.04,
-      "dias": 245,
+      "dias": 247,
       "dia": "24/03/2026",
       "obj": "AJUSTE DE NATUREZA DE DESPESAS",
       "prazo": "Não informado na NC",
@@ -1014,7 +744,7 @@ const DASHBOARD_DATA = {
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
-      "id": "BAAPLOG_t9",
+      "id": "BAAPLOG_t6",
       "om": "BAAPLOG",
       "nc": "167505000012026NC430872",
       "uasg": "167238",
@@ -1028,7 +758,7 @@ const DASHBOARD_DATA = {
       "emp": 807.25,
       "saldo": 285.74,
       "taxa": 73.86,
-      "dias": 69,
+      "dias": 71,
       "dia": "16/09/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 16OUT26. REFERENTE CIA C BA AP LOG EX .",
       "prazo": "16/10/2026",
@@ -1039,33 +769,6 @@ const DASHBOARD_DATA = {
         "trecho": "EMPENHAR ATE 16OUT26"
       },
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
-    },
-    {
-      "id": "DSUP1_t2",
-      "om": "DSUP1",
-      "nc": "160073000012026NC015226",
-      "uasg": "160307",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNSEGO",
-      "pinome": "SEG OBRIG/EMPLACAM/AQUIS DE PLACAS VTR ADM",
-      "v": 250.95,
-      "prov": 250.95,
-      "emp": 0.0,
-      "saldo": 250.95,
-      "taxa": 0.0,
-      "dias": 93,
-      "dia": "24/08/2026",
-      "obj": "ATENDE PGT0 DE DUDA PRIMEIRO EMPLACAMENTO. DOC DE REFERENCIA: DIEX Nº 2133-TRANSP/S4/1º D SUP DE 19 AGO 2026. EMPENHO IMEDIATO-UTILIZAR O RECURSO CONFORME O CADERNO DE ORIENTACAO AOS AGENTES DA ADMINISTRACAO",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPENHO IMEDIATO"
-      },
-      "concedente": "SGS / DGO - Diretoria de Gestão Orçamentária"
     },
     {
       "id": "DCMUN_t3",
@@ -1082,7 +785,7 @@ const DASHBOARD_DATA = {
       "emp": 2784.25,
       "saldo": 233.91,
       "taxa": 159.1,
-      "dias": 69,
+      "dias": 71,
       "dia": "16/09/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "prazo": "19/10/2026",
@@ -1097,21 +800,21 @@ const DASHBOARD_DATA = {
     {
       "id": "ECT_t5",
       "om": "ECT",
-      "nc": "160321000012026NC000065",
+      "nc": "160321000012026NC000068",
       "uasg": "160321",
       "u": "160",
       "nd": "339033",
       "ndnome": "PASSAGENS E DESPESAS COM LOCOMOCAO",
-      "pi": "E7DATRSPASS",
-      "pinome": "TRANSPORTE- PASSAGENS",
+      "pi": "E7DATRSAPIO",
+      "pinome": "TRANSPORTE",
       "v": 221.64,
       "prov": 221.64,
-      "emp": 0.0,
+      "emp": 100239.82,
       "saldo": 221.64,
-      "taxa": 0.0,
-      "dias": 14,
-      "dia": "09/11/2026",
-      "obj": "MUDANCA DE UGR PARA RECOLHIMENTO",
+      "taxa": 45226.41,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "MUDANCA DE PI PARA RECOLHIMENTO",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -1136,7 +839,7 @@ const DASHBOARD_DATA = {
       "emp": 9550.75,
       "saldo": 130.0,
       "taxa": 95.51,
-      "dias": 259,
+      "dias": 261,
       "dia": "10/03/2026",
       "obj": "ATD CONTRATACAO DE SERVICO. DOC REF: DIEX Nº 5315-SEGER/6 SCH/EME, DE 02/03/2026. PRAZO DE EMPENHO: IMEDIATO.",
       "prazo": "IMEDIATO",
@@ -1149,7 +852,7 @@ const DASHBOARD_DATA = {
       "concedente": "SGS / DGO - Diretoria de Gestão Orçamentária"
     },
     {
-      "id": "BCMS_t3",
+      "id": "BCMS_t2",
       "om": "BCMS",
       "nc": "167505000012026NC430958",
       "uasg": "167329",
@@ -1163,7 +866,7 @@ const DASHBOARD_DATA = {
       "emp": 703.52,
       "saldo": 117.18,
       "taxa": 56.28,
-      "dias": 70,
+      "dias": 71,
       "dia": "16/09/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "prazo": "19/10/2026",
@@ -1190,7 +893,7 @@ const DASHBOARD_DATA = {
       "emp": 2475.0,
       "saldo": 95.0,
       "taxa": 96.3,
-      "dias": 133,
+      "dias": 135,
       "dia": "14/07/2026",
       "obj": "(040535-DC MUN)CSUP-DIVSUBS-SOL-PAG DIARIAS. OBS LEGISLACAO VIGENTE (ATENDE OS 14-DPIC/C SUP, 29MAIO26-1O CONGRESSO DE LOGISTICA) CFE DIEX NO 15790-CSUP/COLOG, 07JUL26. EMPH IMEDIATO. PRB DETAORC.",
       "prazo": "IMEDIATO",
@@ -1203,34 +906,34 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "ECT_t3",
-      "om": "ECT",
-      "nc": "160505000012026NC410703",
-      "uasg": "160321",
+      "id": "BAAPLOG_t14",
+      "om": "BAAPLOG",
+      "nc": "160504000012026NC421373",
+      "uasg": "160238",
       "u": "160",
-      "nd": "339015",
-      "ndnome": "DIARIAS - PESSOAL MILITAR",
-      "pi": "IDDSATSPCEB",
-      "pinome": "DESL PARA CURSOS E ESTAGIOS NO AMBITODO EB",
-      "v": 95.0,
-      "prov": 2320.97,
-      "emp": 2225.97,
-      "saldo": 95.0,
-      "taxa": 95.91,
-      "dias": 221,
-      "dia": "16/04/2026",
-      "obj": "ATENDE ADITAMENTO 4C BOL DGP 027_06 MAR 2026_CURSOS FAVORECIDO 3º SGT HUGO LIMA OLIVEIRA 16479495721 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25148",
-      "prazo": "Não informado na NC",
+      "nd": "449052",
+      "ndnome": "EQUIPAMENTOS E MATERIAL PERMANENTE",
+      "pi": "E6MISOLMNOP",
+      "pinome": "MATERIAL DE INTENDENCIA",
+      "v": 92.41,
+      "prov": 62088.72,
+      "emp": 61996.31,
+      "saldo": 92.41,
+      "taxa": 99.85,
+      "dias": 8,
+      "dia": "18/11/2026",
+      "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-AQUISICAO DE EQUIPAMENTOS E MOBILIARIO PARA FUNCIONAMENTO DE ESTRUTURAS DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
+      "prazo": "IMEDIATO",
       "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
+        "tipo": "empenho",
+        "fonte": "descrição da NC (SIAFI)",
+        "regra": "imediato (texto da NC)",
+        "trecho": "EMPH IMEDIATO"
       },
-      "concedente": "DSup - Diretoria de Suprimento / COLOG"
+      "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BMSA_t4",
+      "id": "BMSA_t3",
       "om": "BMSA",
       "nc": "167304000012026NC000009",
       "uasg": "167304",
@@ -1244,7 +947,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 82.0,
       "taxa": 0.0,
-      "dias": 8,
+      "dias": 9,
       "dia": "17/11/2026",
       "obj": "DETALHAMENTO ORCAMENTARIO PARA FINS DE SALDO RESIDUAL",
       "prazo": "Não informado na NC",
@@ -1271,7 +974,7 @@ const DASHBOARD_DATA = {
       "emp": 612216.51,
       "saldo": 71.96,
       "taxa": 102.04,
-      "dias": 139,
+      "dias": 140,
       "dia": "09/07/2026",
       "obj": "ATENDE DESP COM AQS SUP CLASSE VIII PÃO EFETIVO ISENTO DAS OM NO 2 SEM 2026 AMPARO NA PORTARIA DGPCEX NR 419, DE 07 DE NOVEMBRO DE 2022. EMPENHAR ATE 30SET. LIQUIDACAO ATE 30NOV.",
       "prazo": "30/09/2026",
@@ -1298,7 +1001,7 @@ const DASHBOARD_DATA = {
       "emp": 1207.17,
       "saldo": 42.83,
       "taxa": 96.57,
-      "dias": 320,
+      "dias": 321,
       "dia": "09/01/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "prazo": "31/03/2026",
@@ -1325,7 +1028,7 @@ const DASHBOARD_DATA = {
       "emp": 2713.85,
       "saldo": 31.81,
       "taxa": 98.84,
-      "dias": 319,
+      "dias": 321,
       "dia": "09/01/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "prazo": "31/03/2026",
@@ -1338,7 +1041,7 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BMSA_t5",
+      "id": "BMSA_t4",
       "om": "BMSA",
       "nc": "160504000012026NC420818",
       "uasg": "160304",
@@ -1352,7 +1055,7 @@ const DASHBOARD_DATA = {
       "emp": 35790.74,
       "saldo": 29.36,
       "taxa": 99.92,
-      "dias": 8,
+      "dias": 9,
       "dia": "17/11/2026",
       "obj": "AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "prazo": "Não informado na NC",
@@ -1365,7 +1068,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "DSUP1_t5",
+      "id": "DSUP1_t4",
       "om": "DSUP1",
       "nc": "160504000012026NC420344",
       "uasg": "160307",
@@ -1379,7 +1082,7 @@ const DASHBOARD_DATA = {
       "emp": 39354.0,
       "saldo": 28.38,
       "taxa": 99.93,
-      "dias": 14,
+      "dias": 15,
       "dia": "11/11/2026",
       "obj": "(040584-1O D SUP)C SUP-DMI-SOL-RECURSO, EXTRA PDR LOG, PARA INVENTARIO E PREP DE CJ CMFL INSERVIVEIS, CFM SOL DIEX NO 2914-COS/1O D SUP, DE 28 OUT 26. EMPH IMEDIATO.",
       "prazo": "IMEDIATO",
@@ -1392,7 +1095,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "DSUP1_t9",
+      "id": "DSUP1_t7",
       "om": "DSUP1",
       "nc": "160504000012026NC421095",
       "uasg": "160307",
@@ -1403,10 +1106,10 @@ const DASHBOARD_DATA = {
       "pinome": "MATERIAL DE INTENDENCIA",
       "v": 20.54,
       "prov": 138915.0,
-      "emp": 138894.46,
+      "emp": 138915.0,
       "saldo": 20.54,
-      "taxa": 99.99,
-      "dias": 7,
+      "taxa": 100.0,
+      "dias": 8,
       "dia": "18/11/2026",
       "obj": "(040584-1O D SUP)C SUP-DMI-PLJ-RECURSO PARA ATENDER AQS DE MATERIAL, BOINA PRETA, CFM SOL DIEX NO 28737-DIVMATINT/CSUP/COLOG, EM 12 NOV 26. EMPH IMEDIATO.",
       "prazo": "IMEDIATO",
@@ -1419,7 +1122,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "DSUP1_t10",
+      "id": "DSUP1_t8",
       "om": "DSUP1",
       "nc": "160504000012026NC421065",
       "uasg": "160307",
@@ -1433,7 +1136,7 @@ const DASHBOARD_DATA = {
       "emp": 24883.33,
       "saldo": 15.67,
       "taxa": 99.94,
-      "dias": 7,
+      "dias": 8,
       "dia": "18/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (SV. DE PINTURA DA IDENTIDADE VISUAL RECEPCAO DAS SECOES DOS DEP. CLASSE I) REF DIEX NO 3035-ALMOX/S4/1O D SUP DE 09/11/2026. EMPH ATE 48H. PRB DETAORC.",
       "prazo": "20/11/2026",
@@ -1446,7 +1149,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BCMS_t4",
+      "id": "BCMS_t3",
       "om": "BCMS",
       "nc": "160329000012026NC000090",
       "uasg": "160329",
@@ -1460,7 +1163,7 @@ const DASHBOARD_DATA = {
       "emp": 30493.73,
       "saldo": 14.46,
       "taxa": 210883.33,
-      "dias": 48,
+      "dias": 49,
       "dia": "08/10/2026",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "prazo": "Não informado na NC",
@@ -1473,23 +1176,23 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "BCMS_t13",
-      "om": "BCMS",
-      "nc": "160329000012026NC000109",
-      "uasg": "160329",
+      "id": "BAAPLOG_t17",
+      "om": "BAAPLOG",
+      "nc": "160238000012026NC000215",
+      "uasg": "160238",
       "u": "160",
       "nd": "339000",
       "ndnome": "APLICACOES DIRETAS",
       "pi": "E5MBPDRDEGE",
       "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZ BLIND",
       "v": 9.39,
-      "prov": 9.39,
-      "emp": 11499.53,
+      "prov": 10.01,
+      "emp": 0.62,
       "saldo": 9.39,
-      "taxa": 122465.71,
-      "dias": 13,
-      "dia": "12/11/2026",
-      "obj": "ALTERACAO DE ND.",
+      "taxa": 6.19,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -1497,7 +1200,7 @@ const DASHBOARD_DATA = {
         "regra": "texto da NC sem prazo",
         "trecho": ""
       },
-      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
+      "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
       "id": "ECT_t1",
@@ -1514,7 +1217,7 @@ const DASHBOARD_DATA = {
       "emp": 2167.23,
       "saldo": 6.26,
       "taxa": 99.71,
-      "dias": 318,
+      "dias": 321,
       "dia": "09/01/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "prazo": "31/03/2026",
@@ -1527,7 +1230,7 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BAAPLOG_t11",
+      "id": "BAAPLOG_t8",
       "om": "BAAPLOG",
       "nc": "160504000012026NC417959",
       "uasg": "160238",
@@ -1541,7 +1244,7 @@ const DASHBOARD_DATA = {
       "emp": 7261.75,
       "saldo": 6.22,
       "taxa": 38.22,
-      "dias": 35,
+      "dias": 37,
       "dia": "20/10/2026",
       "obj": "CMAT-MOTO ? DESCENTRALIZACAO PARCIAL PDRLOG P/ MNT CORRETIVA VTR NAO BLD. PRIORIDADE ATD DEMANDAS APROVADAS NO SIGELOG. EMPENHO ATE 31 OUT 26.",
       "prazo": "31/10/2026",
@@ -1554,34 +1257,34 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BAAPLOG_t5",
+      "id": "BAAPLOG_t18",
       "om": "BAAPLOG",
-      "nc": "167503000012026NC001847",
+      "nc": "167238000012026NC000016",
       "uasg": "167238",
       "u": "167",
-      "nd": "339015",
-      "ndnome": "DIARIAS - PESSOAL MILITAR",
+      "nd": "339000",
+      "ndnome": "APLICACOES DIRETAS",
       "pi": "C6ENEASCAPE",
       "pinome": "SIPO DESMIL",
       "v": 5.0,
-      "prov": 3272.5,
-      "emp": 12660.0,
+      "prov": 5.0,
+      "emp": 8350.0,
       "saldo": 5.0,
-      "taxa": 386.86,
-      "dias": 162,
-      "dia": "15/06/2026",
-      "obj": "CDT DSTN AO 3º TURNO DO CGAEM 2026 - REF: DIEX Nº 4823-LOG/SEC LOG FIN/CH GAB, 11JUN26. PD:SIPO DESMNIL. PRZ EMP: 31JUL26",
-      "prazo": "31/07/2026",
+      "taxa": 167000.0,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RETORNO A ORIGEM POR SOLICITACAO DO DECEX.",
+      "prazo": "Não informado na NC",
       "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "data explícita na NC",
-        "trecho": "EMP: 31JUL26"
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       },
-      "concedente": "D Sau - Diretoria de Saúde (Descentralização)"
+      "concedente": "Ba Ap Log (Fundo de Saúde)"
     },
     {
-      "id": "BCMS_t5",
+      "id": "BCMS_t4",
       "om": "BCMS",
       "nc": "160329000012026NC000093",
       "uasg": "160329",
@@ -1590,12 +1293,12 @@ const DASHBOARD_DATA = {
       "ndnome": "APLICACOES DIRETAS",
       "pi": "E5MBSUNPREV",
       "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO_BLIND",
-      "v": 4.66,
+      "v": 4.34,
       "prov": 4.66,
       "emp": 36754.83,
-      "saldo": 4.66,
+      "saldo": 4.34,
       "taxa": 788730.26,
-      "dias": 48,
+      "dias": 49,
       "dia": "08/10/2026",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "prazo": "Não informado na NC",
@@ -1608,34 +1311,7 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "DSUP1_t12",
-      "om": "DSUP1",
-      "nc": "160307000012026NC000066",
-      "uasg": "160307",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNSUPL",
-      "pinome": "ADMINISTRACAO DE OM",
-      "v": 3.88,
-      "prov": 505.72,
-      "emp": 501.84,
-      "saldo": 3.88,
-      "taxa": 99.23,
-      "dias": 0,
-      "dia": "25/11/2026",
-      "obj": "DETALHAMENTO DE CREDITO.",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "1º D Sup - 1º Depósito de Suprimento"
-    },
-    {
-      "id": "DSUP1_t7",
+      "id": "DSUP1_t5",
       "om": "DSUP1",
       "nc": "160504000012026NC420819",
       "uasg": "160307",
@@ -1649,7 +1325,7 @@ const DASHBOARD_DATA = {
       "emp": 75331.5,
       "saldo": 2.43,
       "taxa": 100.0,
-      "dias": 8,
+      "dias": 9,
       "dia": "17/11/2026",
       "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "prazo": "Não informado na NC",
@@ -1662,7 +1338,34 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "ECT_t4",
+      "id": "BCMS_t8",
+      "om": "BCMS",
+      "nc": "160329000012026NC000109",
+      "uasg": "160329",
+      "u": "160",
+      "nd": "339000",
+      "ndnome": "APLICACOES DIRETAS",
+      "pi": "E5MBPDRDEGE",
+      "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZ BLIND",
+      "v": 1.44,
+      "prov": 9.39,
+      "emp": 11499.53,
+      "saldo": 1.44,
+      "taxa": 122465.71,
+      "dias": 14,
+      "dia": "12/11/2026",
+      "obj": "ALTERACAO DE ND.",
+      "prazo": "Não informado na NC",
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      },
+      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
+    },
+    {
+      "id": "ECT_t2",
       "om": "ECT",
       "nc": "167505000012026NC430941",
       "uasg": "167321",
@@ -1676,7 +1379,7 @@ const DASHBOARD_DATA = {
       "emp": 2172.47,
       "saldo": 1.03,
       "taxa": 99.95,
-      "dias": 68,
+      "dias": 71,
       "dia": "16/09/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "prazo": "19/10/2026",
@@ -1703,7 +1406,7 @@ const DASHBOARD_DATA = {
       "emp": 1749.06,
       "saldo": 0.94,
       "taxa": 99.95,
-      "dias": 319,
+      "dias": 321,
       "dia": "09/01/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "prazo": "31/03/2026",
@@ -1716,7 +1419,7 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BCMS_t10",
+      "id": "BCMS_t6",
       "om": "BCMS",
       "nc": "160504000012026NC417984",
       "uasg": "160329",
@@ -1730,7 +1433,7 @@ const DASHBOARD_DATA = {
       "emp": 123200.09,
       "saldo": 0.91,
       "taxa": 183.88,
-      "dias": 35,
+      "dias": 36,
       "dia": "21/10/2026",
       "obj": "(12526-BCMS)C SUP-DMI-SOL-RECURSO PARA AQS DE MAT FABRICACAO DE ARMARIOS , COLCHAO, CFM SOL DIEX NO 5746-E10/EMG/BAAPLOG, 4 OUT 26. EMPH IMEDIATO.",
       "prazo": "IMEDIATO",
@@ -1743,34 +1446,7 @@ const DASHBOARD_DATA = {
       "concedente": "CMAT - Centro de Material Bélico / COLOG"
     },
     {
-      "id": "BCMS_t6",
-      "om": "BCMS",
-      "nc": "160329000012026NC000092",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "E5MBPDRDEGE",
-      "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZ BLIND",
-      "v": 0.85,
-      "prov": 0.85,
-      "emp": 0.0,
-      "saldo": 0.85,
-      "taxa": 0.0,
-      "dias": 48,
-      "dia": "08/10/2026",
-      "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
-    },
-    {
-      "id": "BCMS_t21",
+      "id": "BCMS_t13",
       "om": "BCMS",
       "nc": "160329000012026NC000113",
       "uasg": "160329",
@@ -1784,7 +1460,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 0.8,
       "taxa": 0.0,
-      "dias": 0,
+      "dias": 1,
       "dia": "25/11/2026",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "prazo": "Não informado na NC",
@@ -1797,7 +1473,7 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "BCMS_t11",
+      "id": "BCMS_t7",
       "om": "BCMS",
       "nc": "160238000012026NC000174",
       "uasg": "160329",
@@ -1806,12 +1482,12 @@ const DASHBOARD_DATA = {
       "ndnome": "APLICACOES DIRETAS",
       "pi": "E5MMSUNPREV",
       "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO",
-      "v": 0.78,
+      "v": 0.48,
       "prov": 2100.0,
       "emp": 2099.7,
-      "saldo": 0.78,
+      "saldo": 0.48,
       "taxa": 99.99,
-      "dias": 30,
+      "dias": 31,
       "dia": "26/10/2026",
       "obj": "CMAT-MOTO - AQS SUP/ INSUMOS MNT PREVENTIVA 1O ESC DE VIATURAS NAO BLD. EMPENHO ATE 31 OUT 26. RECOLHER SALDOS ATE 01 NOV 26 - DESCENTRALIZACAO FEITA CONFORME DETERMINADO NO DIEX Nº 6211- E4/EMG/BAAPLOG DE 23 DE OUTUBRO DE 2026.",
       "prazo": "31/10/2026",
@@ -1822,33 +1498,6 @@ const DASHBOARD_DATA = {
         "trecho": "EMPENHO ATE 31 OUT 26"
       },
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
-    },
-    {
-      "id": "BCMS_t7",
-      "om": "BCMS",
-      "nc": "160329000012026NC000086",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "E5MBPDRDEGE",
-      "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZ BLIND",
-      "v": 0.51,
-      "prov": 0.51,
-      "emp": 0.0,
-      "saldo": 0.51,
-      "taxa": 0.0,
-      "dias": 48,
-      "dia": "08/10/2026",
-      "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
       "id": "DCMUN_t4",
@@ -1862,10 +1511,10 @@ const DASHBOARD_DATA = {
       "pinome": "LOGISTICA VTR NAO BLD PERT AO SISFPC",
       "v": 0.48,
       "prov": 2066.48,
-      "emp": 10781.15,
+      "emp": 11788.17,
       "saldo": 0.48,
-      "taxa": 521.72,
-      "dias": 56,
+      "taxa": 570.45,
+      "dias": 58,
       "dia": "29/09/2026",
       "obj": "DETAORC",
       "prazo": "Não informado na NC",
@@ -1878,7 +1527,7 @@ const DASHBOARD_DATA = {
       "concedente": "D C Mun (Fundo de Saúde)"
     },
     {
-      "id": "BCMS_t8",
+      "id": "BCMS_t5",
       "om": "BCMS",
       "nc": "160329000012026NC000087",
       "uasg": "160329",
@@ -1892,7 +1541,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 0.47,
       "taxa": 0.0,
-      "dias": 48,
+      "dias": 49,
       "dia": "08/10/2026",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "prazo": "Não informado na NC",
@@ -1905,7 +1554,7 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "BAAPLOG_t14",
+      "id": "BAAPLOG_t11",
       "om": "BAAPLOG",
       "nc": "160238000012026NC000203",
       "uasg": "160238",
@@ -1919,7 +1568,7 @@ const DASHBOARD_DATA = {
       "emp": 0.0,
       "saldo": 0.36,
       "taxa": 0.0,
-      "dias": 12,
+      "dias": 14,
       "dia": "12/11/2026",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO DE APLICACAO.",
       "prazo": "Não informado na NC",
@@ -1932,7 +1581,7 @@ const DASHBOARD_DATA = {
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
-      "id": "BCMS_t14",
+      "id": "BCMS_t9",
       "om": "BCMS",
       "nc": "160329000012026NC000110",
       "uasg": "160329",
@@ -1946,7 +1595,7 @@ const DASHBOARD_DATA = {
       "emp": 16895.9,
       "saldo": 0.32,
       "taxa": 5279968.75,
-      "dias": 13,
+      "dias": 14,
       "dia": "12/11/2026",
       "obj": "ALTERACAO DE ND.",
       "prazo": "Não informado na NC",
@@ -1959,7 +1608,7 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "BAAPLOG_t15",
+      "id": "BAAPLOG_t12",
       "om": "BAAPLOG",
       "nc": "160238000012026NC000202",
       "uasg": "160238",
@@ -1973,7 +1622,7 @@ const DASHBOARD_DATA = {
       "emp": 1482.74,
       "saldo": 0.32,
       "taxa": 463356.25,
-      "dias": 12,
+      "dias": 14,
       "dia": "12/11/2026",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO PARA APLICACAO.",
       "prazo": "Não informado na NC",
@@ -1986,7 +1635,34 @@ const DASHBOARD_DATA = {
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
-      "id": "BCMS_t15",
+      "id": "BAAPLOG_t19",
+      "om": "BAAPLOG",
+      "nc": "160238000012026NC000215",
+      "uasg": "160238",
+      "u": "160",
+      "nd": "339000",
+      "ndnome": "APLICACOES DIRETAS",
+      "pi": "E5MBSUNPREV",
+      "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO_BLIND",
+      "v": 0.32,
+      "prov": 10.01,
+      "emp": 9.69,
+      "saldo": 0.32,
+      "taxa": 96.8,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "prazo": "Não informado na NC",
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      },
+      "concedente": "Ba Ap Log - Base de Apoio Logístico"
+    },
+    {
+      "id": "BCMS_t10",
       "om": "BCMS",
       "nc": "160329000012026NC000111",
       "uasg": "160329",
@@ -2000,7 +1676,7 @@ const DASHBOARD_DATA = {
       "emp": 76625.4,
       "saldo": 0.3,
       "taxa": 25541800.0,
-      "dias": 13,
+      "dias": 14,
       "dia": "12/11/2026",
       "obj": "ALTERACAO DE ND.",
       "prazo": "Não informado na NC",
@@ -2013,23 +1689,23 @@ const DASHBOARD_DATA = {
       "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
     },
     {
-      "id": "DSUP1_t6",
-      "om": "DSUP1",
-      "nc": "160307000012026NC000058",
-      "uasg": "160307",
+      "id": "BAAPLOG_t20",
+      "om": "BAAPLOG",
+      "nc": "160238000012026NC000215",
+      "uasg": "160238",
       "u": "160",
       "nd": "339000",
       "ndnome": "APLICACOES DIRETAS",
       "pi": "E5MMSUNPREV",
       "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO",
       "v": 0.3,
-      "prov": 0.3,
-      "emp": 5130.0,
+      "prov": 10.01,
+      "emp": 9.71,
       "saldo": 0.3,
-      "taxa": 1710000.0,
-      "dias": 13,
-      "dia": "12/11/2026",
-      "obj": "MUDANCA DE ND",
+      "taxa": 97.0,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -2037,10 +1713,37 @@ const DASHBOARD_DATA = {
         "regra": "texto da NC sem prazo",
         "trecho": ""
       },
-      "concedente": "1º D Sup - 1º Depósito de Suprimento"
+      "concedente": "Ba Ap Log - Base de Apoio Logístico"
     },
     {
-      "id": "DSUP1_t3",
+      "id": "BAAPLOG_t21",
+      "om": "BAAPLOG",
+      "nc": "160238000012026NC000216",
+      "uasg": "160238",
+      "u": "160",
+      "nd": "339000",
+      "ndnome": "APLICACOES DIRETAS",
+      "pi": "E5MMSUNPREV",
+      "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO",
+      "v": 0.3,
+      "prov": 0.3,
+      "emp": 0.0,
+      "saldo": 0.3,
+      "taxa": 0.0,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "prazo": "Não informado na NC",
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      },
+      "concedente": "Ba Ap Log - Base de Apoio Logístico"
+    },
+    {
+      "id": "DSUP1_t2",
       "om": "DSUP1",
       "nc": "160307000012026NC000055",
       "uasg": "160307",
@@ -2054,7 +1757,7 @@ const DASHBOARD_DATA = {
       "emp": 4657.5,
       "saldo": 0.18,
       "taxa": 100.0,
-      "dias": 22,
+      "dias": 23,
       "dia": "03/11/2026",
       "obj": "DETAORC DA 00 PARA 30 COM O OBJETIVO DE EMISSAO DE NOTA DE EMPENHO",
       "prazo": "Não informado na NC",
@@ -2067,34 +1770,7 @@ const DASHBOARD_DATA = {
       "concedente": "1º D Sup - 1º Depósito de Suprimento"
     },
     {
-      "id": "BCMS_t9",
-      "om": "BCMS",
-      "nc": "160329000012026NC000091",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "E5MBPDRDEGE",
-      "pinome": "DESCENTRALIZACAO RECURSOS MOTOMECANIZ BLIND",
-      "v": 0.08,
-      "prov": 0.08,
-      "emp": 0.0,
-      "saldo": 0.08,
-      "taxa": 0.0,
-      "dias": 48,
-      "dia": "08/10/2026",
-      "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
-    },
-    {
-      "id": "BAAPLOG_t6",
+      "id": "BAAPLOG_t5",
       "om": "BAAPLOG",
       "nc": "167505000012026NC422837",
       "uasg": "167238",
@@ -2108,7 +1784,7 @@ const DASHBOARD_DATA = {
       "emp": 58039.57,
       "saldo": 0.07,
       "taxa": 65.76,
-      "dias": 133,
+      "dias": 135,
       "dia": "14/07/2026",
       "obj": "ATD DESPESAS COM FUNADOM 2 COTA, CONFORME PDR SSEX 2026. LIQUIDAR ATE 30SET26 LIQ. MENSALMENTE. AUTORIZACAO PARA DETAORC CONF. LEGISLACAO VIGENTE.",
       "prazo": "30/09/2026",
@@ -2121,77 +1797,23 @@ const DASHBOARD_DATA = {
       "concedente": "D Sau - Diretoria de Saúde (FUSEx)"
     },
     {
-      "id": "BCMS_t22",
-      "om": "BCMS",
-      "nc": "160329000012026NC000114",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNADOM",
-      "pinome": "ADMINISTRACAO DE OM",
-      "v": 0.06,
-      "prov": 0.06,
-      "emp": 0.0,
-      "saldo": 0.06,
-      "taxa": 0.0,
-      "dias": 0,
-      "dia": "25/11/2026",
-      "obj": "DETALHAMENTO DE CREDITO.",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "BCMS - Batalhão Central de Manutenção e Suprimento"
-    },
-    {
-      "id": "BCMS_t12",
-      "om": "BCMS",
-      "nc": "160073000012026NC021479",
-      "uasg": "160329",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "I3DAFUNADOM",
-      "pinome": "ADMINISTRACAO DE OM",
-      "v": 0.02,
-      "prov": 5034.35,
-      "emp": 5034.4,
-      "saldo": 0.02,
-      "taxa": 100.0,
-      "dias": 21,
-      "dia": "04/11/2026",
-      "obj": "ATENDE COTA FUNADOM DE JAN 2027. COTA CHEIA SEM DEDUCAO DE 10 POR CENTO ALMOX VIRTUAL NACIONAL. DOC REF DIEX NR 3321 SGS.SDIR.DIR, DE 28 OUT 2026. EMPENHO IMEDIATO. ATD BC MNT SUP",
-      "prazo": "IMEDIATO",
-      "prazo_info": {
-        "tipo": "empenho",
-        "fonte": "descrição da NC (SIAFI)",
-        "regra": "imediato (texto da NC)",
-        "trecho": "EMPENHO IMEDIATO"
-      },
-      "concedente": "SGS / DGO - Diretoria de Gestão Orçamentária"
-    },
-    {
-      "id": "BAAPLOG_t20",
+      "id": "BAAPLOG_t22",
       "om": "BAAPLOG",
-      "nc": "160238000012026NC000211",
+      "nc": "160238000012026NC000214",
       "uasg": "160238",
       "u": "160",
       "nd": "339000",
       "ndnome": "APLICACOES DIRETAS",
-      "pi": "-8",
-      "pinome": "SEM INFORMACAO",
-      "v": 0.02,
-      "prov": 646.27,
-      "emp": 646.25,
-      "saldo": 0.02,
-      "taxa": 100.0,
-      "dias": 6,
-      "dia": "18/11/2026",
-      "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "pi": "E5MMSUNPREV",
+      "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO",
+      "v": 0.01,
+      "prov": 0.01,
+      "emp": 0.0,
+      "saldo": 0.01,
+      "taxa": 0.0,
+      "dias": 0,
+      "dia": "26/11/2026",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL.",
       "prazo": "Não informado na NC",
       "prazo_info": {
         "tipo": "",
@@ -2200,37 +1822,68 @@ const DASHBOARD_DATA = {
         "trecho": ""
       },
       "concedente": "Ba Ap Log - Base de Apoio Logístico"
-    },
-    {
-      "id": "DCMUN_t6",
-      "om": "DCMUN",
-      "nc": "160246000012026NC000040",
-      "uasg": "160246",
-      "u": "160",
-      "nd": "339000",
-      "ndnome": "APLICACOES DIRETAS",
-      "pi": "E5MMSUNPREV",
-      "pinome": "SUPRIMENTO E MANUTENCAO MOTOMECANIZACAO",
-      "v": 0.01,
-      "prov": 0.01,
-      "emp": 670.0,
-      "saldo": 0.01,
-      "taxa": 6700000.0,
-      "dias": 12,
-      "dia": "12/11/2026",
-      "obj": "DETAORC",
-      "prazo": "Não informado na NC",
-      "prazo_info": {
-        "tipo": "",
-        "fonte": "",
-        "regra": "texto da NC sem prazo",
-        "trecho": ""
-      },
-      "concedente": "D C Mun - Depósito Central de Munições"
     }
   ],
   "resumoDiario": {
     "BCMS": [
+      {
+        "d": "26/11/2026",
+        "n": 7,
+        "rec": 9600.0,
+        "red": -1271.79,
+        "liq": 8328.21,
+        "ncs": [
+          [
+            "160298000012026NC000980",
+            "160",
+            "DESCENTRALIZACAO DE CREDITO",
+            9600.0,
+            "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC."
+          ],
+          [
+            "160073000012026NC023024",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.08,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.3,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.32,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -9.39,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160505000012026NC000274",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -411.7,
+            "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+          ],
+          [
+            "160035000012026NC403297",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -850.0,
+            "CCOMGEX/AGGE NC DE ORIGEM 056 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400182. CONF. ITEM 1B PDR26. (VALOR RESIDUAL)"
+          ]
+        ]
+      },
       {
         "d": "25/11/2026",
         "n": 4,
@@ -2403,32 +2056,144 @@ const DASHBOARD_DATA = {
             "COPLOG_RECOLHIMENTO DA SALDO DE CREDITO CONFORME MSG SIAFI 2026/4061278, UG 160467, DE 11NOV26."
           ]
         ]
-      },
-      {
-        "d": "16/11/2026",
-        "n": 2,
-        "rec": 0,
-        "red": -10022.8,
-        "liq": -10022.8,
-        "ncs": [
-          [
-            "160504000012026NC420751",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -2500.0,
-            "COPLOG_RECOLHIMENTO DA SALDO DE CREDITO CONFORME MSG SIAFI 2026/4061278, UG 160467, DE 11NOV26."
-          ],
-          [
-            "160504000012026NC420750",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -7522.8,
-            "COPLOG_RECOLHIMENTO DA SALDO DE CREDITO CONFORME MSG SIAFI 2026/4061278, UG 160467, DE 11NOV26."
-          ]
-        ]
       }
     ],
     "BAAPLOG": [
+      {
+        "d": "26/11/2026",
+        "n": 18,
+        "rec": 29148.58,
+        "red": -116667.72,
+        "liq": -87519.14,
+        "ncs": [
+          [
+            "160505000012026NC442617",
+            "160",
+            "DESCENTRALIZACAO DE CREDITO",
+            21676.56,
+            "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+          ],
+          [
+            "160505000012026NC442617",
+            "160",
+            "DESCENTRALIZACAO DE CREDITO",
+            4492.68,
+            "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+          ],
+          [
+            "160238000012026NC000212",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            2640.0,
+            "AJUST ND"
+          ],
+          [
+            "160238000012026NC000213",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            324.0,
+            "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            9.39,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "167238000012026NC000016",
+            "167",
+            "DETALHAMENTO DE CREDITO",
+            5.0,
+            "RETORNO A ORIGEM POR SOLICITACAO DO DECEX."
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            0.32,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160238000012026NC000215",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            0.3,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160238000012026NC000216",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            0.3,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160238000012026NC000213",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            0.02,
+            "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000214",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            0.01,
+            "RECOLHIMENTO DE SALDO RESIDUAL."
+          ],
+          [
+            "160073000012026NC023081",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.02,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000213",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            -0.02,
+            "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "167238000012026NC000016",
+            "167",
+            "DETALHAMENTO DE CREDITO",
+            -5.0,
+            "RETORNO A ORIGEM POR SOLICITACAO DO DECEX."
+          ],
+          [
+            "160073000012026NC023081",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -324.0,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000213",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            -324.0,
+            "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160238000012026NC000212",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            -2640.0,
+            "AJUST ND"
+          ],
+          [
+            "160504000012026NC422154",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -113374.68,
+            "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO."
+          ]
+        ]
+      },
       {
         "d": "24/11/2026",
         "n": 2,
@@ -2776,46 +2541,25 @@ const DASHBOARD_DATA = {
             "NECESSIDADE DA ADMINISTRACAO"
           ]
         ]
-      },
-      {
-        "d": "12/11/2026",
-        "n": 4,
-        "rec": 1072.4,
-        "red": -1071.72,
-        "liq": 0.68,
-        "ncs": [
-          [
-            "160238000012026NC000204",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            1071.72,
-            "AJUS ND"
-          ],
-          [
-            "160238000012026NC000203",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            0.36,
-            "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO DE APLICACAO."
-          ],
-          [
-            "160238000012026NC000202",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            0.32,
-            "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO PARA APLICACAO."
-          ],
-          [
-            "160238000012026NC000204",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -1071.72,
-            "AJUS ND"
-          ]
-        ]
       }
     ],
     "DCMUN": [
+      {
+        "d": "26/11/2026",
+        "n": 1,
+        "rec": 0,
+        "red": -0.01,
+        "liq": -0.01,
+        "ncs": [
+          [
+            "160238000012026NC000214",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.01,
+            "RECOLHIMENTO DE SALDO RESIDUAL."
+          ]
+        ]
+      },
       {
         "d": "24/11/2026",
         "n": 1,
@@ -2981,32 +2725,25 @@ const DASHBOARD_DATA = {
             "RECOLHIMENTO DE SALDO."
           ]
         ]
-      },
-      {
-        "d": "12/11/2026",
-        "n": 2,
-        "rec": 0.01,
-        "red": -0.01,
-        "liq": 0.0,
-        "ncs": [
-          [
-            "160246000012026NC000040",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            0.01,
-            "DETAORC"
-          ],
-          [
-            "160246000012026NC000040",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -0.01,
-            "DETAORC"
-          ]
-        ]
       }
     ],
     "BMSA": [
+      {
+        "d": "26/11/2026",
+        "n": 1,
+        "rec": 0,
+        "red": -748.43,
+        "liq": -748.43,
+        "ncs": [
+          [
+            "160505000012026NC000269",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -748.43,
+            "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+          ]
+        ]
+      },
       {
         "d": "25/11/2026",
         "n": 2,
@@ -3263,39 +3000,46 @@ const DASHBOARD_DATA = {
             "DETALHAMENTO DO CREDITO PARA FINS DE EMISSAO DE EMPENHO, CONFORME OAA/2026 - DGO."
           ]
         ]
-      },
-      {
-        "d": "16/11/2026",
-        "n": 3,
-        "rec": 37127.8,
-        "red": -100.0,
-        "liq": 37027.8,
-        "ncs": [
-          [
-            "160505000012026NC440098",
-            "160",
-            "DESCENTRALIZACAO DE CREDITO",
-            21676.56,
-            "ATENDE ADITAMENTO 3Q BOL DGP 122_23 OUT 2026_PRAÇAS FAVORECIDO 1º SGT BRUNO GOMES MEDEIROS 10610921789 REFERENTE PLANEJAMENTO SIPEO 102787"
-          ],
-          [
-            "160505000012026NC440098",
-            "160",
-            "DESCENTRALIZACAO DE CREDITO",
-            15451.24,
-            "ATENDE ADITAMENTO 3Q BOL DGP 122_23 OUT 2026_PRAÇAS FAVORECIDO 1º SGT BRUNO GOMES MEDEIROS 10610921789 REFERENTE PLANEJAMENTO SIPEO 102787"
-          ],
-          [
-            "160504000012026NC420744",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -100.0,
-            "COPLOG_RECOLHIMENTO DA SALDO DE CREDITO CONFORME MSG SIAFI 2026/4061278, UG 160467, DE 11NOV26."
-          ]
-        ]
       }
     ],
     "DSUP1": [
+      {
+        "d": "26/11/2026",
+        "n": 4,
+        "rec": 0,
+        "red": -756.97,
+        "liq": -756.97,
+        "ncs": [
+          [
+            "160238000012026NC000216",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -0.3,
+            "RECOLHIMENTO DE SALDO RESIDUAL"
+          ],
+          [
+            "160073000012026NC023005",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -3.88,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160073000012026NC023005",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -250.95,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ],
+          [
+            "160073000012026NC023005",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -501.84,
+            "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+          ]
+        ]
+      },
       {
         "d": "25/11/2026",
         "n": 8,
@@ -3671,39 +3415,60 @@ const DASHBOARD_DATA = {
             "MUDANCA DE ND"
           ]
         ]
-      },
-      {
-        "d": "13/11/2026",
-        "n": 3,
-        "rec": 24994.8,
-        "red": -31.84,
-        "liq": 24962.96,
-        "ncs": [
-          [
-            "160073000012026NC022244",
-            "160",
-            "DESCENTRALIZACAO DE CREDITO",
-            24994.8,
-            "ATENDE AQUISICAO DE INSUMOS PARA A FESTIVIDADE DO CENTENARIO DO 1º DSUP. DIEX Nº 3049-1º D SUP. EMPENHO IMEDIATO. ATENTAR PARA AS ORIENTACOES CONTIDAS NA DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026. - UTILIZAR O RECURSO CONFORME O CADERNO DE ORIENTACAO AOS AGENTES DA ADMINISTRACAO."
-          ],
-          [
-            "160504000012026NC420555",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -6.34,
-            "(040584-1O D SUP) C SUP - DMI - RECOLHIMENTO DE SALDO NAO APLICADO NO PRAZO PREVISTO."
-          ],
-          [
-            "160504000012026NC420432",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -25.5,
-            "(040584-1O D SUP) C SUP-DIV SUBS-PLJ-RECOLHIMENTO DE CREDITO (SALDO RESIDUAL). REF: RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO. NC ORIGEM: -."
-          ]
-        ]
       }
     ],
     "ECT": [
+      {
+        "d": "26/11/2026",
+        "n": 6,
+        "rec": 221.64,
+        "red": -187833.69,
+        "liq": -187612.05,
+        "ncs": [
+          [
+            "160321000012026NC000068",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            221.64,
+            "MUDANCA DE PI PARA RECOLHIMENTO"
+          ],
+          [
+            "160321000012026NC000069",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            0.0,
+            "PARA RECOLHIMENTO DE SOBRAS DAS MISSOES FINALIZADAS"
+          ],
+          [
+            "160505000012026NC000273",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -95.0,
+            "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+          ],
+          [
+            "160321000012026NC000068",
+            "160",
+            "DETALHAMENTO DE CREDITO",
+            -221.64,
+            "MUDANCA DE PI PARA RECOLHIMENTO"
+          ],
+          [
+            "160505000012026NC000273",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -383.47,
+            "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+          ],
+          [
+            "160504000012026NC422245",
+            "160",
+            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+            -187133.58,
+            "RECOLHIMENTO DE SALDO RESIDUAL CONFORME DIEX NO 1425-SETFIN/ECT, DE 16 NOV 26."
+          ]
+        ]
+      },
       {
         "d": "23/11/2026",
         "n": 2,
@@ -3925,113 +3690,6 @@ const DASHBOARD_DATA = {
             "COPLOG_CONTRATACAO DE SERVICOS DE MANUTENCAO DE VIATURAS (QUARTEIRIZACAO). EMPENHO IMEDIATO. CONFORME PLANEJAMENTO DO COPLOG."
           ]
         ]
-      },
-      {
-        "d": "10/11/2026",
-        "n": 14,
-        "rec": 38769.22,
-        "red": -43166.46,
-        "liq": -4397.24,
-        "ncs": [
-          [
-            "160502000012026NC508817",
-            "160",
-            "DESCENTRALIZACAO DE CREDITO",
-            38760.0,
-            "02RECRESSOL* ATENDER CONTRATO 01_26 COLETA RESIDUOS SOLIDOS.RFR JAN A MAR 27.APLICAR CONF NT NR 01-2024 SMA_DPIMA E MSG SIAFI NR 2026-3272070, DE 26FEV26.EMPH IMEDIATO.CONF LEI NR 14.133, DE 1 ABR 21. NC020999.PROIBIDO DETALHAMENTO DE CREDITO."
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            8.93,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            0.21,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            0.04,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            0.03,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            0.01,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -0.01,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -0.03,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -0.04,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -0.21,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160321000012026NC000066",
-            "160",
-            "DETALHAMENTO DE CREDITO",
-            -8.93,
-            "MUDANCA DE ND PARA RECOLHIMENTO"
-          ],
-          [
-            "160503000012026NC002078",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -735.0,
-            "RECOLHIMENTO DE SALDO NAO UTILIZADO EM DATA PREVISTA NA NC"
-          ],
-          [
-            "160504000012026NC420089",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -2063.24,
-            "RECOLHIMENTO DE SALDO NAO UTILIZADO, CONFORME MENSAGEM SIAFI 2026/4053867."
-          ],
-          [
-            "160504000012026NC420087",
-            "160",
-            "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
-            -40359.0,
-            "RECOLHIMENTO DE SALDO NAO UTILIZADO, CONFORME MENSAGEM SIAFI 2026/4053867."
-          ]
-        ]
       }
     ]
   },
@@ -4162,8 +3820,8 @@ const DASHBOARD_DATA = {
       "dia": "19/11/2026",
       "val_alocado": 850.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 850.0,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "CCOMGEX/E4 - NC DE ORIGEM XXX CREDITO COMPL PGTO DE DIARIA P/ ATENDER ATIV. DE APOIO DIRETO DE MNT MEM CL VII,DESTINADO A COBRIR AS DESPESAS DO SUBTENENTE RODRIGUE. DIEX Nº 3093-SALC/CMDO/BCMS, DE 13NOV26.CONF. ITEM 1.B. DO PDR/26.",
       "movimentacoes": [
@@ -4211,6 +3869,43 @@ const DASHBOARD_DATA = {
           "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
           "val": -5694.3,
           "obj": "CCOMGEX/AGGE NC DE ORIGEM 1159 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400183. PARA ATENDER O DIEX Nº 3120-SALC/CMDO/BCMS, DE 16NOV26. CONF. ITEM 1C PDR26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160035000012026NC403297": {
+      "nc": "160035000012026NC403297",
+      "short_nc": "26NC403297",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160035",
+      "concedente_nome": "CCOMGEX - Cmdo Comunicações e Guerra Eletrônica",
+      "acao": "20XE",
+      "pi": "K8COMSIDIAR",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 850.0,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "CCOMGEX/AGGE NC DE ORIGEM 056 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400182. CONF. ITEM 1B PDR26. (VALOR RESIDUAL)",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": -850.0,
+          "obj": "CCOMGEX/AGGE NC DE ORIGEM 056 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400182. CONF. ITEM 1B PDR26. (VALOR RESIDUAL)"
         }
       ],
       "nes": [],
@@ -6339,8 +6034,8 @@ const DASHBOARD_DATA = {
       "dia": "04/11/2026",
       "val_alocado": 5034.35,
       "val_reduzido": 0.0,
-      "saldo_tela": 0.02,
-      "dias_tela": 21,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "ATENDE COTA FUNADOM DE JAN 2027. COTA CHEIA SEM DEDUCAO DE 10 POR CENTO ALMOX VIRTUAL NACIONAL. DOC REF DIEX NR 3321 SGS.SDIR.DIR, DE 28 OUT 2026. EMPENHO IMEDIATO. ATD BC MNT SUP",
       "movimentacoes": [
@@ -6516,6 +6211,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "160073000012026NC023024": {
+      "nc": "160073000012026NC023024",
+      "short_nc": "26NC023024",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 0.08,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.08,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "160238000012026NC000075": {
       "nc": "160238000012026NC000075",
       "short_nc": "26NC000075",
@@ -6641,8 +6373,8 @@ const DASHBOARD_DATA = {
       "dia": "26/10/2026",
       "val_alocado": 2100.0,
       "val_reduzido": 2100.0,
-      "saldo_tela": 0.78,
-      "dias_tela": 30,
+      "saldo_tela": 0.48,
+      "dias_tela": 31,
       "prazo": "31/10/2026",
       "obj": "CMAT-MOTO - AQS SUP/ INSUMOS MNT PREVENTIVA 1O ESC DE VIATURAS NAO BLD. EMPENHO ATE 31 OUT 26. RECOLHER SALDOS ATE 01 NOV 26 - DESCENTRALIZACAO FEITA CONFORME DETERMINADO NO DIEX Nº 6211- E4/EMG/BAAPLOG DE 23 DE OUTUBRO DE 2026.",
       "movimentacoes": [
@@ -6679,6 +6411,83 @@ const DASHBOARD_DATA = {
         "fonte": "descrição da NC (SIAFI)",
         "regra": "data explícita na NC",
         "trecho": "EMPENHO ATE 31 OUT 26"
+      }
+    },
+    "160238000012026NC000215": {
+      "nc": "160238000012026NC000215",
+      "short_nc": "26NC000215",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 10.010000000000002,
+      "val_reduzido": 10.010000000000002,
+      "saldo_tela": 0.3,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -9.39,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.32,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 9.39,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.32,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       }
     },
     "160298000012026NC000023": {
@@ -7473,6 +7282,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "160298000012026NC000980": {
+      "nc": "160298000012026NC000980",
+      "short_nc": "26NC000980",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160298",
+      "concedente_nome": "Comando Militar do Leste (CML)",
+      "acao": "212B",
+      "pi": "E6SUPLJA3RR",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
+      "op_principal": "DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 9600.0,
+      "val_reduzido": 0.0,
+      "saldo_tela": 9600.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339030",
+          "ndn": "MATERIAL DE CONSUMO",
+          "val": 9600.0,
+          "obj": "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "160329000012026NC000001": {
       "nc": "160329000012026NC000001",
       "short_nc": "26NC000001",
@@ -7642,7 +7488,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -7669,7 +7515,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -8423,6 +8269,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -13414,8 +13269,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.51,
       "val_reduzido": 0.51,
-      "saldo_tela": 0.51,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -13460,7 +13315,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.47,
       "val_reduzido": 0.47,
       "saldo_tela": 0.47,
-      "dias_tela": 48,
+      "dias_tela": 49,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -13605,7 +13460,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 14.46,
       "val_reduzido": 14.46,
       "saldo_tela": 14.46,
-      "dias_tela": 48,
+      "dias_tela": 49,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -13740,8 +13595,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.08,
       "val_reduzido": 0.08,
-      "saldo_tela": 0.08,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -13785,8 +13640,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.85,
       "val_reduzido": 0.85,
-      "saldo_tela": 0.85,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -13830,8 +13685,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 4.66,
       "val_reduzido": 4.66,
-      "saldo_tela": 4.66,
-      "dias_tela": 48,
+      "saldo_tela": 4.34,
+      "dias_tela": 49,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -14618,8 +14473,8 @@ const DASHBOARD_DATA = {
       "dia": "12/11/2026",
       "val_alocado": 9.39,
       "val_reduzido": 9.39,
-      "saldo_tela": 9.39,
-      "dias_tela": 13,
+      "saldo_tela": 1.44,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "ALTERACAO DE ND.",
       "movimentacoes": [
@@ -14674,7 +14529,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.32,
       "val_reduzido": 0.32,
       "saldo_tela": 0.32,
-      "dias_tela": 13,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "ALTERACAO DE ND.",
       "movimentacoes": [
@@ -14747,7 +14602,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.3,
       "val_reduzido": 0.3,
       "saldo_tela": 0.3,
-      "dias_tela": 13,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "ALTERACAO DE ND.",
       "movimentacoes": [
@@ -14875,7 +14730,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.8,
       "val_reduzido": 0.8,
       "saldo_tela": 0.8,
-      "dias_tela": 0,
+      "dias_tela": 1,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -14919,7 +14774,7 @@ const DASHBOARD_DATA = {
       "dia": "25/11/2026",
       "val_alocado": 0.06,
       "val_reduzido": 0.06,
-      "saldo_tela": 0.06,
+      "saldo_tela": 0.0,
       "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO DE CREDITO.",
@@ -19966,7 +19821,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 67000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 0.91,
-      "dias_tela": 35,
+      "dias_tela": 36,
       "prazo": "IMEDIATO",
       "obj": "(12526-BCMS)C SUP-DMI-SOL-RECURSO PARA AQS DE MAT FABRICACAO DE ARMARIOS , COLCHAO, CFM SOL DIEX NO 5746-E10/EMG/BAAPLOG, 4 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -20709,6 +20564,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "160505000012026NC000274": {
+      "nc": "160505000012026NC000274",
+      "short_nc": "26NC000274",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "2000",
+      "pi": "IDDSATSPCEB",
+      "nd": "339033",
+      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 411.7,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -411.7,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "160505000012026NC403543": {
       "nc": "160505000012026NC403543",
       "short_nc": "26NC403543",
@@ -21339,8 +21231,8 @@ const DASHBOARD_DATA = {
       "dia": "07/04/2026",
       "val_alocado": 1551.35,
       "val_reduzido": 0.0,
-      "saldo_tela": 411.7,
-      "dias_tela": 232,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "—",
       "obj": "ATENDE COMPLEMENTO BOLETIM INTERNO RESERVADO BAR DGP 009_04 MAR 2026_CURSOS FAVORECIDO 2º TEN ESTHER DIAS DE OLIVEIRA 18121517729 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25155",
       "movimentacoes": [
@@ -22933,7 +22825,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -22960,7 +22852,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -23682,6 +23574,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -26549,7 +26450,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1250.0,
       "val_reduzido": 0.0,
       "saldo_tela": 42.83,
-      "dias_tela": 320,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -27494,7 +27395,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1250.0,
       "val_reduzido": 0.0,
       "saldo_tela": 117.18,
-      "dias_tela": 70,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -27803,7 +27704,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 500.0,
       "val_reduzido": 0.0,
       "saldo_tela": 500.0,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -27840,7 +27741,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1177.0,
       "val_reduzido": 0.0,
       "saldo_tela": 1177.0,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -27876,8 +27777,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 473.45,
       "val_reduzido": 0.0,
-      "saldo_tela": 473.45,
-      "dias_tela": 8,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS SETEMBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -27913,8 +27814,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 473.45,
       "val_reduzido": 0.0,
-      "saldo_tela": 473.45,
-      "dias_tela": 8,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS OUTUBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -28652,7 +28553,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 10000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 130.0,
-      "dias_tela": 259,
+      "dias_tela": 261,
       "prazo": "IMEDIATO",
       "obj": "ATD CONTRATACAO DE SERVICO. DOC REF: DIEX Nº 5315-SEGER/6 SCH/EME, DE 02/03/2026. PRAZO DE EMPENHO: IMEDIATO.",
       "movimentacoes": [
@@ -31625,8 +31526,8 @@ const DASHBOARD_DATA = {
       "dia": "18/11/2026",
       "val_alocado": 2640.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 2640.0,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "AQUISICAO DE CADEIRA PARA A DIVISAO DE IMPORTACAO E EXPORTACAO DE MATERIAL. DOC REF: DIEX Nº 6703-DIEM/BAAPLOG DE 16NOV26. PRAZO DE EMPENHO: IMEDIATO. EMPENHAR CONFORME ORIENTACOES DO COAA DGO 03.",
       "movimentacoes": [
@@ -31673,6 +31574,51 @@ const DASHBOARD_DATA = {
           "nd": "339000",
           "ndn": "APLICACOES DIRETAS",
           "val": -322.25,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160073000012026NC023081": {
+      "nc": "160073000012026NC023081",
+      "short_nc": "26NC023081",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 324.02,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -324.0,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.02,
           "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
         }
       ],
@@ -31853,7 +31799,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -31880,7 +31826,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -32642,6 +32588,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -34277,7 +34232,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4935.0,
       "val_reduzido": 4935.0,
       "saldo_tela": 319.25,
-      "dias_tela": 245,
+      "dias_tela": 247,
       "prazo": "Não informado na NC",
       "obj": "AJUSTE DE NATUREZA DE DESPESAS",
       "movimentacoes": [
@@ -42609,7 +42564,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 5000.11,
       "val_reduzido": 5000.11,
       "saldo_tela": 476.79,
-      "dias_tela": 13,
+      "dias_tela": 15,
       "prazo": "Não informado na NC",
       "obj": "AJUS ND",
       "movimentacoes": [
@@ -42654,7 +42609,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 17000.62,
       "val_reduzido": 17000.62,
       "saldo_tela": 1069.26,
-      "dias_tela": 13,
+      "dias_tela": 15,
       "prazo": "Não informado na NC",
       "obj": "AJUS ND",
       "movimentacoes": [
@@ -42754,7 +42709,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.32,
       "val_reduzido": 0.32,
       "saldo_tela": 0.32,
-      "dias_tela": 12,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO PARA APLICACAO.",
       "movimentacoes": [
@@ -42809,7 +42764,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.36,
       "val_reduzido": 0.36,
       "saldo_tela": 0.36,
-      "dias_tela": 12,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO DE APLICACAO.",
       "movimentacoes": [
@@ -43185,15 +43140,15 @@ const DASHBOARD_DATA = {
       "concedente_ug": "160238",
       "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
       "acao": "2000",
-      "pi": "-8",
-      "nd": "339000",
-      "ndn": "APLICACOES DIRETAS",
+      "pi": "I3DAFUNADOM",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
       "op_principal": "DETALHAMENTO DE CREDITO",
       "dia": "18/11/2026",
       "val_alocado": 646.27,
       "val_reduzido": 646.27,
-      "saldo_tela": 0.02,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
       "movimentacoes": [
@@ -43260,6 +43215,202 @@ const DASHBOARD_DATA = {
           "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
           "val": -0.02,
           "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160238000012026NC000212": {
+      "nc": "160238000012026NC000212",
+      "short_nc": "26NC000212",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "2000",
+      "pi": "I1DSATSAIMP",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 2640.0,
+      "val_reduzido": 2640.0,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "AJUST ND",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -2640.0,
+          "obj": "AJUST ND"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449052",
+          "ndn": "EQUIPAMENTOS E MATERIAL PERMANENTE",
+          "val": 2640.0,
+          "obj": "AJUST ND"
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160238000012026NC000213": {
+      "nc": "160238000012026NC000213",
+      "short_nc": "26NC000213",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 324.02,
+      "val_reduzido": 324.02,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 324.0,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -324.0,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.02,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.02,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160238000012026NC000214": {
+      "nc": "160238000012026NC000214",
+      "short_nc": "26NC000214",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.01,
+      "val_reduzido": 0.01,
+      "saldo_tela": 0.01,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.01,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.01,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160238000012026NC000216": {
+      "nc": "160238000012026NC000216",
+      "short_nc": "26NC000216",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.3,
+      "val_reduzido": 0.3,
+      "saldo_tela": 0.3,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
         }
       ],
       "nes": [],
@@ -46671,7 +46822,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 10000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 1604.0,
-      "dias_tela": 231,
+      "dias_tela": 233,
       "prazo": "31/05/2026",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-RECURSO PARA ATENDER CONFECCAO DE MATERIAL DE BIDS, CFM PEDIDOS APROVADOS NO PDR LOG 2026. POR ORDEM DO CMT LOG, EMPH ATE 31 MAIO 26.",
       "movimentacoes": [
@@ -48087,8 +48238,8 @@ const DASHBOARD_DATA = {
       "dia": "10/08/2026",
       "val_alocado": 45997.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 45997.0,
-      "dias_tela": 106,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/10/2026",
       "obj": "(012369-BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.68H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP5.921,67.NEALIQ35.784,81.DSPN210,79.TRNF-6.363,00.ADNT0,00.PRB DETAORC.",
       "movimentacoes": [
@@ -48124,8 +48275,8 @@ const DASHBOARD_DATA = {
       "dia": "10/08/2026",
       "val_alocado": 148134.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 67377.68,
-      "dias_tela": 106,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/10/2026",
       "obj": "(027318-CIA C BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.193H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP16.807,10.NEALIQ101.565,72.DSPN598,27.TRNF-476,00.ADNT0,00.PRB DETAORC.",
       "movimentacoes": [
@@ -49450,7 +49601,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 19000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 6.22,
-      "dias_tela": 35,
+      "dias_tela": 37,
       "prazo": "31/10/2026",
       "obj": "CMAT-MOTO ? DESCENTRALIZACAO PARCIAL PDRLOG P/ MNT CORRETIVA VTR NAO BLD. PRIORIDADE ATD DEMANDAS APROVADAS NO SIGELOG. EMPENHO ATE 31 OUT 26.",
       "movimentacoes": [
@@ -49924,7 +50075,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 6702.27,
       "val_reduzido": 0.0,
       "saldo_tela": 6702.27,
-      "dias_tela": 6,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-ATENDER SERVICOS DE MANUTENCAO DE INSTALACOES DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -49960,8 +50111,8 @@ const DASHBOARD_DATA = {
       "dia": "18/11/2026",
       "val_alocado": 62088.72,
       "val_reduzido": 0.0,
-      "saldo_tela": 62088.72,
-      "dias_tela": 6,
+      "saldo_tela": 92.41,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-AQUISICAO DE EQUIPAMENTOS E MOBILIARIO PARA FUNCIONAMENTO DE ESTRUTURAS DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -50045,6 +50196,43 @@ const DASHBOARD_DATA = {
           "nd": "339030",
           "ndn": "MATERIAL DE CONSUMO",
           "val": -78.15,
+          "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160504000012026NC422154": {
+      "nc": "160504000012026NC422154",
+      "short_nc": "26NC422154",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160504",
+      "concedente_nome": "CMAT - Centro de Material Bélico / COLOG",
+      "acao": "212B",
+      "pi": "E6SUPLJA1QR",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 113374.68,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339030",
+          "ndn": "MATERIAL DE CONSUMO",
+          "val": -113374.68,
           "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO."
         }
       ],
@@ -51625,6 +51813,51 @@ const DASHBOARD_DATA = {
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160505000012026NC442617": {
+      "nc": "160505000012026NC442617",
+      "short_nc": "26NC442617",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "212O",
+      "pi": "D6PEINDMV1T",
+      "nd": "339093",
+      "ndn": "INDENIZACOES E RESTITUICOES",
+      "op_principal": "DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 26169.24,
+      "val_reduzido": 0.0,
+      "saldo_tela": 4492.68,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339093",
+          "ndn": "INDENIZACOES E RESTITUICOES",
+          "val": 21676.56,
+          "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339093",
+          "ndn": "INDENIZACOES E RESTITUICOES",
+          "val": 4492.68,
+          "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+        }
+      ],
+      "nes": [],
       "prazo_info": {
         "tipo": "",
         "fonte": "",
@@ -54285,7 +54518,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -54312,7 +54545,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -55076,6 +55309,15 @@ const DASHBOARD_DATA = {
           "val": 1592.2,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
         }
       ],
       "prazo_info": {
@@ -55747,7 +55989,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 5649.28,
       "val_reduzido": 5649.28,
       "saldo_tela": 651.72,
-      "dias_tela": 41,
+      "dias_tela": 43,
       "prazo": "30/09/2026",
       "obj": "ATD DESPESAS COM FUNADOM 2 COTA, CONFORME PDR SSEX 2026. LIQUIDAR ATE 30SET26 LIQ. MENSALMENTE. AUTORIZACAO PARA DETAORC CONF. LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -55829,6 +56071,97 @@ const DASHBOARD_DATA = {
         "fonte": "descrição da NC (SIAFI)",
         "regra": "data explícita na NC",
         "trecho": "LIQUIDAR ATE 30SET26"
+      }
+    },
+    "167238000012026NC000016": {
+      "nc": "167238000012026NC000016",
+      "short_nc": "26NC000016",
+      "om": "BAAPLOG",
+      "ug": "167",
+      "concedente_ug": "167238",
+      "concedente_nome": "Ba Ap Log (Fundo de Saúde)",
+      "acao": "21GQ",
+      "pi": "C6ENEASCAPE",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 5.0,
+      "val_reduzido": 5.0,
+      "saldo_tela": 5.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RETORNO A ORIGEM POR SOLICITACAO DO DECEX.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 5.0,
+          "obj": "RETORNO A ORIGEM POR SOLICITACAO DO DECEX."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": -5.0,
+          "obj": "RETORNO A ORIGEM POR SOLICITACAO DO DECEX."
+        }
+      ],
+      "nes": [
+        {
+          "ne": "2026NE000163",
+          "dia": "10/06/2026",
+          "fav": "DEPOSITO CENTRAL DE MUNICAO",
+          "doc": "160246",
+          "val": 1100.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000164",
+          "dia": "10/06/2026",
+          "fav": "DEPOSITO CENTRAL DE MUNICAO",
+          "doc": "160246",
+          "val": 0.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000220",
+          "dia": "10/08/2026",
+          "fav": "DEPOSITO CENTRAL DE MUNICAO",
+          "doc": "160246",
+          "val": 5407.5,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000069",
+          "dia": "22/04/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 1842.5,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000070",
+          "dia": "22/04/2026",
+          "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
+          "doc": "160321",
+          "val": 0.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        }
+      ],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       }
     },
     "167238000012026NC600179": {
@@ -56739,8 +57072,8 @@ const DASHBOARD_DATA = {
       "dia": "15/06/2026",
       "val_alocado": 3272.5,
       "val_reduzido": 0.0,
-      "saldo_tela": 5.0,
-      "dias_tela": 162,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "31/07/2026",
       "obj": "CDT DSTN AO 3º TURNO DO CGAEM 2026 - REF: DIEX Nº 4823-LOG/SEC LOG FIN/CH GAB, 11JUN26. PD:SIPO DESMNIL. PRZ EMP: 31JUL26",
       "movimentacoes": [
@@ -57096,7 +57429,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000120",
           "dia": "26/10/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 1940.0,
           "proc": "",
@@ -57720,7 +58053,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2745.66,
       "val_reduzido": 0.0,
       "saldo_tela": 31.81,
-      "dias_tela": 319,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -58407,7 +58740,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 88253.66,
       "val_reduzido": 0.0,
       "saldo_tela": 0.07,
-      "dias_tela": 133,
+      "dias_tela": 135,
       "prazo": "30/09/2026",
       "obj": "ATD DESPESAS COM FUNADOM 2 COTA, CONFORME PDR SSEX 2026. LIQUIDAR ATE 30SET26 LIQ. MENSALMENTE. AUTORIZACAO PARA DETAORC CONF. LEGISLACAO VIGENTE.",
       "movimentacoes": [
@@ -58823,7 +59156,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1092.99,
       "val_reduzido": 0.0,
       "saldo_tela": 285.74,
-      "dias_tela": 69,
+      "dias_tela": 71,
       "prazo": "16/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 16OUT26. REFERENTE CIA C BA AP LOG EX .",
       "movimentacoes": [
@@ -60883,7 +61216,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -60910,7 +61243,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -61672,6 +62005,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -64218,8 +64560,8 @@ const DASHBOARD_DATA = {
       "dia": "12/11/2026",
       "val_alocado": 0.01,
       "val_reduzido": 0.01,
-      "saldo_tela": 0.01,
-      "dias_tela": 12,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETAORC",
       "movimentacoes": [
@@ -67051,7 +67393,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000407",
           "dia": "19/11/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 3783.7,
           "proc": "",
@@ -67677,7 +68019,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000145",
           "dia": "28/05/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 10245.0,
           "proc": "PREGAO 90034/2025",
@@ -68973,7 +69315,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2570.0,
       "val_reduzido": 0.0,
       "saldo_tela": 95.0,
-      "dias_tela": 133,
+      "dias_tela": 135,
       "prazo": "IMEDIATO",
       "obj": "(040535-DC MUN)CSUP-DIVSUBS-SOL-PAG DIARIAS. OBS LEGISLACAO VIGENTE (ATENDE OS 14-DPIC/C SUP, 29MAIO26-1O CONGRESSO DE LOGISTICA) CFE DIEX NO 15790-CSUP/COLOG, 07JUL26. EMPH IMEDIATO. PRB DETAORC.",
       "movimentacoes": [
@@ -71037,8 +71379,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 2830.31,
       "val_reduzido": 0.0,
-      "saldo_tela": 2830.31,
-      "dias_tela": 7,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -73212,8 +73554,8 @@ const DASHBOARD_DATA = {
       "dia": "22/10/2026",
       "val_alocado": 6650.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 6650.0,
-      "dias_tela": 33,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/11/2026",
       "obj": "APOIAR IIB 2027. DC MUN. EMPENHO ATÉ 30NOV2026. ESSA UG NÃO DEVE ALTERAR ND/UGR (ALT EXEC SOMENTE P/ COTER). ATENDE DIEX Nº 11646 - DPG/CH PREP F TER/COTER, 16 OUT 26.",
       "movimentacoes": [
@@ -73553,7 +73895,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -73580,7 +73922,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -74137,7 +74479,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2066.48,
       "val_reduzido": 2066.48,
       "saldo_tela": 0.48,
-      "dias_tela": 56,
+      "dias_tela": 58,
       "prazo": "Não informado na NC",
       "obj": "DETAORC",
       "movimentacoes": [
@@ -74318,6 +74660,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -76873,7 +77224,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1750.0,
       "val_reduzido": 0.0,
       "saldo_tela": 0.94,
-      "dias_tela": 319,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -78643,7 +78994,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1750.0,
       "val_reduzido": 0.0,
       "saldo_tela": 233.91,
-      "dias_tela": 69,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -81992,7 +82343,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -82019,7 +82370,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -82773,6 +83124,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -88989,7 +89349,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000201",
           "dia": "09/06/2026",
-          "fav": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HOS",
+          "fav": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HO",
           "doc": "55469329000198",
           "val": 231.8,
           "proc": "",
@@ -94306,7 +94666,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 35820.1,
       "val_reduzido": 0.0,
       "saldo_tela": 29.36,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "Não informado na NC",
       "obj": "AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -94431,6 +94791,152 @@ const DASHBOARD_DATA = {
         }
       ],
       "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160505000012026NC000269": {
+      "nc": "160505000012026NC000269",
+      "short_nc": "26NC000269",
+      "om": "BMSA",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "2000",
+      "pi": "IDDSATSPCEB",
+      "nd": "339033",
+      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 748.43,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -748.43,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+        }
+      ],
+      "nes": [
+        {
+          "ne": "2026NE000016",
+          "dia": "27/02/2026",
+          "fav": "P&Y COMERCIO LTDA",
+          "doc": "42542508000161",
+          "val": 1445.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000017",
+          "dia": "27/02/2026",
+          "fav": "RJ COMERCIO E SERVICOS GERAIS LTDA",
+          "doc": "11819860000178",
+          "val": 2648.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000018",
+          "dia": "27/02/2026",
+          "fav": "GENTILEZA COMERCIO DE MATERIAIS E SERVICOS LTDA",
+          "doc": "50391734000117",
+          "val": 701.71,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000019",
+          "dia": "27/02/2026",
+          "fav": "GENTILEZA COMERCIO DE MATERIAIS E SERVICOS LTDA",
+          "doc": "50391734000117",
+          "val": 499.51,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000020",
+          "dia": "27/02/2026",
+          "fav": "M. CAVALCANTE MERCANTIL LTDA",
+          "doc": "32474127000139",
+          "val": 609.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000021",
+          "dia": "27/02/2026",
+          "fav": "GENTILEZA COMERCIO DE MATERIAIS E SERVICOS LTDA",
+          "doc": "50391734000117",
+          "val": 725.01,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000022",
+          "dia": "27/02/2026",
+          "fav": "61.196.113 MARCOS PAULO BAIAO",
+          "doc": "61196113000107",
+          "val": 894.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000023",
+          "dia": "27/02/2026",
+          "fav": "DALO EMPREENDIMENTOS LTDA",
+          "doc": "49709450000147",
+          "val": 920.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000024",
+          "dia": "27/02/2026",
+          "fav": "DF COMERCIO E SERVICOS LTDA",
+          "doc": "45644476000101",
+          "val": 35.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000025",
+          "dia": "27/02/2026",
+          "fav": "EMPREENDIMENTO LGA LTDA",
+          "doc": "37278582000182",
+          "val": 3798.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000026",
+          "dia": "27/02/2026",
+          "fav": "DALO EMPREENDIMENTOS LTDA",
+          "doc": "49709450000147",
+          "val": 1653.9,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000028",
+          "dia": "27/02/2026",
+          "fav": "DALO EMPREENDIMENTOS LTDA",
+          "doc": "49709450000147",
+          "val": 227.5,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "",
         "fonte": "",
@@ -94882,14 +95388,14 @@ const DASHBOARD_DATA = {
       "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
       "acao": "2000",
       "pi": "IDDSATSPCEB",
-      "nd": "339033",
-      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
       "op_principal": "DESCENTRALIZACAO DE CREDITO",
       "dia": "29/06/2026",
       "val_alocado": 4997.5599999999995,
       "val_reduzido": 0.0,
-      "saldo_tela": 748.43,
-      "dias_tela": 149,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDE ADITAMENTO 4A BOL DGP 067_12 JUN 2026_CURSOS FAVORECIDO MAJ BRAULIO CASTELUCI TESTA 05657950747 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 28354",
       "movimentacoes": [
@@ -96650,6 +97156,15 @@ const DASHBOARD_DATA = {
           "val": 1592.2,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
         }
       ],
       "prazo_info": {
@@ -97120,7 +97635,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -97147,7 +97662,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -97911,6 +98426,15 @@ const DASHBOARD_DATA = {
           "val": 1592.2,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
         }
       ],
       "prazo_info": {
@@ -98117,7 +98641,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 82.0,
       "val_reduzido": 82.0,
       "saldo_tela": 82.0,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO ORCAMENTARIO PARA FINS DE SALDO RESIDUAL",
       "movimentacoes": [
@@ -100112,7 +100636,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4255.98,
       "val_reduzido": 0.0,
       "saldo_tela": 1071.25,
-      "dias_tela": 320,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26.",
       "movimentacoes": [
@@ -101276,7 +101800,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4255.99,
       "val_reduzido": 0.0,
       "saldo_tela": 2156.63,
-      "dias_tela": 70,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -103179,8 +103703,8 @@ const DASHBOARD_DATA = {
       "dia": "24/08/2026",
       "val_alocado": 250.95,
       "val_reduzido": 0.0,
-      "saldo_tela": 250.95,
-      "dias_tela": 93,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "ATENDE PGT0 DE DUDA PRIMEIRO EMPLACAMENTO. DOC DE REFERENCIA: DIEX Nº 2133-TRANSP/S4/1º D SUP DE 19 AGO 2026. EMPENHO IMEDIATO-UTILIZAR O RECURSO CONFORME O CADERNO DE ORIENTACAO AOS AGENTES DA ADMINISTRACAO",
       "movimentacoes": [
@@ -103560,7 +104084,17 @@ const DASHBOARD_DATA = {
           "obj": "ATD DESPESAS COM SERVICOS POSTAIS ATE DEZEMBRO 2026 QUE VENCE EM JANEIRO 2027. DOC REF DIEX NR 2996 SPAA SGS SDIR DE 9 SET 25. EMPENHO IMEDIATO."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000533",
+          "dia": "25/11/2026",
+          "fav": "EMPRESA BRASILEIRA DE CORREIOS E TELEGRAFOS",
+          "doc": "34028316000294",
+          "val": 560.0,
+          "proc": "INEX 07/2015",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -103837,6 +104371,59 @@ const DASHBOARD_DATA = {
         "fonte": "descrição da NC (SIAFI)",
         "regra": "imediato (texto da NC)",
         "trecho": "EMPENHO IMEDIATO"
+      }
+    },
+    "160073000012026NC023005": {
+      "nc": "160073000012026NC023005",
+      "short_nc": "26NC023005",
+      "om": "DSUP1",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNSEGO",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 756.67,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -250.95,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -3.88,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -501.84,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       }
     },
     "160298000012026NC000063": {
@@ -104247,7 +104834,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -104274,7 +104861,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -105036,6 +105623,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -108516,7 +109112,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4657.68,
       "val_reduzido": 4657.68,
       "saldo_tela": 0.18,
-      "dias_tela": 22,
+      "dias_tela": 23,
       "prazo": "Não informado na NC",
       "obj": "DETAORC DA 00 PARA 30 COM O OBJETIVO DE EMISSAO DE NOTA DE EMPENHO",
       "movimentacoes": [
@@ -108650,8 +109246,8 @@ const DASHBOARD_DATA = {
       "dia": "12/11/2026",
       "val_alocado": 0.3,
       "val_reduzido": 0.3,
-      "saldo_tela": 0.3,
-      "dias_tela": 13,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND",
       "movimentacoes": [
@@ -109084,14 +109680,14 @@ const DASHBOARD_DATA = {
       "concedente_ug": "160307",
       "concedente_nome": "1º D Sup - 1º Depósito de Suprimento",
       "acao": "2000",
-      "pi": "I3DAFUNSUPL",
-      "nd": "339000",
-      "ndn": "APLICACOES DIRETAS",
+      "pi": "I3DACSPTELM",
+      "nd": "339039",
+      "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
       "op_principal": "DETALHAMENTO DE CREDITO",
       "dia": "25/11/2026",
       "val_alocado": 505.71999999999997,
       "val_reduzido": 505.71999999999997,
-      "saldo_tela": 3.88,
+      "saldo_tela": 0.0,
       "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO DE CREDITO.",
@@ -118697,6 +119293,15 @@ const DASHBOARD_DATA = {
           "val": 389154.68,
           "proc": "PREGAO ELETRONICO 90248/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000535",
+          "dia": "25/11/2026",
+          "fav": "JH2P-ENGENHARIA, CONSTRUCAO E DECORACAO LTDA",
+          "doc": "03992117000197",
+          "val": 80206.98,
+          "proc": "PE 90248/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
       "prazo_info": {
@@ -119216,8 +119821,8 @@ const DASHBOARD_DATA = {
       "dia": "04/11/2026",
       "val_alocado": 55957.72,
       "val_reduzido": 0.0,
-      "saldo_tela": 39503.74,
-      "dias_tela": 21,
+      "saldo_tela": 53503.74,
+      "dias_tela": 22,
       "prazo": "13/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE EQUIPAMENTOS P/ SETOR SUP CL) REF DIEX NO 2720-COS/1O D SUP DE 08/10/2026. EMPH ATE 7 DIAS UTEIS. PRB DETAORC.",
       "movimentacoes": [
@@ -119636,7 +120241,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 39382.38,
       "val_reduzido": 0.0,
       "saldo_tela": 28.38,
-      "dias_tela": 14,
+      "dias_tela": 15,
       "prazo": "IMEDIATO",
       "obj": "(040584-1O D SUP)C SUP-DMI-SOL-RECURSO, EXTRA PDR LOG, PARA INVENTARIO E PREP DE CJ CMFL INSERVIVEIS, CFM SOL DIEX NO 2914-COS/1O D SUP, DE 28 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -119794,7 +120399,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 75333.93,
       "val_reduzido": 0.0,
       "saldo_tela": 2.43,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "Não informado na NC",
       "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -119841,7 +120446,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 24899.0,
       "val_reduzido": 0.0,
       "saldo_tela": 15.67,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "20/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (SV. DE PINTURA DA IDENTIDADE VISUAL RECEPCAO DAS SECOES DOS DEP. CLASSE I) REF DIEX NO 3035-ALMOX/S4/1O D SUP DE 09/11/2026. EMPH ATE 48H. PRB DETAORC.",
       "movimentacoes": [
@@ -120008,7 +120613,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 138915.0,
       "val_reduzido": 0.0,
       "saldo_tela": 20.54,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(040584-1O D SUP)C SUP-DMI-PLJ-RECURSO PARA ATENDER AQS DE MATERIAL, BOINA PRETA, CFM SOL DIEX NO 28737-DIVMATINT/CSUP/COLOG, EM 12 NOV 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -120021,7 +120626,17 @@ const DASHBOARD_DATA = {
           "obj": "(040584-1O D SUP)C SUP-DMI-PLJ-RECURSO PARA ATENDER AQS DE MATERIAL, BOINA PRETA, CFM SOL DIEX NO 28737-DIVMATINT/CSUP/COLOG, EM 12 NOV 26. EMPH IMEDIATO."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000531",
+          "dia": "25/11/2026",
+          "fav": "GMG INDUSTRIA DO VESTUARIO LTDA",
+          "doc": "03366550000117",
+          "val": 138915.0,
+          "proc": "PE 00018/2023",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -120058,7 +120673,17 @@ const DASHBOARD_DATA = {
           "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (SERVICOS DE CALIBRACAO ACREDITADA JUNTO AO INMETRO (RBC)) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000534",
+          "dia": "25/11/2026",
+          "fav": "VISOMES COMERCIAL METROLOGICA LTDA",
+          "doc": "00567892000107",
+          "val": 62400.0,
+          "proc": "PREGAO 90002/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -120119,7 +120744,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 14000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 14000.0,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "20/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE UM EVAPORADOR ROTATIVO DA MARCA SOLA) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC.",
       "movimentacoes": [
@@ -120132,7 +120757,17 @@ const DASHBOARD_DATA = {
           "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE UM EVAPORADOR ROTATIVO DA MARCA SOLA) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000532",
+          "dia": "25/11/2026",
+          "fav": "SOLAB CIENTIFICA EQUIPAMENTOS PARA LABORATORIOS LTDA",
+          "doc": "11232743000103",
+          "val": 0.0,
+          "proc": "PREGAO 90055/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -121883,7 +122518,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 600000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 71.96,
-      "dias_tela": 139,
+      "dias_tela": 140,
       "prazo": "30/09/2026",
       "obj": "ATENDE DESP COM AQS SUP CLASSE VIII PÃO EFETIVO ISENTO DAS OM NO 2 SEM 2026 AMPARO NA PORTARIA DGPCEX NR 419, DE 07 DE NOVEMBRO DE 2022. EMPENHAR ATE 30SET. LIQUIDACAO ATE 30NOV.",
       "movimentacoes": [
@@ -124112,7 +124747,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -124139,7 +124774,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -124885,6 +125520,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -128832,15 +129476,15 @@ const DASHBOARD_DATA = {
       "concedente_ug": "160321",
       "concedente_nome": "ECT - Estabelecimento Central de Transportes",
       "acao": "2000",
-      "pi": "E7DATRSPASS",
+      "pi": "IDDSATSPCEB",
       "nd": "339033",
       "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
       "op_principal": "DETALHAMENTO DE CREDITO",
       "dia": "09/11/2026",
       "val_alocado": 221.64,
       "val_reduzido": 221.64,
-      "saldo_tela": 221.64,
-      "dias_tela": 14,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE UGR PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -129032,6 +129676,108 @@ const DASHBOARD_DATA = {
         }
       ],
       "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160321000012026NC000068": {
+      "nc": "160321000012026NC000068",
+      "short_nc": "26NC000068",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160321",
+      "concedente_nome": "ECT - Estabelecimento Central de Transportes",
+      "acao": "212B",
+      "pi": "E7DATRSAPIO",
+      "nd": "339033",
+      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 221.64,
+      "val_reduzido": 221.64,
+      "saldo_tela": 221.64,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "MUDANCA DE PI PARA RECOLHIMENTO",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": 221.64,
+          "obj": "MUDANCA DE PI PARA RECOLHIMENTO"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -221.64,
+          "obj": "MUDANCA DE PI PARA RECOLHIMENTO"
+        }
+      ],
+      "nes": [
+        {
+          "ne": "2026NE000204",
+          "dia": "28/05/2026",
+          "fav": "MATRIX COMERCIALIZADORA DE ENERGIA ELETRICA S/A",
+          "doc": "17858631000149",
+          "val": 100239.82,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160321000012026NC000069": {
+      "nc": "160321000012026NC000069",
+      "short_nc": "26NC000069",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160321",
+      "concedente_nome": "ECT - Estabelecimento Central de Transportes",
+      "acao": "21A0",
+      "pi": "E7DATRSDIAR",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 0.0,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "PARA RECOLHIMENTO DE SOBRAS DAS MISSOES FINALIZADAS",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": 0.0,
+          "obj": "PARA RECOLHIMENTO DE SOBRAS DAS MISSOES FINALIZADAS"
+        }
+      ],
+      "nes": [
+        {
+          "ne": "2026NE000423",
+          "dia": "23/10/2026",
+          "fav": "SOLUTIONS COMERCIO DE MOVEIS PARA ESCRITORIOS E SERVICO",
+          "doc": "50056441000183",
+          "val": 10198.0,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        }
+      ],
       "prazo_info": {
         "tipo": "",
         "fonte": "",
@@ -133082,7 +133828,7 @@ const DASHBOARD_DATA = {
           "dia": "08/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 3195.0,
+          "val": 2007.5,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -133262,6 +134008,24 @@ const DASHBOARD_DATA = {
           "val": 12000.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000295",
+          "dia": "25/11/2026",
+          "fav": "MAICON DOS SANTOS SILVA",
+          "doc": "17094471769",
+          "val": 19000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000296",
+          "dia": "25/11/2026",
+          "fav": "LUCAS DE SOUZA MARTINIANO",
+          "doc": "17995535740",
+          "val": 19000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
       "prazo_info": {
@@ -133401,7 +134165,26 @@ const DASHBOARD_DATA = {
           "obj": "COPLOG - PDRLOG2026 - ATENDER SUPRIMENTO DE FUNDOS EM APOIO AO EIXO NORDESTE 2O SEMESTRE E EM AP ATV LOG TRNP, CONF. DIEX NO 22752-DIVOPLOG.6/COPLOG/COLOG, DE 15 DE SET26. EMP ATE 30OUT26."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000297",
+          "dia": "25/11/2026",
+          "fav": "MAICON DOS SANTOS SILVA",
+          "doc": "17094471769",
+          "val": 10000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000298",
+          "dia": "25/11/2026",
+          "fav": "LUCAS DE SOUZA MARTINIANO",
+          "doc": "17995535740",
+          "val": 10000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -133461,8 +134244,8 @@ const DASHBOARD_DATA = {
       "dia": "21/09/2026",
       "val_alocado": 86214.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 0.0,
-      "dias_tela": 0,
+      "saldo_tela": 1068.32,
+      "dias_tela": 66,
       "prazo": "30/10/2026",
       "obj": "COPLOG - PDRLOG2026 - ATENDER DIARIAS DE MILITARES EM AP AO EIXO SUL 2O SEMESTRE 2026 E EM AP ATV LOG TRNP, CONF. DIEX NO 22752-DIVOPLOG.6 /COPLOG/ COLOG DE 15SET26. EMPH ATE 30OUT26 NO SCDP.",
       "movimentacoes": [
@@ -133907,8 +134690,8 @@ const DASHBOARD_DATA = {
       "dia": "23/10/2026",
       "val_alocado": 820.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 0.0,
-      "dias_tela": 0,
+      "saldo_tela": 820.0,
+      "dias_tela": 34,
       "prazo": "IMEDIATO",
       "obj": "COPLOG - ATENDER DIARIAS DE MILITARES PARA TREINAMENTO SIGELOG NA GUARNICAO DE BRASILIA /DF E EM AP A ATV LOG TRNP, CONFORME DIEX NO 20500-DIEX NO 6147-CCOL /BAAPLOG DE 20OUT26. EMPENHO IMEDIATO NO SCDP.",
       "movimentacoes": [
@@ -134166,8 +134949,8 @@ const DASHBOARD_DATA = {
       "dia": "11/11/2026",
       "val_alocado": 600000.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 187133.58,
-      "dias_tela": 12,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "COPLOG_CONTRATACAO DE SERVICOS DE MANUTENCAO DE VIATURAS (QUARTEIRIZACAO). EMPENHO IMEDIATO. CONFORME PLANEJAMENTO DO COPLOG.",
       "movimentacoes": [
@@ -134457,6 +135240,88 @@ const DASHBOARD_DATA = {
           "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
           "val": -567.94,
           "obj": "(052001-ECT) C SUP-DIV SUBS-SOL-RECOLHIMENTO DE CREDITO (SALDO RESIDUAL). REF: DIEX NO 1423-SETFIN/ECT, 16/11/26. NC ORIGEM: 2026NC416741."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160504000012026NC422245": {
+      "nc": "160504000012026NC422245",
+      "short_nc": "26NC422245",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160504",
+      "concedente_nome": "CMAT - Centro de Material Bélico / COLOG",
+      "acao": "21A0",
+      "pi": "E7DATRSAPIO",
+      "nd": "339039",
+      "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 187133.58,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL CONFORME DIEX NO 1425-SETFIN/ECT, DE 16 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339039",
+          "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
+          "val": -187133.58,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL CONFORME DIEX NO 1425-SETFIN/ECT, DE 16 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "160505000012026NC000273": {
+      "nc": "160505000012026NC000273",
+      "short_nc": "26NC000273",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "2000",
+      "pi": "IDDSATSPCEB",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 478.47,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": -95.0,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -383.47,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
         }
       ],
       "nes": [],
@@ -134824,8 +135689,8 @@ const DASHBOARD_DATA = {
       "dia": "16/04/2026",
       "val_alocado": 2320.9700000000003,
       "val_reduzido": 0.0,
-      "saldo_tela": 95.0,
-      "dias_tela": 221,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDE ADITAMENTO 4C BOL DGP 027_06 MAR 2026_CURSOS FAVORECIDO 3º SGT HUGO LIMA OLIVEIRA 16479495721 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25148",
       "movimentacoes": [
@@ -135986,7 +136851,17 @@ const DASHBOARD_DATA = {
           "obj": "PAGAMENTO DE INDENIZACAO A TERCEIROS - ANALISE Nº 68/2026/SGFEX/DGO, DE 18 NOV 2026. FAVORECIDO: VERA LUCIA PINHEIRO - 974.003.437-34. REFERENCIA: PORTARIA - 002 CH ECT DE, 08 JAN 2025. VALOR ATUALIZADO (IPCA-E+POUPANCA), CONTADOS A PARTIR DA DATA DA SOLUCAO DA SINDICANCIA. PRAZO EMPENHO: IMEDIATO. APOS EMISSAO DA OB, REGISTRAR ORDEM BANCARIA NO SISADE."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000027",
+          "dia": "25/11/2026",
+          "fav": "VERA LUCIA PINHEIRO",
+          "doc": "97400343734",
+          "val": 3438.58,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -136023,7 +136898,17 @@ const DASHBOARD_DATA = {
           "obj": "PAGAMENTO DE INDENIZACAO A TERCEIROS - ANALISE Nº 69/2026/SGFEX/DGO, DE 18 NOV 2026. FAVORECIDO: JOSE WILSON DA SILVA SANTOS FILHO - 034.362.887-21. REFERENCIA: PORTARIA - 002 CH ECT DE, 08 JAN 2025. VALOR ATUALIZADO (IPCA-E+POUPANCA), CONTADOS A PARTIR DA DATA DA SOLUCAO DA SINDICANCIA. PRAZO EMPENHO: IMEDIATO. APOS EMISSAO DA OB, REGISTRAR ORDEM BANCARIA NO SISADE."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000028",
+          "dia": "25/11/2026",
+          "fav": "JOSE WILSON DA SILVA SANTOS FILHO",
+          "doc": "03436288721",
+          "val": 12562.6,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -136222,7 +137107,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2173.49,
       "val_reduzido": 0.0,
       "saldo_tela": 6.26,
-      "dias_tela": 318,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -136780,7 +137665,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2173.5,
       "val_reduzido": 0.0,
       "saldo_tela": 1.03,
-      "dias_tela": 68,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -137068,8 +137953,8 @@ const DASHBOARD_DATA = {
       "dia": "19/11/2026",
       "val_alocado": 850.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 850.0,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "CCOMGEX/E4 - NC DE ORIGEM XXX CREDITO COMPL PGTO DE DIARIA P/ ATENDER ATIV. DE APOIO DIRETO DE MNT MEM CL VII,DESTINADO A COBRIR AS DESPESAS DO SUBTENENTE RODRIGUE. DIEX Nº 3093-SALC/CMDO/BCMS, DE 13NOV26.CONF. ITEM 1.B. DO PDR/26.",
       "movimentacoes": [
@@ -137117,6 +138002,43 @@ const DASHBOARD_DATA = {
           "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
           "val": -5694.3,
           "obj": "CCOMGEX/AGGE NC DE ORIGEM 1159 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400183. PARA ATENDER O DIEX Nº 3120-SALC/CMDO/BCMS, DE 16NOV26. CONF. ITEM 1C PDR26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC403297": {
+      "nc": "160035000012026NC403297",
+      "short_nc": "26NC403297",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160035",
+      "concedente_nome": "CCOMGEX - Cmdo Comunicações e Guerra Eletrônica",
+      "acao": "20XE",
+      "pi": "K8COMSIDIAR",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 850.0,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "CCOMGEX/AGGE NC DE ORIGEM 056 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400182. CONF. ITEM 1B PDR26. (VALOR RESIDUAL)",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": -850.0,
+          "obj": "CCOMGEX/AGGE NC DE ORIGEM 056 - ESTORNO PARCIAL DA NOTA DE CREDITO 2026NC400182. CONF. ITEM 1B PDR26. (VALOR RESIDUAL)"
         }
       ],
       "nes": [],
@@ -139245,8 +140167,8 @@ const DASHBOARD_DATA = {
       "dia": "04/11/2026",
       "val_alocado": 5034.35,
       "val_reduzido": 0.0,
-      "saldo_tela": 0.02,
-      "dias_tela": 21,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "ATENDE COTA FUNADOM DE JAN 2027. COTA CHEIA SEM DEDUCAO DE 10 POR CENTO ALMOX VIRTUAL NACIONAL. DOC REF DIEX NR 3321 SGS.SDIR.DIR, DE 28 OUT 2026. EMPENHO IMEDIATO. ATD BC MNT SUP",
       "movimentacoes": [
@@ -139422,6 +140344,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "26NC023024": {
+      "nc": "160073000012026NC023024",
+      "short_nc": "26NC023024",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 0.08,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.08,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "26NC000075": {
       "nc": "160238000012026NC000075",
       "short_nc": "26NC000075",
@@ -139547,8 +140506,8 @@ const DASHBOARD_DATA = {
       "dia": "26/10/2026",
       "val_alocado": 2100.0,
       "val_reduzido": 2100.0,
-      "saldo_tela": 0.78,
-      "dias_tela": 30,
+      "saldo_tela": 0.48,
+      "dias_tela": 31,
       "prazo": "31/10/2026",
       "obj": "CMAT-MOTO - AQS SUP/ INSUMOS MNT PREVENTIVA 1O ESC DE VIATURAS NAO BLD. EMPENHO ATE 31 OUT 26. RECOLHER SALDOS ATE 01 NOV 26 - DESCENTRALIZACAO FEITA CONFORME DETERMINADO NO DIEX Nº 6211- E4/EMG/BAAPLOG DE 23 DE OUTUBRO DE 2026.",
       "movimentacoes": [
@@ -139585,6 +140544,83 @@ const DASHBOARD_DATA = {
         "fonte": "descrição da NC (SIAFI)",
         "regra": "data explícita na NC",
         "trecho": "EMPENHO ATE 31 OUT 26"
+      }
+    },
+    "26NC000215": {
+      "nc": "160238000012026NC000215",
+      "short_nc": "26NC000215",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 10.010000000000002,
+      "val_reduzido": 10.010000000000002,
+      "saldo_tela": 0.3,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -9.39,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.32,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 9.39,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.32,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       }
     },
     "26NC000023": {
@@ -140379,6 +141415,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "26NC000980": {
+      "nc": "160298000012026NC000980",
+      "short_nc": "26NC000980",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160298",
+      "concedente_nome": "Comando Militar do Leste (CML)",
+      "acao": "212B",
+      "pi": "E6SUPLJA3RR",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
+      "op_principal": "DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 9600.0,
+      "val_reduzido": 0.0,
+      "saldo_tela": 9600.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339030",
+          "ndn": "MATERIAL DE CONSUMO",
+          "val": 9600.0,
+          "obj": "ATENDE DIEX NR 1593, DE 26 DE NOVEMBRO DE 2026. FINALIDADE: ATENDER CERIMONIAL MILITAR - PASSAGEM DE COMANDO DA 111ª CIA AP MB. EMPENHAR IMEDIATAMENTE. SUBITENS CONFORME BT 30.411-01 - C SUP. PROIBIDO DETAORC."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "26NC000001": {
       "nc": "160329000012026NC000001",
       "short_nc": "26NC000001",
@@ -140548,7 +141621,7 @@ const DASHBOARD_DATA = {
           "dia": "09/07/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 134224.32,
+          "val": 133697.5,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -140575,7 +141648,7 @@ const DASHBOARD_DATA = {
           "dia": "29/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 86214.0,
+          "val": 86040.0,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         },
@@ -141329,6 +142402,15 @@ const DASHBOARD_DATA = {
           "fav": "POLICIA RODOVIARIA FEDERAL",
           "doc": "200109",
           "val": 1592.2,
+          "proc": "",
+          "prova": "Célula Orçamentária SIAFI"
+        },
+        {
+          "ne": "2026NE000134",
+          "dia": "25/11/2026",
+          "fav": "POLICIA RODOVIARIA FEDERAL",
+          "doc": "200109",
+          "val": 1007.02,
           "proc": "",
           "prova": "Célula Orçamentária SIAFI"
         }
@@ -146029,8 +147111,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.51,
       "val_reduzido": 0.51,
-      "saldo_tela": 0.51,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -146075,7 +147157,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.47,
       "val_reduzido": 0.47,
       "saldo_tela": 0.47,
-      "dias_tela": 48,
+      "dias_tela": 49,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -146220,7 +147302,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 14.46,
       "val_reduzido": 14.46,
       "saldo_tela": 14.46,
-      "dias_tela": 48,
+      "dias_tela": 49,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -146355,8 +147437,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.08,
       "val_reduzido": 0.08,
-      "saldo_tela": 0.08,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO DE SALDO",
       "movimentacoes": [
@@ -146400,8 +147482,8 @@ const DASHBOARD_DATA = {
       "dia": "08/10/2026",
       "val_alocado": 0.85,
       "val_reduzido": 0.85,
-      "saldo_tela": 0.85,
-      "dias_tela": 48,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -147179,7 +148261,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.32,
       "val_reduzido": 0.32,
       "saldo_tela": 0.32,
-      "dias_tela": 13,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "ALTERACAO DE ND.",
       "movimentacoes": [
@@ -147252,7 +148334,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.3,
       "val_reduzido": 0.3,
       "saldo_tela": 0.3,
-      "dias_tela": 13,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "ALTERACAO DE ND.",
       "movimentacoes": [
@@ -147380,7 +148462,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.8,
       "val_reduzido": 0.8,
       "saldo_tela": 0.8,
-      "dias_tela": 0,
+      "dias_tela": 1,
       "prazo": "Não informado na NC",
       "obj": "MUDANCA DE ND PARA RECOLHIMENTO",
       "movimentacoes": [
@@ -147424,7 +148506,7 @@ const DASHBOARD_DATA = {
       "dia": "25/11/2026",
       "val_alocado": 0.06,
       "val_reduzido": 0.06,
-      "saldo_tela": 0.06,
+      "saldo_tela": 0.0,
       "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO DE CREDITO.",
@@ -152471,7 +153553,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 67000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 0.91,
-      "dias_tela": 35,
+      "dias_tela": 36,
       "prazo": "IMEDIATO",
       "obj": "(12526-BCMS)C SUP-DMI-SOL-RECURSO PARA AQS DE MAT FABRICACAO DE ARMARIOS , COLCHAO, CFM SOL DIEX NO 5746-E10/EMG/BAAPLOG, 4 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -153214,6 +154296,43 @@ const DASHBOARD_DATA = {
         "trecho": ""
       }
     },
+    "26NC000274": {
+      "nc": "160505000012026NC000274",
+      "short_nc": "26NC000274",
+      "om": "BCMS",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "2000",
+      "pi": "IDDSATSPCEB",
+      "nd": "339033",
+      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 411.7,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -411.7,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
     "26NC403543": {
       "nc": "160505000012026NC403543",
       "short_nc": "26NC403543",
@@ -153844,8 +154963,8 @@ const DASHBOARD_DATA = {
       "dia": "07/04/2026",
       "val_alocado": 1551.35,
       "val_reduzido": 0.0,
-      "saldo_tela": 411.7,
-      "dias_tela": 232,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "—",
       "obj": "ATENDE COMPLEMENTO BOLETIM INTERNO RESERVADO BAR DGP 009_04 MAR 2026_CURSOS FAVORECIDO 2º TEN ESTHER DIAS DE OLIVEIRA 18121517729 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25155",
       "movimentacoes": [
@@ -157412,7 +158531,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1250.0,
       "val_reduzido": 0.0,
       "saldo_tela": 42.83,
-      "dias_tela": 320,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -158357,7 +159476,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1250.0,
       "val_reduzido": 0.0,
       "saldo_tela": 117.18,
-      "dias_tela": 70,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -158666,7 +159785,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 500.0,
       "val_reduzido": 0.0,
       "saldo_tela": 500.0,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -158703,7 +159822,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1177.0,
       "val_reduzido": 0.0,
       "saldo_tela": 1177.0,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE COLEGIO VILA VALQUEIRE LTDA CNPJ 07099577000141 MENS OUTUBRO 26 SGT DANIEL CABRAL DOS SANTOS CPF 11517684722 BAR NR 09 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -158739,8 +159858,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 473.45,
       "val_reduzido": 0.0,
-      "saldo_tela": 473.45,
-      "dias_tela": 8,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS SETEMBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -158776,8 +159895,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 473.45,
       "val_reduzido": 0.0,
-      "saldo_tela": 473.45,
-      "dias_tela": 8,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "RESSARC CONTR SV ENS ESP ANEE MATERNAL E JARDIM FAZ DE CONTA LTDA CNPJ 30292536000199 MENS OUTUBRO 26 SGT ANDRESSA CRISTINA DE SOUZA CARVALHO CPF 12936469708 BAR NR14 CMDO 1RM EMPH IMTO APLICAR CFM LEGISLACAO VIGENTE",
       "movimentacoes": [
@@ -159387,7 +160506,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 10000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 130.0,
-      "dias_tela": 259,
+      "dias_tela": 261,
       "prazo": "IMEDIATO",
       "obj": "ATD CONTRATACAO DE SERVICO. DOC REF: DIEX Nº 5315-SEGER/6 SCH/EME, DE 02/03/2026. PRAZO DE EMPENHO: IMEDIATO.",
       "movimentacoes": [
@@ -162360,8 +163479,8 @@ const DASHBOARD_DATA = {
       "dia": "18/11/2026",
       "val_alocado": 2640.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 2640.0,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "AQUISICAO DE CADEIRA PARA A DIVISAO DE IMPORTACAO E EXPORTACAO DE MATERIAL. DOC REF: DIEX Nº 6703-DIEM/BAAPLOG DE 16NOV26. PRAZO DE EMPENHO: IMEDIATO. EMPENHAR CONFORME ORIENTACOES DO COAA DGO 03.",
       "movimentacoes": [
@@ -162408,6 +163527,51 @@ const DASHBOARD_DATA = {
           "nd": "339000",
           "ndn": "APLICACOES DIRETAS",
           "val": -322.25,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC023081": {
+      "nc": "160073000012026NC023081",
+      "short_nc": "26NC023081",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 324.02,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -324.0,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.02,
           "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
         }
       ],
@@ -165842,7 +167006,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 5000.11,
       "val_reduzido": 5000.11,
       "saldo_tela": 476.79,
-      "dias_tela": 13,
+      "dias_tela": 15,
       "prazo": "Não informado na NC",
       "obj": "AJUS ND",
       "movimentacoes": [
@@ -165932,7 +167096,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.32,
       "val_reduzido": 0.32,
       "saldo_tela": 0.32,
-      "dias_tela": 12,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO PARA APLICACAO.",
       "movimentacoes": [
@@ -165987,7 +167151,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 0.36,
       "val_reduzido": 0.36,
       "saldo_tela": 0.36,
-      "dias_tela": 12,
+      "dias_tela": 14,
       "prazo": "Não informado na NC",
       "obj": "RECOLHIMENTO DE SALDO RESIDUAL APOS FINDADO O PRAZO DE APLICACAO.",
       "movimentacoes": [
@@ -166363,15 +167527,15 @@ const DASHBOARD_DATA = {
       "concedente_ug": "160238",
       "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
       "acao": "2000",
-      "pi": "-8",
-      "nd": "339000",
-      "ndn": "APLICACOES DIRETAS",
+      "pi": "I3DAFUNADOM",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
       "op_principal": "DETALHAMENTO DE CREDITO",
       "dia": "18/11/2026",
       "val_alocado": 646.27,
       "val_reduzido": 646.27,
-      "saldo_tela": 0.02,
-      "dias_tela": 6,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
       "movimentacoes": [
@@ -166438,6 +167602,202 @@ const DASHBOARD_DATA = {
           "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
           "val": -0.02,
           "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC000212": {
+      "nc": "160238000012026NC000212",
+      "short_nc": "26NC000212",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "2000",
+      "pi": "I1DSATSAIMP",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 2640.0,
+      "val_reduzido": 2640.0,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "AJUST ND",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -2640.0,
+          "obj": "AJUST ND"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449052",
+          "ndn": "EQUIPAMENTOS E MATERIAL PERMANENTE",
+          "val": 2640.0,
+          "obj": "AJUST ND"
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC000213": {
+      "nc": "160238000012026NC000213",
+      "short_nc": "26NC000213",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "2000",
+      "pi": "I3DAFUNADOM",
+      "nd": "449000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "DETALHAMENTO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 324.02,
+      "val_reduzido": 324.02,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 324.0,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -324.0,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.02,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DETALHAMENTO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.02,
+          "obj": "DETALHAMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC000214": {
+      "nc": "160238000012026NC000214",
+      "short_nc": "26NC000214",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.01,
+      "val_reduzido": 0.01,
+      "saldo_tela": 0.01,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.01,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.01,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC000216": {
+      "nc": "160238000012026NC000216",
+      "short_nc": "26NC000216",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160238",
+      "concedente_nome": "Ba Ap Log - Base de Apoio Logístico",
+      "acao": "21A0",
+      "pi": "E5MMSUNPREV",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.3,
+      "val_reduzido": 0.3,
+      "saldo_tela": 0.3,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": 0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -0.3,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL"
         }
       ],
       "nes": [],
@@ -169635,7 +170995,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 10000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 1604.0,
-      "dias_tela": 231,
+      "dias_tela": 233,
       "prazo": "31/05/2026",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-RECURSO PARA ATENDER CONFECCAO DE MATERIAL DE BIDS, CFM PEDIDOS APROVADOS NO PDR LOG 2026. POR ORDEM DO CMT LOG, EMPH ATE 31 MAIO 26.",
       "movimentacoes": [
@@ -171051,8 +172411,8 @@ const DASHBOARD_DATA = {
       "dia": "10/08/2026",
       "val_alocado": 45997.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 45997.0,
-      "dias_tela": 106,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/10/2026",
       "obj": "(012369-BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.68H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP5.921,67.NEALIQ35.784,81.DSPN210,79.TRNF-6.363,00.ADNT0,00.PRB DETAORC.",
       "movimentacoes": [
@@ -171088,8 +172448,8 @@ const DASHBOARD_DATA = {
       "dia": "10/08/2026",
       "val_alocado": 148134.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 67377.68,
-      "dias_tela": 106,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/10/2026",
       "obj": "(027318-CIA C BA AP LOG EX)CSUP-DIVSUBS-PLJ-AQS QR 2A PRV SET26-FEV27(OBS REGRAS BT30.410-01).R$7,00.22D.05M.193H.REF: PDRLOG 2026.EMPH ATE 30OUT26.SALDO NA PRV:RP16.807,10.NEALIQ101.565,72.DSPN598,27.TRNF-476,00.ADNT0,00.PRB DETAORC.",
       "movimentacoes": [
@@ -172414,7 +173774,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 19000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 6.22,
-      "dias_tela": 35,
+      "dias_tela": 37,
       "prazo": "31/10/2026",
       "obj": "CMAT-MOTO ? DESCENTRALIZACAO PARCIAL PDRLOG P/ MNT CORRETIVA VTR NAO BLD. PRIORIDADE ATD DEMANDAS APROVADAS NO SIGELOG. EMPENHO ATE 31 OUT 26.",
       "movimentacoes": [
@@ -172888,7 +174248,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 6702.27,
       "val_reduzido": 0.0,
       "saldo_tela": 6702.27,
-      "dias_tela": 6,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-ATENDER SERVICOS DE MANUTENCAO DE INSTALACOES DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -172924,8 +174284,8 @@ const DASHBOARD_DATA = {
       "dia": "18/11/2026",
       "val_alocado": 62088.72,
       "val_reduzido": 0.0,
-      "saldo_tela": 62088.72,
-      "dias_tela": 6,
+      "saldo_tela": 92.41,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(027318-CIA C BA AP LOG EX)C SUP-DMI-PLJ-AQUISICAO DE EQUIPAMENTOS E MOBILIARIO PARA FUNCIONAMENTO DE ESTRUTURAS DE APOIO LOGISTICO DA CIA C/BA AP LOG, CONFORME DIEX NO 1322-GP MAT/SEC CMDO/OM, DE 30 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -173009,6 +174369,43 @@ const DASHBOARD_DATA = {
           "nd": "339030",
           "ndn": "MATERIAL DE CONSUMO",
           "val": -78.15,
+          "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC422154": {
+      "nc": "160504000012026NC422154",
+      "short_nc": "26NC422154",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160504",
+      "concedente_nome": "CMAT - Centro de Material Bélico / COLOG",
+      "acao": "212B",
+      "pi": "E6SUPLJA1QR",
+      "nd": "339030",
+      "ndn": "MATERIAL DE CONSUMO",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 113374.68,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339030",
+          "ndn": "MATERIAL DE CONSUMO",
+          "val": -113374.68,
           "obj": "RECOLHIMENTO DE SALDO POR TERMINO DE PRAZO PARA APLICACAO."
         }
       ],
@@ -174524,6 +175921,51 @@ const DASHBOARD_DATA = {
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC442617": {
+      "nc": "160505000012026NC442617",
+      "short_nc": "26NC442617",
+      "om": "BAAPLOG",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "212O",
+      "pi": "D6PEINDMV1T",
+      "nd": "339093",
+      "ndn": "INDENIZACOES E RESTITUICOES",
+      "op_principal": "DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 26169.24,
+      "val_reduzido": 0.0,
+      "saldo_tela": 4492.68,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339093",
+          "ndn": "INDENIZACOES E RESTITUICOES",
+          "val": 21676.56,
+          "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "DESCENTRALIZACAO DE CREDITO",
+          "nd": "339093",
+          "ndn": "INDENIZACOES E RESTITUICOES",
+          "val": 4492.68,
+          "obj": "ATENDE ADITAMENTO 3S BOL DGP 125_30 OUT 2026_PRAÇAS FAVORECIDO 1º SGT LEONARDO SANTOS FERREIRA 11475843704 REFERENTE PLANEJAMENTO SIPEO 104426"
+        }
+      ],
+      "nes": [],
       "prazo_info": {
         "tipo": "",
         "fonte": "",
@@ -178170,7 +179612,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000120",
           "dia": "26/10/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 1940.0,
           "proc": "",
@@ -178794,7 +180236,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2745.66,
       "val_reduzido": 0.0,
       "saldo_tela": 31.81,
-      "dias_tela": 319,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -179434,7 +180876,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 88253.66,
       "val_reduzido": 0.0,
       "saldo_tela": 0.07,
-      "dias_tela": 133,
+      "dias_tela": 135,
       "prazo": "30/09/2026",
       "obj": "ATD DESPESAS COM FUNADOM 2 COTA, CONFORME PDR SSEX 2026. LIQUIDAR ATE 30SET26 LIQ. MENSALMENTE. AUTORIZACAO PARA DETAORC CONF. LEGISLACAO VIGENTE.",
       "movimentacoes": [
@@ -179850,7 +181292,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1092.99,
       "val_reduzido": 0.0,
       "saldo_tela": 285.74,
-      "dias_tela": 69,
+      "dias_tela": 71,
       "prazo": "16/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 16OUT26. REFERENTE CIA C BA AP LOG EX .",
       "movimentacoes": [
@@ -184367,7 +185809,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000407",
           "dia": "19/11/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 3783.7,
           "proc": "",
@@ -184993,7 +186435,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000145",
           "dia": "28/05/2026",
-          "fav": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+          "fav": "REPREMIG LTDA",
           "doc": "65149197000251",
           "val": 10245.0,
           "proc": "PREGAO 90034/2025",
@@ -186289,7 +187731,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2570.0,
       "val_reduzido": 0.0,
       "saldo_tela": 95.0,
-      "dias_tela": 133,
+      "dias_tela": 135,
       "prazo": "IMEDIATO",
       "obj": "(040535-DC MUN)CSUP-DIVSUBS-SOL-PAG DIARIAS. OBS LEGISLACAO VIGENTE (ATENDE OS 14-DPIC/C SUP, 29MAIO26-1O CONGRESSO DE LOGISTICA) CFE DIEX NO 15790-CSUP/COLOG, 07JUL26. EMPH IMEDIATO. PRB DETAORC.",
       "movimentacoes": [
@@ -188353,8 +189795,8 @@ const DASHBOARD_DATA = {
       "dia": "17/11/2026",
       "val_alocado": 2830.31,
       "val_reduzido": 0.0,
-      "saldo_tela": 2830.31,
-      "dias_tela": 7,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -190472,8 +191914,8 @@ const DASHBOARD_DATA = {
       "dia": "22/10/2026",
       "val_alocado": 6650.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 6650.0,
-      "dias_tela": 33,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "30/11/2026",
       "obj": "APOIAR IIB 2027. DC MUN. EMPENHO ATÉ 30NOV2026. ESSA UG NÃO DEVE ALTERAR ND/UGR (ALT EXEC SOMENTE P/ COTER). ATENDE DIEX Nº 11646 - DPG/CH PREP F TER/COTER, 16 OUT 26.",
       "movimentacoes": [
@@ -192857,7 +194299,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1750.0,
       "val_reduzido": 0.0,
       "saldo_tela": 0.94,
-      "dias_tela": 319,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -194627,7 +196069,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 1750.0,
       "val_reduzido": 0.0,
       "saldo_tela": 233.91,
-      "dias_tela": 69,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -198785,7 +200227,7 @@ const DASHBOARD_DATA = {
         {
           "ne": "2026NE000201",
           "dia": "09/06/2026",
-          "fav": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HOS",
+          "fav": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HO",
           "doc": "55469329000198",
           "val": 231.8,
           "proc": "",
@@ -204102,7 +205544,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 35820.1,
       "val_reduzido": 0.0,
       "saldo_tela": 29.36,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "Não informado na NC",
       "obj": "AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -204622,14 +206064,14 @@ const DASHBOARD_DATA = {
       "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
       "acao": "2000",
       "pi": "IDDSATSPCEB",
-      "nd": "339033",
-      "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
       "op_principal": "DESCENTRALIZACAO DE CREDITO",
       "dia": "29/06/2026",
       "val_alocado": 4997.5599999999995,
       "val_reduzido": 0.0,
-      "saldo_tela": 748.43,
-      "dias_tela": 149,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDE ADITAMENTO 4A BOL DGP 067_12 JUN 2026_CURSOS FAVORECIDO MAJ BRAULIO CASTELUCI TESTA 05657950747 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 28354",
       "movimentacoes": [
@@ -207656,7 +209098,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4255.98,
       "val_reduzido": 0.0,
       "saldo_tela": 1071.25,
-      "dias_tela": 320,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26.",
       "movimentacoes": [
@@ -208820,7 +210262,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 4255.99,
       "val_reduzido": 0.0,
       "saldo_tela": 2156.63,
-      "dias_tela": 70,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -210676,8 +212118,8 @@ const DASHBOARD_DATA = {
       "dia": "24/08/2026",
       "val_alocado": 250.95,
       "val_reduzido": 0.0,
-      "saldo_tela": 250.95,
-      "dias_tela": 93,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "ATENDE PGT0 DE DUDA PRIMEIRO EMPLACAMENTO. DOC DE REFERENCIA: DIEX Nº 2133-TRANSP/S4/1º D SUP DE 19 AGO 2026. EMPENHO IMEDIATO-UTILIZAR O RECURSO CONFORME O CADERNO DE ORIENTACAO AOS AGENTES DA ADMINISTRACAO",
       "movimentacoes": [
@@ -211057,7 +212499,17 @@ const DASHBOARD_DATA = {
           "obj": "ATD DESPESAS COM SERVICOS POSTAIS ATE DEZEMBRO 2026 QUE VENCE EM JANEIRO 2027. DOC REF DIEX NR 2996 SPAA SGS SDIR DE 9 SET 25. EMPENHO IMEDIATO."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000533",
+          "dia": "25/11/2026",
+          "fav": "EMPRESA BRASILEIRA DE CORREIOS E TELEGRAFOS",
+          "doc": "34028316000294",
+          "val": 560.0,
+          "proc": "INEX 07/2015",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -211334,6 +212786,59 @@ const DASHBOARD_DATA = {
         "fonte": "descrição da NC (SIAFI)",
         "regra": "imediato (texto da NC)",
         "trecho": "EMPENHO IMEDIATO"
+      }
+    },
+    "26NC023005": {
+      "nc": "160073000012026NC023005",
+      "short_nc": "26NC023005",
+      "om": "DSUP1",
+      "ug": "160",
+      "concedente_ug": "160073",
+      "concedente_nome": "SGS / DGO - Diretoria de Gestão Orçamentária",
+      "acao": "2000",
+      "pi": "I3DAFUNSEGO",
+      "nd": "339000",
+      "ndn": "APLICACOES DIRETAS",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 756.67,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -250.95,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -3.88,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "449000",
+          "ndn": "APLICACOES DIRETAS",
+          "val": -501.84,
+          "obj": "RECOLHIMENTO DE CREDITO PARA FINS DE REMANEJAMENTO, CONFORME DIEX Nº 3576-SGS/SDIR/DIR, 10 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
       }
     },
     "26NC000973": {
@@ -220843,6 +222348,15 @@ const DASHBOARD_DATA = {
           "val": 389154.68,
           "proc": "PREGAO ELETRONICO 90248/2025",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000535",
+          "dia": "25/11/2026",
+          "fav": "JH2P-ENGENHARIA, CONSTRUCAO E DECORACAO LTDA",
+          "doc": "03992117000197",
+          "val": 80206.98,
+          "proc": "PE 90248/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
       "prazo_info": {
@@ -221362,8 +222876,8 @@ const DASHBOARD_DATA = {
       "dia": "04/11/2026",
       "val_alocado": 55957.72,
       "val_reduzido": 0.0,
-      "saldo_tela": 39503.74,
-      "dias_tela": 21,
+      "saldo_tela": 53503.74,
+      "dias_tela": 22,
       "prazo": "13/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE EQUIPAMENTOS P/ SETOR SUP CL) REF DIEX NO 2720-COS/1O D SUP DE 08/10/2026. EMPH ATE 7 DIAS UTEIS. PRB DETAORC.",
       "movimentacoes": [
@@ -221782,7 +223296,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 39382.38,
       "val_reduzido": 0.0,
       "saldo_tela": 28.38,
-      "dias_tela": 14,
+      "dias_tela": 15,
       "prazo": "IMEDIATO",
       "obj": "(040584-1O D SUP)C SUP-DMI-SOL-RECURSO, EXTRA PDR LOG, PARA INVENTARIO E PREP DE CJ CMFL INSERVIVEIS, CFM SOL DIEX NO 2914-COS/1O D SUP, DE 28 OUT 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -221940,7 +223454,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 75333.93,
       "val_reduzido": 0.0,
       "saldo_tela": 2.43,
-      "dias_tela": 8,
+      "dias_tela": 9,
       "prazo": "Não informado na NC",
       "obj": "ATENDER AQUISICAO DE MATERIAIS NECESSARIOS PARA UNITIZACAO DE CARGA.",
       "movimentacoes": [
@@ -221987,7 +223501,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 24899.0,
       "val_reduzido": 0.0,
       "saldo_tela": 15.67,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "20/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (SV. DE PINTURA DA IDENTIDADE VISUAL RECEPCAO DAS SECOES DOS DEP. CLASSE I) REF DIEX NO 3035-ALMOX/S4/1O D SUP DE 09/11/2026. EMPH ATE 48H. PRB DETAORC.",
       "movimentacoes": [
@@ -222154,7 +223668,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 138915.0,
       "val_reduzido": 0.0,
       "saldo_tela": 20.54,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "IMEDIATO",
       "obj": "(040584-1O D SUP)C SUP-DMI-PLJ-RECURSO PARA ATENDER AQS DE MATERIAL, BOINA PRETA, CFM SOL DIEX NO 28737-DIVMATINT/CSUP/COLOG, EM 12 NOV 26. EMPH IMEDIATO.",
       "movimentacoes": [
@@ -222167,7 +223681,17 @@ const DASHBOARD_DATA = {
           "obj": "(040584-1O D SUP)C SUP-DMI-PLJ-RECURSO PARA ATENDER AQS DE MATERIAL, BOINA PRETA, CFM SOL DIEX NO 28737-DIVMATINT/CSUP/COLOG, EM 12 NOV 26. EMPH IMEDIATO."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000531",
+          "dia": "25/11/2026",
+          "fav": "GMG INDUSTRIA DO VESTUARIO LTDA",
+          "doc": "03366550000117",
+          "val": 138915.0,
+          "proc": "PE 00018/2023",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -222204,7 +223728,17 @@ const DASHBOARD_DATA = {
           "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (SERVICOS DE CALIBRACAO ACREDITADA JUNTO AO INMETRO (RBC)) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000534",
+          "dia": "25/11/2026",
+          "fav": "VISOMES COMERCIAL METROLOGICA LTDA",
+          "doc": "00567892000107",
+          "val": 62400.0,
+          "proc": "PREGAO 90002/2026",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -222265,7 +223799,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 14000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 14000.0,
-      "dias_tela": 7,
+      "dias_tela": 8,
       "prazo": "20/11/2026",
       "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE UM EVAPORADOR ROTATIVO DA MARCA SOLA) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC.",
       "movimentacoes": [
@@ -222278,7 +223812,17 @@ const DASHBOARD_DATA = {
           "obj": "(40584-1O D SUP) C SUP-DIV SUBS -MNT OP. OBS REGRAS DO BT30.409-01. (AQUISICAO DE UM EVAPORADOR ROTATIVO DA MARCA SOLA) REF DIEX NO 2766-LIAB/1O D SUP DE 14/10/2026. EMPH ATE 48H. PRB DETAORC."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000532",
+          "dia": "25/11/2026",
+          "fav": "SOLAB CIENTIFICA EQUIPAMENTOS PARA LABORATORIOS LTDA",
+          "doc": "11232743000103",
+          "val": 0.0,
+          "proc": "PREGAO 90055/2025",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -224029,7 +225573,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 600000.0,
       "val_reduzido": 0.0,
       "saldo_tela": 71.96,
-      "dias_tela": 139,
+      "dias_tela": 140,
       "prazo": "30/09/2026",
       "obj": "ATENDE DESP COM AQS SUP CLASSE VIII PÃO EFETIVO ISENTO DAS OM NO 2 SEM 2026 AMPARO NA PORTARIA DGPCEX NR 419, DE 07 DE NOVEMBRO DE 2022. EMPENHAR ATE 30SET. LIQUIDACAO ATE 30NOV.",
       "movimentacoes": [
@@ -229982,7 +231526,7 @@ const DASHBOARD_DATA = {
           "dia": "08/09/2026",
           "fav": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
           "doc": "160321",
-          "val": 3195.0,
+          "val": 2007.5,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
@@ -230162,6 +231706,24 @@ const DASHBOARD_DATA = {
           "val": 12000.0,
           "proc": "",
           "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000295",
+          "dia": "25/11/2026",
+          "fav": "MAICON DOS SANTOS SILVA",
+          "doc": "17094471769",
+          "val": 19000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000296",
+          "dia": "25/11/2026",
+          "fav": "LUCAS DE SOUZA MARTINIANO",
+          "doc": "17995535740",
+          "val": 19000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
         }
       ],
       "prazo_info": {
@@ -230301,7 +231863,26 @@ const DASHBOARD_DATA = {
           "obj": "COPLOG - PDRLOG2026 - ATENDER SUPRIMENTO DE FUNDOS EM APOIO AO EIXO NORDESTE 2O SEMESTRE E EM AP ATV LOG TRNP, CONF. DIEX NO 22752-DIVOPLOG.6/COPLOG/COLOG, DE 15 DE SET26. EMP ATE 30OUT26."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000297",
+          "dia": "25/11/2026",
+          "fav": "MAICON DOS SANTOS SILVA",
+          "doc": "17094471769",
+          "val": 10000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        },
+        {
+          "ne": "2026NE000298",
+          "dia": "25/11/2026",
+          "fav": "LUCAS DE SOUZA MARTINIANO",
+          "doc": "17995535740",
+          "val": 10000.0,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -230992,8 +232573,8 @@ const DASHBOARD_DATA = {
       "dia": "11/11/2026",
       "val_alocado": 600000.0,
       "val_reduzido": 0.0,
-      "saldo_tela": 187133.58,
-      "dias_tela": 12,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "IMEDIATO",
       "obj": "COPLOG_CONTRATACAO DE SERVICOS DE MANUTENCAO DE VIATURAS (QUARTEIRIZACAO). EMPENHO IMEDIATO. CONFORME PLANEJAMENTO DO COPLOG.",
       "movimentacoes": [
@@ -231283,6 +232864,88 @@ const DASHBOARD_DATA = {
           "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
           "val": -567.94,
           "obj": "(052001-ECT) C SUP-DIV SUBS-SOL-RECOLHIMENTO DE CREDITO (SALDO RESIDUAL). REF: DIEX NO 1423-SETFIN/ECT, 16/11/26. NC ORIGEM: 2026NC416741."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC422245": {
+      "nc": "160504000012026NC422245",
+      "short_nc": "26NC422245",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160504",
+      "concedente_nome": "CMAT - Centro de Material Bélico / COLOG",
+      "acao": "21A0",
+      "pi": "E7DATRSAPIO",
+      "nd": "339039",
+      "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 187133.58,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE SALDO RESIDUAL CONFORME DIEX NO 1425-SETFIN/ECT, DE 16 NOV 26.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339039",
+          "ndn": "OUTROS SERVICOS DE TERCEIROS - PESSOA JURIDICA",
+          "val": -187133.58,
+          "obj": "RECOLHIMENTO DE SALDO RESIDUAL CONFORME DIEX NO 1425-SETFIN/ECT, DE 16 NOV 26."
+        }
+      ],
+      "nes": [],
+      "prazo_info": {
+        "tipo": "",
+        "fonte": "",
+        "regra": "texto da NC sem prazo",
+        "trecho": ""
+      }
+    },
+    "26NC000273": {
+      "nc": "160505000012026NC000273",
+      "short_nc": "26NC000273",
+      "om": "ECT",
+      "ug": "160",
+      "concedente_ug": "160505",
+      "concedente_nome": "DSup - Diretoria de Suprimento / COLOG",
+      "acao": "2000",
+      "pi": "IDDSATSPCEB",
+      "nd": "339015",
+      "ndn": "DIARIAS - PESSOAL MILITAR",
+      "op_principal": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+      "dia": "26/11/2026",
+      "val_alocado": 0.0,
+      "val_reduzido": 478.47,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
+      "prazo": "Não informado na NC",
+      "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026.",
+      "movimentacoes": [
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339015",
+          "ndn": "DIARIAS - PESSOAL MILITAR",
+          "val": -95.0,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
+        },
+        {
+          "dia": "26/11/2026",
+          "op": "ANULACAO DE DESCENTRALIZACAO DE CREDITO",
+          "nd": "339033",
+          "ndn": "PASSAGENS E DESPESAS COM LOCOMOCAO",
+          "val": -383.47,
+          "obj": "RECOLHIMENTO DE CREDITO, CONFORME DIEX NR 3907 4 SECAO DPGO 27 OUT 26 E DIRETRIZ PARA O ENCERRAMENTO DO EXERCICIO FINANCEIRO DE 2026."
         }
       ],
       "nes": [],
@@ -231650,8 +233313,8 @@ const DASHBOARD_DATA = {
       "dia": "16/04/2026",
       "val_alocado": 2320.9700000000003,
       "val_reduzido": 0.0,
-      "saldo_tela": 95.0,
-      "dias_tela": 221,
+      "saldo_tela": 0.0,
+      "dias_tela": 0,
       "prazo": "Não informado na NC",
       "obj": "ATENDE ADITAMENTO 4C BOL DGP 027_06 MAR 2026_CURSOS FAVORECIDO 3º SGT HUGO LIMA OLIVEIRA 16479495721 INDENIZAÇÃO REFERENTE PLANEJAMENTO SIPEO 25148",
       "movimentacoes": [
@@ -232812,7 +234475,17 @@ const DASHBOARD_DATA = {
           "obj": "PAGAMENTO DE INDENIZACAO A TERCEIROS - ANALISE Nº 68/2026/SGFEX/DGO, DE 18 NOV 2026. FAVORECIDO: VERA LUCIA PINHEIRO - 974.003.437-34. REFERENCIA: PORTARIA - 002 CH ECT DE, 08 JAN 2025. VALOR ATUALIZADO (IPCA-E+POUPANCA), CONTADOS A PARTIR DA DATA DA SOLUCAO DA SINDICANCIA. PRAZO EMPENHO: IMEDIATO. APOS EMISSAO DA OB, REGISTRAR ORDEM BANCARIA NO SISADE."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000027",
+          "dia": "25/11/2026",
+          "fav": "VERA LUCIA PINHEIRO",
+          "doc": "97400343734",
+          "val": 3438.58,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -232849,7 +234522,17 @@ const DASHBOARD_DATA = {
           "obj": "PAGAMENTO DE INDENIZACAO A TERCEIROS - ANALISE Nº 69/2026/SGFEX/DGO, DE 18 NOV 2026. FAVORECIDO: JOSE WILSON DA SILVA SANTOS FILHO - 034.362.887-21. REFERENCIA: PORTARIA - 002 CH ECT DE, 08 JAN 2025. VALOR ATUALIZADO (IPCA-E+POUPANCA), CONTADOS A PARTIR DA DATA DA SOLUCAO DA SINDICANCIA. PRAZO EMPENHO: IMEDIATO. APOS EMISSAO DA OB, REGISTRAR ORDEM BANCARIA NO SISADE."
         }
       ],
-      "nes": [],
+      "nes": [
+        {
+          "ne": "2026NE000028",
+          "dia": "25/11/2026",
+          "fav": "JOSE WILSON DA SILVA SANTOS FILHO",
+          "doc": "03436288721",
+          "val": 12562.6,
+          "proc": "",
+          "prova": "Auditado & Confirmado (UG+PI+ND)"
+        }
+      ],
       "prazo_info": {
         "tipo": "empenho",
         "fonte": "descrição da NC (SIAFI)",
@@ -233048,7 +234731,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2173.49,
       "val_reduzido": 0.0,
       "saldo_tela": 6.26,
-      "dias_tela": 318,
+      "dias_tela": 321,
       "prazo": "31/03/2026",
       "obj": "1ª PARCELA UGPD ATENDE DESPESA COM AQUISIÇÃO DE INSUMOS PARA ATENDIMENTOS INT VEDADA AQUISIÇÃO DE OPME E INSUMOS ONCOLÓGICOS. REF.: JAN/FEV/MAR 26. EMPENHAR ATÉ 31/MAR/26. REFERENTE.",
       "movimentacoes": [
@@ -233606,7 +235289,7 @@ const DASHBOARD_DATA = {
       "val_alocado": 2173.5,
       "val_reduzido": 0.0,
       "saldo_tela": 1.03,
-      "dias_tela": 68,
+      "dias_tela": 71,
       "prazo": "19/10/2026",
       "obj": "ATENDE DESPESA COM AQUISICAO DE INSUMOS PARA ATENDIMENTOS INTERNOS. QUARTA PARCELA. VEDADA AQUISICAO DE OPME E INSUMOS ONCOLOGICOS. REF. OUT, NOV E DEZ 26. EMPENHAR ATE 19OUT26",
       "movimentacoes": [
@@ -233859,12 +235542,12 @@ const DASHBOARD_DATA = {
       "cred": 763018.8
     },
     {
-      "data": "26/11",
-      "prov": 54526129.57,
-      "emp": 53984669.47,
-      "liq": 31880577.81,
-      "pag": 31253775.12,
-      "cred": 449928.62
+      "data": "27/11",
+      "prov": 54257810.86,
+      "emp": 54043844.67,
+      "liq": 31938261.64,
+      "pag": 31285511.1,
+      "cred": 122445.03
     }
   ],
   "topFornecedores": [
@@ -233878,9 +235561,9 @@ const DASHBOARD_DATA = {
     {
       "nome": "JH2P-ENGENHARIA, CONSTRUCAO E DECORACAO LTDA",
       "cnpj": "03.992.117/0001-97",
-      "qtdNEs": 15,
+      "qtdNEs": 16,
       "omds": "1º D Sup",
-      "val": 2757140.06
+      "val": 2837347.04
     },
     {
       "nome": "GENAP EMPREENDIMENTOS LTDA",
@@ -233915,7 +235598,7 @@ const DASHBOARD_DATA = {
       "cnpj": "160321",
       "qtdNEs": 41,
       "omds": "ECT",
-      "val": 1811903.05
+      "val": 1810014.73
     },
     {
       "nome": "STELLANTIS AUTOMOVEIS BRASIL LTDA.",
@@ -233934,9 +235617,9 @@ const DASHBOARD_DATA = {
     {
       "nome": "GMG INDUSTRIA DO VESTUARIO LTDA",
       "cnpj": "03.366.550/0001-17",
-      "qtdNEs": 1,
+      "qtdNEs": 2,
       "omds": "1º D Sup",
-      "val": 976185.0
+      "val": 1115100.0
     },
     {
       "nome": "AIRPHOENIX SERVICOS INTERNACIONAIS LTDA",
@@ -233985,13 +235668,13 @@ const DASHBOARD_DATA = {
       "proc": "PE 90248/2025",
       "objeto": "2026RO014853/CENTRO DE OBTENCOES DO EXERCITO - GESTOR DE 03/09/2026, PE 90248/2025 - 153114 - UFRGS,",
       "omds": "1º D Sup",
-      "val": 1533166.2
+      "val": 1613373.18
     },
     {
       "proc": "PE 00018/2023",
       "objeto": "2026NC400834 DO CENTRO DE OBTENCOES DO EXERCITO DE 09FEV26, PE 00018/2023 - UG PARTICIPANTE - CONFOR",
       "omds": "1º D Sup",
-      "val": 1406364.0
+      "val": 1545279.0
     },
     {
       "proc": "PREGAO 18/2023",
@@ -234068,6 +235751,174 @@ const DASHBOARD_DATA = {
   ],
   "todasNEs": [
     {
+      "ne": "2026NE000531",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "GMG INDUSTRIA DO VESTUARIO LTDA",
+      "cnpj": "03366550000117",
+      "valor": 138915.0,
+      "data": "25/11/2026",
+      "processo": "PE 00018/2023",
+      "ncOrigem": "2026NC421095",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 1109441.5
+    },
+    {
+      "ne": "2026NE000532",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "SOLAB CIENTIFICA EQUIPAMENTOS PARA LABORATORIOS LTDA",
+      "cnpj": "11232743000103",
+      "valor": 0.0,
+      "data": "25/11/2026",
+      "processo": "PREGAO 90055/2025",
+      "ncOrigem": "2026NC421305",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 155471.35
+    },
+    {
+      "ne": "2026NE000533",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "EMPRESA BRASILEIRA DE CORREIOS E TELEGRAFOS",
+      "cnpj": "34028316000294",
+      "valor": 560.0,
+      "data": "25/11/2026",
+      "processo": "INEX 07/2015",
+      "ncOrigem": "2026NC019537",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 1261.8
+    },
+    {
+      "ne": "2026NE000534",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "VISOMES COMERCIAL METROLOGICA LTDA",
+      "cnpj": "00567892000107",
+      "valor": 62400.0,
+      "data": "25/11/2026",
+      "processo": "PREGAO 90002/2026",
+      "ncOrigem": "2026NC421227",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2419375.98
+    },
+    {
+      "ne": "2026NE000535",
+      "ug": "160307",
+      "omSigla": "1º D Sup",
+      "credor": "JH2P-ENGENHARIA, CONSTRUCAO E DECORACAO LTDA",
+      "cnpj": "03992117000197",
+      "valor": 80206.98,
+      "data": "25/11/2026",
+      "processo": "PE 90248/2025",
+      "ncOrigem": "2026NC417710",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 317252.48
+    },
+    {
+      "ne": "2026NE000295",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "MAICON DOS SANTOS SILVA",
+      "cnpj": "17094471769",
+      "valor": 19000.0,
+      "data": "25/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC415446",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 231362.99
+    },
+    {
+      "ne": "2026NE000296",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "LUCAS DE SOUZA MARTINIANO",
+      "cnpj": "17995535740",
+      "valor": 19000.0,
+      "data": "25/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC415446",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 231362.99
+    },
+    {
+      "ne": "2026NE000297",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "MAICON DOS SANTOS SILVA",
+      "cnpj": "17094471769",
+      "valor": 10000.0,
+      "data": "25/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC415448",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 138659.38
+    },
+    {
+      "ne": "2026NE000298",
+      "ug": "160321",
+      "omSigla": "ECT",
+      "credor": "LUCAS DE SOUZA MARTINIANO",
+      "cnpj": "17995535740",
+      "valor": 10000.0,
+      "data": "25/11/2026",
+      "processo": "21A0",
+      "ncOrigem": "2026NC415448",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 138659.38
+    },
+    {
+      "ne": "2026NE000134",
+      "ug": "167304",
+      "omSigla": "BMSA",
+      "credor": "POLICIA RODOVIARIA FEDERAL",
+      "cnpj": "200109",
+      "valor": 1007.02,
+      "data": "25/11/2026",
+      "processo": "2000",
+      "ncOrigem": "2026NC000006",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 2014.04
+    },
+    {
+      "ne": "2026NE000027",
+      "ug": "167321",
+      "omSigla": "ECT",
+      "credor": "VERA LUCIA PINHEIRO",
+      "cnpj": "97400343734",
+      "valor": 3438.58,
+      "data": "25/11/2026",
+      "processo": "2000",
+      "ncOrigem": "2026NC004601",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 8234.89
+    },
+    {
+      "ne": "2026NE000028",
+      "ug": "167321",
+      "omSigla": "ECT",
+      "credor": "JOSE WILSON DA SILVA SANTOS FILHO",
+      "cnpj": "03436288721",
+      "valor": 12562.6,
+      "data": "25/11/2026",
+      "processo": "2000",
+      "ncOrigem": "2026NC004602",
+      "status": "Liquidado",
+      "aLiquidar": 0.0,
+      "pago": 8234.89
+    },
+    {
       "ne": "2026NE000514",
       "ug": "160304",
       "omSigla": "BMSA",
@@ -234127,7 +235978,7 @@ const DASHBOARD_DATA = {
       "ne": "2026NE000407",
       "ug": "160246",
       "omSigla": "D C Mun",
-      "credor": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+      "credor": "REPREMIG LTDA",
       "cnpj": "65149197000251",
       "valor": 3783.7,
       "data": "19/11/2026",
@@ -238425,7 +240276,7 @@ const DASHBOARD_DATA = {
       "ne": "2026NE000120",
       "ug": "167238",
       "omSigla": "Ba Ap Log",
-      "credor": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+      "credor": "REPREMIG LTDA",
       "cnpj": "65149197000251",
       "valor": 1940.0,
       "data": "26/10/2026",
@@ -238685,7 +240536,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000450",
@@ -239455,7 +241306,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000440",
@@ -239469,7 +241320,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000441",
@@ -239483,7 +241334,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000257",
@@ -239735,7 +241586,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000467",
@@ -240687,7 +242538,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC020075",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 80233.06
+      "pago": 80361.19
     },
     {
       "ne": "2026NE000435",
@@ -240799,7 +242650,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000116",
@@ -241191,7 +243042,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000431",
@@ -241205,7 +243056,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000432",
@@ -241219,7 +243070,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000433",
@@ -241233,7 +243084,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000434",
@@ -241247,7 +243098,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000446",
@@ -241709,7 +243560,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000297",
@@ -241723,7 +243574,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000298",
@@ -241737,7 +243588,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000299",
@@ -241751,7 +243602,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000300",
@@ -241765,7 +243616,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000301",
@@ -241779,7 +243630,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000114",
@@ -242129,7 +243980,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000424",
@@ -242157,7 +244008,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC000058",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 10260.0
+      "pago": 4845.0
     },
     {
       "ne": "2026NE000438",
@@ -242865,7 +244716,7 @@ const DASHBOARD_DATA = {
       "omSigla": "ECT",
       "credor": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
       "cnpj": "160321",
-      "valor": 86214.0,
+      "valor": 86040.0,
       "data": "29/09/2026",
       "processo": "21A0",
       "ncOrigem": "2026NC000001",
@@ -243767,7 +245618,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC018038",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 80233.06
+      "pago": 80361.19
     },
     {
       "ne": "2026NE000217",
@@ -243865,7 +245716,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000286",
@@ -244047,7 +245898,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000266",
@@ -244061,7 +245912,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC413505",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000267",
@@ -244075,7 +245926,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000268",
@@ -244089,7 +245940,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000269",
@@ -244103,7 +245954,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000270",
@@ -244117,7 +245968,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000271",
@@ -244131,7 +245982,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000272",
@@ -244145,7 +245996,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000273",
@@ -244159,7 +246010,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000274",
@@ -244173,7 +246024,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000275",
@@ -244187,7 +246038,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000277",
@@ -244201,7 +246052,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000278",
@@ -244215,7 +246066,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000279",
@@ -244229,7 +246080,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000280",
@@ -244243,7 +246094,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC415767",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000110",
@@ -246133,7 +247984,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC015458",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 265600.2
+      "pago": 15968.89
     },
     {
       "ne": "2026NE000208",
@@ -246141,7 +247992,7 @@ const DASHBOARD_DATA = {
       "omSigla": "ECT",
       "credor": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
       "cnpj": "160321",
-      "valor": 3195.0,
+      "valor": 2007.5,
       "data": "08/09/2026",
       "processo": "21A0",
       "ncOrigem": "2026NC414270",
@@ -246161,7 +248012,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2025NC015458",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 31999.74
+      "pago": 1588.98
     },
     {
       "ne": "2026NE000101",
@@ -248149,7 +250000,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000362",
@@ -248163,7 +250014,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000363",
@@ -248177,7 +250028,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000364",
@@ -248191,7 +250042,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000365",
@@ -248359,7 +250210,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000357",
@@ -248373,7 +250224,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000358",
@@ -248387,7 +250238,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000359",
@@ -248401,7 +250252,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000360",
@@ -248415,7 +250266,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000357",
@@ -248835,7 +250686,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC413505",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 1114460.1
+      "pago": 1114479.72
     },
     {
       "ne": "2026NE000339",
@@ -249661,7 +251512,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC411244",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000342",
@@ -249675,7 +251526,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000343",
@@ -249689,7 +251540,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000344",
@@ -249703,7 +251554,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000345",
@@ -249717,7 +251568,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000346",
@@ -249731,7 +251582,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000347",
@@ -250767,7 +252618,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC412144",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000332",
@@ -253665,7 +255516,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000296",
@@ -253679,7 +255530,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000297",
@@ -253693,7 +255544,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000301",
@@ -253889,7 +255740,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000293",
@@ -253903,7 +255754,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000294",
@@ -253917,7 +255768,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000291",
@@ -256095,7 +257946,7 @@ const DASHBOARD_DATA = {
       "omSigla": "ECT",
       "credor": "ESTABELECIMENTO CENTRAL DE TRANSPORTE",
       "cnpj": "160321",
-      "valor": 134224.32,
+      "valor": 133697.5,
       "data": "09/07/2026",
       "processo": "21A0",
       "ncOrigem": "2026NC000001",
@@ -258103,7 +259954,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC011790",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 74399.98
+      "pago": 15968.89
     },
     {
       "ne": "2026NE000045",
@@ -260637,7 +262488,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000208",
@@ -260651,7 +262502,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000209",
@@ -260665,7 +262516,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000210",
@@ -260679,7 +262530,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000211",
@@ -260693,7 +262544,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000212",
@@ -260819,7 +262670,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000183",
@@ -260833,7 +262684,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000184",
@@ -260847,7 +262698,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000185",
@@ -260861,7 +262712,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000186",
@@ -260875,7 +262726,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000187",
@@ -260889,7 +262740,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000188",
@@ -260903,7 +262754,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000189",
@@ -260931,7 +262782,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000191",
@@ -260945,7 +262796,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000192",
@@ -260959,7 +262810,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000193",
@@ -260973,7 +262824,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000194",
@@ -260987,7 +262838,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000195",
@@ -261001,7 +262852,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000196",
@@ -261015,7 +262866,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000197",
@@ -261029,7 +262880,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000198",
@@ -261043,7 +262894,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000199",
@@ -261057,7 +262908,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000200",
@@ -261071,13 +262922,13 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000201",
       "ug": "160304",
       "omSigla": "BMSA",
-      "credor": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HOS",
+      "credor": "MS SOLUCOES INTEGRADAS EM PRODUTOS DE ODONTOLOGIA E HO",
       "cnpj": "55469329000198",
       "valor": 231.8,
       "data": "09/06/2026",
@@ -261085,7 +262936,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000224",
@@ -262443,7 +264294,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000176",
@@ -262457,7 +264308,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000177",
@@ -262471,7 +264322,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000178",
@@ -262485,7 +264336,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000214",
@@ -262723,7 +264574,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000173",
@@ -263009,7 +264860,7 @@ const DASHBOARD_DATA = {
       "ne": "2026NE000145",
       "ug": "160246",
       "omSigla": "D C Mun",
-      "credor": "REPREMIG REPRESENTACAO E COMERCIO DE MINAS GERAIS LTDA",
+      "credor": "REPREMIG LTDA",
       "cnpj": "65149197000251",
       "valor": 10245.0,
       "data": "28/05/2026",
@@ -263619,7 +265470,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2025NC008812",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 136799.72
+      "pago": 15968.89
     },
     {
       "ne": "2026NE000109",
@@ -263689,7 +265540,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2025NC008812",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 12000.26
+      "pago": 1588.98
     },
     {
       "ne": "2026NE000040",
@@ -264249,7 +266100,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000158",
@@ -264473,7 +266324,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC000012",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 24160.0
+      "pago": 3292.0
     },
     {
       "ne": "2026NE000186",
@@ -265649,7 +267500,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC000004",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 6584.0
+      "pago": 3292.0
     },
     {
       "ne": "2026NE000014",
@@ -266363,7 +268214,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000176",
@@ -269513,7 +271364,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000092",
@@ -269527,7 +271378,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000093",
@@ -269541,7 +271392,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000094",
@@ -269555,7 +271406,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000095",
@@ -269569,7 +271420,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000096",
@@ -269583,7 +271434,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000097",
@@ -269597,7 +271448,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000098",
@@ -269611,7 +271462,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000099",
@@ -269625,7 +271476,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000100",
@@ -269639,7 +271490,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000059",
@@ -274959,7 +276810,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC405663",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 5514.2
+      "pago": 6065.62
     },
     {
       "ne": "2026NE000070",
@@ -275757,7 +277608,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000021",
@@ -275771,7 +277622,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000022",
@@ -275785,7 +277636,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000023",
@@ -275799,7 +277650,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000024",
@@ -275813,7 +277664,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000025",
@@ -275827,7 +277678,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000026",
@@ -275841,7 +277692,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000027",
@@ -275855,7 +277706,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000028",
@@ -275869,7 +277720,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000029",
@@ -275883,7 +277734,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000030",
@@ -275911,7 +277762,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000032",
@@ -275925,7 +277776,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000033",
@@ -275939,7 +277790,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000034",
@@ -275953,7 +277804,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000035",
@@ -275967,7 +277818,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000036",
@@ -275981,7 +277832,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000037",
@@ -275995,7 +277846,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000038",
@@ -276009,7 +277860,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000039",
@@ -276023,7 +277874,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000040",
@@ -277185,7 +279036,7 @@ const DASHBOARD_DATA = {
       "ncOrigem": "2026NC401535",
       "status": "Liquidado",
       "aLiquidar": 0.0,
-      "pago": 543833.88
+      "pago": 548019.88
     },
     {
       "ne": "2026NE000012",
