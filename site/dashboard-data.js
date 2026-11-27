@@ -4,7 +4,7 @@ const DASHBOARD_DATA = {
     "posicaoData": "27/11/2026",
     "dataColetaHora": "09:15",
     "dataColetaFonte": "Last-Modified do arquivo no Google Drive",
-    "atualizadoEm": "27/11/2026 às 17:03",
+    "atualizadoEm": "27/11/2026 às 19:19",
     "ultimaMovimentacao": "26/11/2026",
     "mesAtualNome": "Novembro",
     "fonte": "SIAFI / Tesouro Gerencial / SICOF",
